@@ -95,7 +95,7 @@ export const columns: ColumnDef<Person>[] = [
             )
         },
         invertSorting: true,
-        size: 520
+        size: 460
     },
     {
         accessorKey: 'UUID_path',
@@ -110,7 +110,7 @@ export const columns: ColumnDef<Person>[] = [
             </>
             )
         },
-        size: 170
+        size: 320
     },
     {
         accessorKey: 'total_file_size',
@@ -125,8 +125,8 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             )
         },
-        enableColumnFilter: true,
-        size: 60
+        enableColumnFilter: false,
+        size: 120
     },
     {
         accessorKey: 'total_file_count',
@@ -142,7 +142,7 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             )
         },
-        size: 50,
+        size: 120,
         enableColumnFilter: false,
     },
     {
@@ -160,8 +160,9 @@ export const columns: ColumnDef<Person>[] = [
         cell: (info: any) => {
             return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
         },
-        size: 50,
-        minSize: 120
+        size: 130,
+        minSize: 40,
+        enableColumnFilter:false
     },
     // {
     //     accessorKey: 'migrated_file_size',
@@ -205,7 +206,7 @@ export const columns: ColumnDef<Person>[] = [
         },
         enableSorting: false,
         enableColumnFilter: true,
-        size: 106
+        size: 120
     },
     {
         accessorKey: 'Migration_Start_Date',
@@ -229,7 +230,7 @@ export const columns: ColumnDef<Person>[] = [
         },
         enableSorting: false,
         enableColumnFilter: true,
-        size: 80
+        size: 210
     },
     {
         accessorKey: 'Migration_End_Date',
@@ -253,7 +254,7 @@ export const columns: ColumnDef<Person>[] = [
         },
         enableSorting: false,
         enableColumnFilter: true,
-        size: 106
+        size: 210
     },
     {
         accessorKey: 'Invoice_Generated',
@@ -269,7 +270,7 @@ export const columns: ColumnDef<Person>[] = [
         cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },
         enableSorting: false,
         enableColumnFilter: false,
-        size: 35
+        size: 135
     },
     {
         accessorKey: 'Invoice_Generation_Date',
@@ -283,17 +284,17 @@ export const columns: ColumnDef<Person>[] = [
             )
         },
         cell: (info: any) => {
-            return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>{info.getValue()?.split("T")[0]}</span>)
+            return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>0</span>)
         },
         enableSorting: false,
         enableColumnFilter: true,
-        size: 70,
-        meta: {
-            filterVariant: 'calender',
-            calendarMode: 'range',
-            numberOfMonths: 2,
-            placeholder: 'Pick date',
-        },
+        size: 190,
+        // meta: {
+        //     filterVariant: 'calender',
+        //     calendarMode: 'range',
+        //     numberOfMonths: 2,
+        //     placeholder: 'Pick date',
+        // },
     },
     {
         accessorKey: 'Verified',
@@ -313,7 +314,7 @@ export const columns: ColumnDef<Person>[] = [
             filterVariant: 'select',
             selectOptions: [{ label: 'Y', value: 'Y' }, { label: 'N', value: 'N' }],
         },
-        size: 55
+        size: 115
     },
     // {
     //     accessorKey: 'Remarks',
@@ -347,6 +348,6 @@ export const columns: ColumnDef<Person>[] = [
         cell: (info: any) => { return (<div className="py-1"><Progress value={info.getValue()} className="flex justify-center" /></div>) },
         enableSorting: false,
         enableColumnFilter: false,
-        size: 106
+        size: 160
     },
 ]

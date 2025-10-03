@@ -4,47 +4,24 @@ import {
     useReactTable,
     getPaginationRowModel,
 } from '@tanstack/react-table';
-import React, { Fragment, useCallback, useMemo, useRef, useState } from 'react';
+import React, { Fragment, lazy, Suspense, useMemo, useState } from 'react';
 import { columns } from './HandleApiCall/columns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FaSortUp, FaSortDown } from "react-icons/fa6";
 import { useQuery } from '@tanstack/react-query';
-import { fetchData } from './HandleApiCall/Apicall';
-import FilterSearch from '../UUID_Details/HandleApiCall/FilterSearch';
-import { endOfYesterday, format } from 'date-fns';
-import type { DateRange } from "react-day-picker";
+import { fetchData } from '../Object_Details/HandleApiCall/Apicall'; 
+import useWindowSize from '@/hooks/usescreen';
+import { FiFilter } from "react-icons/fi";
+import { MdOutlineFilterAltOff } from "react-icons/md";
+const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
 
-interface DateInterface {
-    from: Date; // Assuming the dates are in string format
-    to: Date;
-}
-
-const dateStart = endOfYesterday();
-const initialDateRange: DateInterface = {
-    from: dateStart,
-    to: new Date(),
-};
-
+ 
 const Tabledata = () => {
     const [Filter, setFilter] = useState<any>({ id: "", value: "" });
-    const [Requeststatus, setRequeststatus] = useState<[]>([]);
-    const [Requesttype, setRequestType] = useState<[]>([]);
-    const [openSearch, setSearchTag] = useState<any[]>([]);
-    const [date, setDate] = useState<DateRange | undefined>(initialDateRange);
-    const MediaArr = [
-        { value: "Completed", label: "Completed", },
-        { value: "Aborted", label: "Aborted", },
-        { value: "Cancelled", label: "Cancelled", },
-        { value: "Processing", label: "Processing", },
-        { value: "Waiting for Resources", label: "Waiting", },
-    ]
-    const TypeArr = [
-        { value: "ARCHIVE", label: "ARCHIVE", },
-        { value: "RESTORE", label: "RESTORE", },
-        { value: "COPY", label: "COPY", },
-        { value: "Delete", label: "DELETE", },
-        { value: "PARTIAL_RESTORE", label: "PARTIAL RESTORE", },
-    ]
+    const [dropdownOpen, setDropdownOpen] = useState([]);
+    const [openSearch, setSearchTag] = useState<any[]>([]); 
+    const { width } = useWindowSize();
+
     const { data, isLoading, refetch, error } = useQuery({
         queryKey: ['requestData'],
         queryFn: () => {
@@ -55,8 +32,6 @@ const Tabledata = () => {
         refetchInterval: 20000,
         retry: false
     });
-
-
 
     const tableData = useMemo(() =>
         (isLoading === true ? Array(10).fill({}) : data),
@@ -80,17 +55,15 @@ const Tabledata = () => {
 
 
     const table = useReactTable({
-        data: tableData ?? [],
+        data: tableData || [],
         columns: tableColumns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         manualPagination: true,
         enableColumnResizing: true,
         columnResizeMode: 'onChange',
-        enableMultiRowSelection: false,
-        manualSorting: true,
-        enableSortingRemoval: false, //Don't allow - default on/true 
     });
+
     function clearFilter(idHeader: string) {
         setFilter({ id: idHeader, value: "" })
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
@@ -102,35 +75,39 @@ const Tabledata = () => {
         setFilter({ id: idHeader, value: value });
     };
 
-    return (<>
+    const openSearchBtn = (Value: any, header: any) => {
+        const add: any = { value: Value };
+        const check: any = Value;
+
+        setDropdownOpen((prev: any) => {
+            if (prev.some((val: any) => (val.value === Value))) return prev;
+            else {
+                return [...prev, add];
+            }
+        });
+
+        setSearchTag((prev: any) => {
+            if (prev.some((val: any) => (val === Value))) return prev;
+            else {
+                return [...prev, check];
+            }
+        });
+    };
+
+    function closeDropMenu(idHeader: string) {
+        setDropdownOpen((old) => old.filter((d: any) => d.value !== idHeader));
+        setSearchTag((old) => old.filter((d: any) => d !== idHeader));
+    };
+
+    return (
         <div
-            className="h-[94%] 2xl:w-[100%] lg:w-full overflow-auto lg:text-sm 2xl:text-base"
-            style={{ direction: table.options.columnResizeDirection }} 
+            className="h-[93%] 2xl:w-[100%] lg:w-full overflow-auto"
+            style={{ direction: table.options.columnResizeDirection }}
         >
-            {/* <table className='w-full' >
+            <table className={"w-full "} style={{ width: table.getTotalSize() < width ? "100%" : table.getTotalSize(), }}>
                 <thead>
                     {table.getHeaderGroups().map(headerGroup => (
                         <Fragment key={headerGroup.id}>
-                            <tr>
-                                {headerGroup.headers.map(header => {
-                                    console.log(headerGroup.headers)
-                                    return (
-                                        <th
-                                            key={header.id}
-                                            colSpan={header.colSpan}
-                                            className="px-1 py-1 sticky top-0 bg-slate-100 dark:bg-[#24303f] z-10"
-                                        >
-                                            {header.column.getCanFilter() ? (
-                                                <FilterSearch column={header.column} media={MediaArr} type={TypeArr} headerid={header.id} handleInputChange={handleInputChange}
-                                                    Filter={Filter} clearFilter={clearFilter} date={date} setDate={setDate} setRequeststatus={setRequeststatus}
-                                                    Requeststatus={Requeststatus} Requesttype={Requesttype} setRequestType={setRequestType} />
-
-                                            ) : null}
-
-                                        </th>)
-                                }
-                                )}
-                            </tr>
                             <tr>
                                 {headerGroup.headers.map(header => {
                                     return (
@@ -145,15 +122,34 @@ const Tabledata = () => {
                                                     className={`flex items-center hover:border-r hover:border-[#414954] ${header.column.getCanFilter() ? 'w-[100%]' : 'w-[100%]'}`}
                                                     onClick={header.column.getToggleSortingHandler()}
                                                 >
-                                                    <span className='w-[70%]'> {flexRender(header.column.columnDef.header, header.getContext())}</span>
-                                                    <span className="pt-1 w-[30%] flex justify-end ">
+                                                    <span className='flex justify-between w-full'>
+                                                        {flexRender(header.column.columnDef.header, header.getContext())}
                                                         {{
-                                                            asc: <FaSortUp className="h-4 w-4 font-bold" />,
-                                                            desc: <FaSortDown className="h-4 w-4 font-bold" />,
+                                                            asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
+                                                            desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
                                                         }[header.column.getIsSorted() as string] ?? null}
                                                     </span>
                                                 </span>
+                                                <div className="flex justify-end items-center">
+                                                    {header.column.getCanFilter() &&
+                                                        (openSearch.includes(header.id) ? (
+                                                            <MdOutlineFilterAltOff
+                                                                className={` pt-1 h-[25px] w-[25px] `}
+                                                                onClick={() => {
+                                                                    closeDropMenu(header.id);
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <FiFilter
+                                                                className={` pt-1 h-[25px] w-[25px]  `}
+                                                                onClick={() => {
+                                                                    openSearchBtn(header.id, header);
+                                                                }}
+                                                            />
+                                                        ))}
+                                                </div>
                                             </div>
+
                                             {header.column.getCanResize() && (
                                                 <div
                                                     onDoubleClick={() => header.column.resetSize()}
@@ -167,68 +163,31 @@ const Tabledata = () => {
                                     )
                                 })}
                             </tr>
-                        </Fragment>
-                    ))}
-                </thead>
-                <tbody>
-                    {table.getRowModel().rows.map(row => {
-                        return (
-                            <tr
-                                key={row.index}
-                                id={`row-${row.index}`}
-                                className={`font-medium h-7  text-white odd:bg-[#24303f] h-7  even:bg-[#2d3d52]`}
-                            >
-                                {row.getVisibleCells().map(cell => {
-                                    return (
-                                        <td key={cell.id} style={{ width: cell.column.getSize() }} className='px-1'>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </td>
-                                    )
-                                })}
-                            </tr>
-                        )
-                    })}
-                </tbody>
-            </table> */}
-            <table className='w-full' >
-                <thead>
-                    {table.getHeaderGroups().map(headerGroup => (
-                        <Fragment key={headerGroup.id}>
-                            <tr>
+                            <tr key={headerGroup.id}>
                                 {headerGroup.headers.map(header => {
                                     return (
                                         <th
                                             key={header.id}
                                             colSpan={header.colSpan}
-                                            style={{ position: 'relative', width: header.getSize(), fontSize: "clamp(0.8rem, 1.5vw, 1rem)" }}
+                                            style={{ position: 'relative', width: header.getSize() }}
                                             className="th select-none px-1.5 text-black dark:text-white sticky top-0 dark:bg-[#2d3d52] bg-slate-50 dark:drop-shadow-1 drop-shadow-md"
                                         >
-                                            <div className="flex justify-between items-center w-full">
-                                                <span
-                                                    className={`flex items-center hover:border-r hover:border-[#414954] ${header.column.getCanFilter() ? 'w-[100%]' : 'w-[100%]'}`}
-                                                    onClick={header.column.getToggleSortingHandler()}
-                                                >
-                                                    <span className='w-[70%]'> {flexRender(header.column.columnDef.header, header.getContext())}</span>
-                                                    <span className="pt-1 w-[30%] flex justify-end ">
-                                                        {{
-                                                            asc: <FaSortUp className="h-4 w-4 font-bold" />,
-                                                            desc: <FaSortDown className="h-4 w-4 font-bold" />,
-                                                        }[header.column.getIsSorted() as string] ?? null}
-                                                    </span>
-                                                </span>
-                                            </div>
-                                            {header.column.getCanResize() && (
-                                                <div
-                                                    onDoubleClick={() => header.column.resetSize()}
-                                                    onMouseDown={header.getResizeHandler()}
-                                                    onTouchStart={header.getResizeHandler()}
-                                                    className={`resizer ${header.column.getIsResizing() ? 'isResizing' : ''
-                                                        }`}
-                                                ></div>
-                                            )}
+                                            {dropdownOpen?.map((val: any) => {
+                                                if (val.value === header.id)
+                                                    return (
+                                                        <Fragment key={val.value}>
+                                                            <Suspense fallback={""} >
+                                                                <ColumnFilterDropdown
+                                                                    header={header}
+                                                                    handleInputChange={handleInputChange}
+                                                                    Filter={Filter}
+                                                                    isOpen={openSearch.includes(header.id)}
+                                                                    onClear={clearFilter}
+                                                                /> </Suspense>
+                                                        </Fragment>
+                                                    )
+                                            })}
+
                                         </th>
                                     )
                                 })}
@@ -259,8 +218,7 @@ const Tabledata = () => {
                     })}
                 </tbody>
             </table>
-        </div >
-    </>
+        </div>
     )
 }
 

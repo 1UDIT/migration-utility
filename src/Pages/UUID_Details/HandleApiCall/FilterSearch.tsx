@@ -37,18 +37,19 @@ declare module '@tanstack/react-table' {
 }
 
 interface props {
-  column: Column<any, unknown>,
-  headerid: string,
-  handleInputChange: any,
-  Filter: any,
-  clearFilter: (idHeader: string) => void,
-  date: DateRange | undefined,
-  setDate: React.Dispatch<React.SetStateAction<DateRange | undefined>>,
-  setRequeststatus: React.Dispatch<React.SetStateAction<any>>
-  Requeststatus: any
-  setRequestType: React.Dispatch<React.SetStateAction<any>>
-  Requesttype: any,
+  column: Column<any, unknown>;
+  headerid: string;
+  handleInputChange: any;
+  Filter: any;
+  clearFilter: (idHeader: string) => void;
+  date?: DateRange;
+  setDate?: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
+  setRequeststatus?: React.Dispatch<React.SetStateAction<any>>;
+  Requeststatus?: any;
+  setRequestType?: React.Dispatch<React.SetStateAction<any>>;
+  Requesttype?: any;
 }
+
 
 const customStyles = {
   control: (base: any, state: any) => ({
@@ -139,7 +140,6 @@ const customStyles = {
 const ValueContainer = ({ children, ...props }: ValueContainerProps) => {
   const { getValue } = props;
   const selectedValues: any = getValue();
-  console.log(selectedValues, "ValueContainer");
   return (
     <components.ValueContainer {...props} className='text-sm'>
       {children}
@@ -150,8 +150,7 @@ const ValueContainer = ({ children, ...props }: ValueContainerProps) => {
 
 
 export const Filter = ({
-  column, headerid, handleInputChange, Filter, clearFilter, date, setDate, setRequeststatus, Requeststatus,
-  Requesttype, setRequestType,
+  column, headerid, handleInputChange, clearFilter, date,
 }: props) => {
   const columnFilterValue = column.getFilterValue();
   const meta = column.columnDef.meta ?? {};
@@ -162,7 +161,6 @@ export const Filter = ({
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [filters, setFilters] = useState({})
 
-  console.log(filters, "filter")
 
   // NEW: generic select content (no switch on headerid / accessorKey)
   const renderSelect = () => {
@@ -195,7 +193,6 @@ export const Filter = ({
       return null;
     })();
 
-    console.log("current", current, "meta", meta.options, "columnFilterValue", columnFilterValue)
 
     return (
       <Select

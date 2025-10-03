@@ -93,7 +93,7 @@ export const columns: ColumnDef<Person>[] = [
             )
         },
         cell: (info: any) => { return (<div className="text-right" title={info.getValue()}>{info.getValue()}</div>) },
-        size: 65,
+        size: 140,
         minSize: 45,
         enableResizing: false,
         sortDescFirst: true,
