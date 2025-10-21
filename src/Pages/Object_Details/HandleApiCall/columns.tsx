@@ -151,7 +151,7 @@ export const columns: ColumnDef<Person>[] = [
         meta: {
             filterVariant: 'calender',
         },
-        size: 170
+        size: 120
     },
     {
         accessorKey: 'divaInstanceNB',
@@ -169,7 +169,7 @@ export const columns: ColumnDef<Person>[] = [
         meta: {
             filterVariant: 'select',
         },
-        size: 100
+        size: 130
     },
     {
         accessorKey: 'ddnPath',
@@ -233,7 +233,7 @@ export const columns: ColumnDef<Person>[] = [
         cell: (info: any) => { return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>) },
         enableSorting: false,
         enableColumnFilter: false,
-        size: 650
+        size: 350
     },
     {
         accessorKey: 'isMatched',
@@ -249,7 +249,7 @@ export const columns: ColumnDef<Person>[] = [
         cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },
         enableSorting: false,
         enableColumnFilter: false,
-        size: 55
+        size: 160
     },
     // {
     //     accessorKey: 'fileName',
@@ -281,7 +281,7 @@ export const columns: ColumnDef<Person>[] = [
         cell: (info: any) => { return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>) },
         enableSorting: false,
         enableColumnFilter: false,
-        size: 60
+        size: 160
     },
     {
         accessorKey: 'status',

@@ -1,8 +1,7 @@
 import { Progress } from "@/components/ui/progress"
 import { FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
-import { GrInProgress } from "react-icons/gr";
-import { Button } from "@/components/ui/button";
-import { MdCancel } from "react-icons/md";
+import { MdOutlinePendingActions } from "react-icons/md";
+import { Button } from "@/components/ui/button"; 
 import { HiArrowPath } from "react-icons/hi2";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -20,7 +19,7 @@ export type Person = {
 
 const statusCall = (status: string) => {
     switch (status) {
-        case "COMPLETED":
+        case "COMPLTED":
             return (
                 <span className='flex cols-2 '>
                     <div className="col-span-1 pr-1">
@@ -31,18 +30,18 @@ const statusCall = (status: string) => {
                     </div>
                 </span>
             )
-        case "Aborted":
+        case "PARTIAL":
             return (
                 <span className='flex cols-2  '>
                     <div className="col-span-1 pr-1">
                         <FaExclamationCircle className='text-[#ff3842] inline-block ' />
                     </div>
                     <div className="col-span-1">
-                        Aborted
+                        PARTIAL
                     </div>
                 </span>
             )
-        case "INPROGRESS":
+        case "IN PROGRESS":
             return (
                 <span className='flex cols-2  '>
                     <div className="col-span-1 pr-1">
@@ -57,21 +56,10 @@ const statusCall = (status: string) => {
             return (
                 <span className='flex cols-2  '>
                     <div className="col-span-1 pr-1">
-                        <GrInProgress className='text-[#28a5ad] inline-block animate-spin-slow' />
+                        <MdOutlinePendingActions className='text-[#06b3ac] inline-block' />
                     </div>
                     <div className="col-span-1">
-                        Waiting
-                    </div>
-                </span>
-            )
-        case "ERROR":
-            return (
-                <span className='flex cols-2  '>
-                    <div className="col-span-1 pr-1">
-                        <MdCancel className='text-[#ff3842] inline-block' />
-                    </div>
-                    <div className="col-span-1">
-                        Cancelled
+                        PENDING
                     </div>
                 </span>
             )
@@ -98,7 +86,7 @@ export const columns: ColumnDef<Person>[] = [
         size: 460
     },
     {
-        accessorKey: 'UUID_path',
+        accessorKey: 'UUIDPath',
         cell: (info: any) => { return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>) },
         header: ({ column }) => {
             return (<>
@@ -113,15 +101,14 @@ export const columns: ColumnDef<Person>[] = [
         size: 320
     },
     {
-        accessorKey: 'total_file_size',
+        accessorKey: 'mediaType',
         cell: (info: any) => { return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>) },
         header: ({ column }) => {
             return (
                 <Button
                     variant="ghost" className="font-bold tableHeaderSize"
                 >
-                    Total Size
-
+                    Media Type
                 </Button>
             )
         },
@@ -129,7 +116,7 @@ export const columns: ColumnDef<Person>[] = [
         size: 120
     },
     {
-        accessorKey: 'total_file_count',
+        accessorKey: 'totalObjectSize',
         cell: (info: any) => {
             return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
         },
@@ -138,7 +125,7 @@ export const columns: ColumnDef<Person>[] = [
                 <Button
                     variant="ghost" className="font-bold tableHeaderSize"
                 >
-                    Migrated File
+                    Object Size
                 </Button>
             )
         },
@@ -146,55 +133,32 @@ export const columns: ColumnDef<Person>[] = [
         enableColumnFilter: false,
     },
     {
-        accessorKey: 'migrated_file_count',
+        accessorKey: 'migratedObjectSize',
         header: ({ column }) => {
             return (
-                <Button
-                    variant="ghost" className="font-bold tableHeaderSize"
-                >
-                    File Count
-
+                <Button variant="ghost" className="font-bold tableHeaderSize">
+                    Migrated Object Size
                 </Button>
             )
         },
         cell: (info: any) => {
             return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
         },
-        size: 130,
+        size: 190,
         minSize: 40,
-        enableColumnFilter:false
+        enableColumnFilter: false
     },
-    // {
-    //     accessorKey: 'migrated_file_size',
-    //     cell: (info: any) => { return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>) },
-    //     header: ({ column }) => {
-    //         return (
-    //             <Button
-    //                 variant="ghost" className="font-bold tableHeaderSize "
-    //             >
-    //                 Migrated Size
-    //             </Button>
-    //         )
-    //     },
-    //     meta: {
-    //         filterVariant: 'select',
-    //     },
-    //     size: 60,
-    //     minSize: 70,
-    // },
     {
-        accessorKey: 'migration_status',
+        accessorKey: 'totalObjectCount',
         header: ({ column }) => {
             return (
-                <Button
-                    variant="ghost" className="font-bold tableHeaderSize"
-                >
-                    Status
+                <Button variant="ghost" className="font-bold tableHeaderSize">
+                    Object Count
                 </Button>
             )
         },
         cell: (info: any) => {
-            return (<span className="tableHeaderSize" title={info.getValue()}>{statusCall(info.getValue())}</span>)
+            return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>)
         },
         meta: {
             filterVariant: 'select',
@@ -206,22 +170,39 @@ export const columns: ColumnDef<Person>[] = [
         },
         enableSorting: false,
         enableColumnFilter: true,
-        size: 120
+        size: 160
     },
     {
-        accessorKey: 'Migration_Start_Date',
+        accessorKey: 'migratedObjectCount',
         header: ({ column }) => {
             return (
                 <Button
                     variant="ghost" className="font-bold tableHeaderSize"
                 >
-                    Migration Start Date
+                    Migrated Object Count
                 </Button>
             )
         },
         cell: (info: any) => {
-            return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>{info.getValue()?.split("T")[0]}</span>)
+            // return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>{info.getValue()?.split("T")[0]}</span>)
+            return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
+        }, 
+        enableSorting: false,
+        enableColumnFilter: true,
+        size: 210
+    }, 
+    {
+        accessorKey: 'startDate',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    Start Date
+                </Button>
+            )
         },
+        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },        
         meta: {
             filterVariant: 'calender',
             calendarMode: 'range',
@@ -233,119 +214,85 @@ export const columns: ColumnDef<Person>[] = [
         size: 210
     },
     {
-        accessorKey: 'Migration_End_Date',
+        accessorKey: 'endDate',
         header: ({ column }) => {
             return (
                 <Button
                     variant="ghost" className="font-bold tableHeaderSize"
                 >
-                    Migration End Date
+                    End Date
                 </Button>
             )
         },
-        cell: (info: any) => {
-            return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>{info.getValue()?.split("T")[0]}</span>)
-        },
+        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },  
+        enableSorting: false,
+        enableColumnFilter: true,
+        size: 210,        
         meta: {
             filterVariant: 'calender',
             calendarMode: 'range',
             numberOfMonths: 2,
             placeholder: 'Pick date',
         },
-        enableSorting: false,
-        enableColumnFilter: true,
-        size: 210
     },
     {
-        accessorKey: 'Invoice_Generated',
+        accessorKey: 'migrationSizeProgressPercent',
         header: ({ column }) => {
             return (
                 <Button
                     variant="ghost" className="font-bold tableHeaderSize"
                 >
-                    Invoice ID
+                    Migration Size Progress
+                </Button>
+            )
+        },
+        cell: (info: any) => { return (<div className="py-1"><Progress value={info.getValue()} className="flex justify-center" /></div>) },
+        enableSorting: false,
+        enableColumnFilter: false,
+        size: 220
+    },
+    {
+        accessorKey: 'migrationCountProgressPercent',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    Migration Count Progress
+                </Button>
+            )
+        },
+        cell: (info: any) => { return (<div className="py-1"><Progress value={info.getValue()} className="flex justify-center" /></div>) },
+        enableSorting: false,
+        enableColumnFilter: false,
+        size: 220
+    },
+    {
+        accessorKey: 'failedObjectCount',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize "
+                >
+                    Failed Object Count
                 </Button>
             )
         },
         cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },
         enableSorting: false,
         enableColumnFilter: false,
-        size: 135
+        size: 160
     },
     {
-        accessorKey: 'Invoice_Generation_Date',
+        accessorKey: 'migrationState',
         header: ({ column }) => {
             return (
-                <Button
-                    variant="ghost" className="font-bold tableHeaderSize"
-                >
-                    No. of file Migrated
+                <Button variant="ghost" className="font-bold tableHeaderSize">
+                    Migration State
                 </Button>
             )
         },
-        cell: (info: any) => {
-            return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>0</span>)
-        },
-        enableSorting: false,
-        enableColumnFilter: true,
-        size: 190,
-        // meta: {
-        //     filterVariant: 'calender',
-        //     calendarMode: 'range',
-        //     numberOfMonths: 2,
-        //     placeholder: 'Pick date',
-        // },
-    },
-    {
-        accessorKey: 'Verified',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost" className="font-bold tableHeaderSize"
-                >
-                    Verified
-                </Button>
-            )
-        },
-        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },
-        enableSorting: false,
-        enableColumnFilter: true,
-        meta: {
-            filterVariant: 'select',
-            selectOptions: [{ label: 'Y', value: 'Y' }, { label: 'N', value: 'N' }],
-        },
-        size: 115
-    },
-    // {
-    //     accessorKey: 'Remarks',
-    //     header: ({ column }) => {
-    //         return (
-    //             <Button
-    //                 variant="ghost" className="font-bold tableHeaderSize"
-    //             >
-    //                 Remarks
-    //             </Button>
-    //         )
-    //     },
-    //     cell: (info: any) => {
-    //         return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
-    //     },
-    //     enableSorting: false,
-    //     enableColumnFilter: false,
-    //     size: 55
-    // },
-    {
-        accessorKey: 'migration_progress_percent',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost" className="font-bold tableHeaderSize "
-                >
-                    Progress
-                </Button>
-            )
-        },
-        cell: (info: any) => { return (<div className="py-1"><Progress value={info.getValue()} className="flex justify-center" /></div>) },
+        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{statusCall(info.getValue())}</div>) },
         enableSorting: false,
         enableColumnFilter: false,
         size: 160

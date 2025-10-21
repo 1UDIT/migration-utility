@@ -10,16 +10,26 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { FaSortUp, FaSortDown } from "react-icons/fa6";
 import { useQuery } from '@tanstack/react-query';
 import { fetchData } from '../Object_Details/HandleApiCall/Apicall';
-import { endOfYesterday, } from 'date-fns'; 
 import useWindowSize from '@/hooks/usescreen';
 import { FiFilter } from "react-icons/fi";
 import { MdOutlineFilterAltOff } from "react-icons/md";
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
- 
+import {
+    Menu,
+    Item,
+    Separator,
+    Submenu,
+    useContextMenu
+} from "react-contexify";
+
+import "react-contexify/dist/ReactContexify.css";
+
+const MENU_ID = "menu-id";
+
 const Tabledata = () => {
     const [Filter, setFilter] = useState<any>({ id: "", value: "" });
     const [dropdownOpen, setDropdownOpen] = useState([]);
-    const [openSearch, setSearchTag] = useState<any[]>([]); 
+    const [openSearch, setSearchTag] = useState<any[]>([]);
     const { width } = useWindowSize();
     const { data, isLoading, refetch, error } = useQuery({
         queryKey: ['requestData'],
@@ -31,8 +41,22 @@ const Tabledata = () => {
         refetchInterval: 20000,
         retry: false
     });
-    
 
+    const { show } = useContextMenu({
+        id: MENU_ID
+    });
+
+    function displayMenu(e:any) {
+        // put whatever custom logic you need
+        // you can even decide to not display the Menu
+        show({
+            event: e,
+        });
+    }
+
+    function handleItemClick({ event, props, triggerEvent, data }:any) {
+        console.log(event, props, triggerEvent, data);
+    }
 
     const tableData = useMemo(() =>
         (isLoading === true ? Array(10).fill({}) : data),
@@ -108,7 +132,7 @@ const Tabledata = () => {
             <table className={"w-full "} style={{ width: table.getTotalSize() < width ? "100%" : table.getTotalSize(), }}>
                 <thead>
                     {table.getHeaderGroups().map(headerGroup => (
-                        <Fragment key={headerGroup.id}> 
+                        <Fragment key={headerGroup.id}>
                             <tr>
                                 {headerGroup.headers.map(header => {
                                     return (
@@ -194,7 +218,7 @@ const Tabledata = () => {
                                 })}
                             </tr>
                         </Fragment>
-                    ))} 
+                    ))}
                 </thead>
                 <tbody>
                     {table.getRowModel().rows.map(row => {
@@ -203,6 +227,7 @@ const Tabledata = () => {
                                 key={row.index}
                                 id={`row-${row.index}`}
                                 className={`font-medium h-7  text-white odd:bg-[#24303f] h-7  even:bg-[#2d3d52]`}
+                                onContextMenu={(e:any)=>(row.original as any).migrationState==="PARTIAL"?displayMenu(e):null}
                             >
                                 {row.getVisibleCells().map(cell => {
                                     return (
@@ -219,6 +244,12 @@ const Tabledata = () => {
                     })}
                 </tbody>
             </table>
+
+            <Menu id={MENU_ID}>
+                <Item onClick={handleItemClick}>
+                    Download Report
+                </Item>                
+            </Menu>
         </div>
     )
 }
