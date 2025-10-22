@@ -130,6 +130,7 @@ export const columns: ColumnDef<Person>[] = [
             )
         },
         size: 120,
+        minSize:70,
         enableColumnFilter: false,
     },
     {
@@ -145,7 +146,7 @@ export const columns: ColumnDef<Person>[] = [
             return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
         },
         size: 190,
-        minSize: 40,
+        minSize: 60,
         enableColumnFilter: false
     },
     {
@@ -160,14 +161,7 @@ export const columns: ColumnDef<Person>[] = [
         cell: (info: any) => {
             return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>)
         },
-        meta: {
-            filterVariant: 'select',
-            selectOptions: [
-                { label: 'Active', value: 'Active' },
-                { label: 'Inactive', value: 'Inactive' },
-                { label: 'Pending', value: 'Pending' },
-            ],
-        },
+        
         enableSorting: false,
         enableColumnFilter: true,
         size: 160
@@ -294,7 +288,15 @@ export const columns: ColumnDef<Person>[] = [
         },
         cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{statusCall(info.getValue())}</div>) },
         enableSorting: false,
-        enableColumnFilter: false,
-        size: 160
+        enableColumnFilter: true,
+        meta: {
+            filterVariant: 'select',
+            selectOptions: [
+                { label: 'Active', value: 'Active' },
+                { label: 'Inactive', value: 'Inactive' },
+                { label: 'Pending', value: 'Pending' },
+            ],
+        },
+        size: 180
     },
 ]

@@ -17,9 +17,7 @@ const ColumnFilterDropdown: React.FC<ColumnFilterDropdownProps> = ({
   handleInputChange,
 }) => {
   return (
-    <div className="flex justify-end items-center">
-       
-
+    <div className="flex items-center">      
       {isOpen && (
         <Suspense fallback={null}>
           <FilterSearch

@@ -52,6 +52,11 @@ interface props {
 
 
 const customStyles = {
+  container: (base: any) => ({
+    ...base,
+    width: '165px',
+    padding: "1px"
+  }),
   control: (base: any, state: any) => ({
     ...base,
     backgroundColor: "#2d3d52",
@@ -140,9 +145,18 @@ const customStyles = {
 const ValueContainer = ({ children, ...props }: ValueContainerProps) => {
   const { getValue } = props;
   const selectedValues: any = getValue();
+
   return (
-    <components.ValueContainer {...props} className='text-sm'>
-      {children}
+    <components.ValueContainer {...props}>
+      {selectedValues.length > 0 ? (
+        <>
+          <span>{selectedValues[0].label}
+            {selectedValues.length > 1 && <span> ...</span>}
+          </span>
+        </>
+      ) : (
+        children
+      )}
     </components.ValueContainer>
   );
 };
@@ -159,7 +173,6 @@ export const Filter = ({
   const nextMonth = addMonths(today, -1);
   const dateStart = endOfYesterday();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [filters, setFilters] = useState({})
 
 
   // NEW: generic select content (no switch on headerid / accessorKey)
@@ -268,101 +281,188 @@ export const Filter = ({
   //   }
   // }
 
+  // const renderCalendar = () => {
+  //   const {
+  //     calendarMode = 'single',
+  //     numberOfMonths = 2, 
+  //   } = meta;
+
+  //   const fv = column.getFilterValue();
+
+
+  //   const selectedRange: DateRange | undefined =
+  //     calendarMode === 'range'
+  //       ? (fv && typeof fv === 'object' && 'from' in (fv as any)
+  //         ? (fv as DateRange)
+  //         : undefined)
+  //       : undefined;
+
+  //   const clear = () => column.setFilterValue(undefined);
+
+  //   // Responsive width: roomy for 2 months
+  //   const contentWidthClass =
+  //     numberOfMonths > 1 ? 'w-[560px] max-w-[95vw]' : 'w-[340px] max-w-[95vw]';
+
+  //   return (
+  //     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+  //       <div className="grid grid-cols-6 w-full h-7 text-white bg-[#2d3d52] font-bold border border-orange-500 rounded-md">
+  //         <PopoverTrigger asChild className="col-span-5 py-1">
+  //           <Button id="date" className='pl-1 text-white bg-transparent hover:bg-transparent'>
+  //             {date?.from ? (
+  //               date.to ? (
+  //                 <span className='whitespace-nowrap text-ellipsis overflow-hidden'>
+  //                   {format(date.from, "LLL dd, y")} -{" "}
+  //                   {format(date.to, "LLL dd, y")}
+  //                 </span>
+  //               ) : (
+  //                 format(date.from, "LLL dd, y")
+  //               )
+  //             ) : (
+  //               <span>Pick a date</span>
+  //             )}
+  //           </Button>
+  //         </PopoverTrigger>
+  //         <div className="col-span-1 flex justify-end mt-1">
+  //           <MdOutlineCancel className="h-5 w-5" onClick={clear} />
+  //         </div>
+  //       </div>
+
+  //       <PopoverContent align="center" className={`bg-[#2d3d52]  ${contentWidthClass}`}>
+  //         <Calendar
+  //           mode="range"
+  //           numberOfMonths={numberOfMonths}
+  //           defaultMonth={
+  //             selectedRange?.from
+  //               ? selectedRange.from
+  //               : addMonths(new Date(), -1) // fallback to 1 month before today
+  //           }
+  //           selected={selectedRange}
+  //           onSelect={(date) => {
+  //             if (!date) return 
+  //           }}
+  //           required={false}
+  //           // className="w-full shadow-sm bg-[#2d3d52]"
+  //           classNames={{
+  //             day: "h-9 w-9 text-sm flex items-center justify-center rounded-md hover:bg-orange-500/30",
+  //           }}
+  //         />
+  //         {/* <Calendar
+  //           mode="range"
+  //           defaultMonth={
+  //             selectedRange?.from
+  //               ? selectedRange.from
+  //               : addMonths(new Date(), -1) // fallback to 1 month before today
+  //           }
+  //           selected={selectedRange}
+  //           onSelect={(date) => {
+  //             if (!date) return
+  //             setFilters((prev) => ({
+  //               ...prev,
+  //               [column.id]: date, // store date under header id
+  //             }))
+  //           }}
+  //           numberOfMonths={2}
+  //           className="rounded-lg border shadow-sm"
+  //         /> */}
+  //       </PopoverContent>
+  //     </Popover>
+  //   );
+  // };
+
   const renderCalendar = () => {
     const {
-      calendarMode = 'single',
+      calendarMode = 'range',
       numberOfMonths = 2,
-      dateFormat = 'LLL dd, y',
-      placeholder = 'Pick a date',
-      datePresets = [],
+      dateFormat = "LLL dd, y",
     } = meta;
 
     const fv = column.getFilterValue();
-
-    // Normalize selected values per mode
-    const selectedSingle: Date | undefined =
-      calendarMode === 'single'
-        ? (fv instanceof Date ? fv : fv ? new Date(fv as any) : undefined)
-        : undefined;
-
     const selectedRange: DateRange | undefined =
-      calendarMode === 'range'
-        ? (fv && typeof fv === 'object' && 'from' in (fv as any)
-          ? (fv as DateRange)
-          : undefined)
+      calendarMode === 'range' && fv && typeof fv === 'object' && 'from' in fv
+        ? (fv as DateRange)
         : undefined;
 
-    const labelText =
-      calendarMode === 'single'
-        ? (selectedSingle ? format(selectedSingle, dateFormat) : placeholder)
-        : (selectedRange?.from
-          ? (selectedRange.to
-            ? `${format(selectedRange.from, dateFormat)} - ${format(
-              selectedRange.to,
-              dateFormat
-            )}`
-            : format(selectedRange.from, dateFormat))
-          : placeholder);
+    const clear = () => {
+      column.setFilterValue(undefined);
+      setIsPopoverOpen(false);
+    };
 
-    const clear = () => column.setFilterValue(undefined);
+    const handleSelect = (date: DateRange | Date | undefined) => {
+      if (!date) return;
 
-    // Responsive width: roomy for 2 months
+      if (calendarMode === 'single') {
+        // store a single date (you can also wrap as { from: d, to: d } if your filter expects a range)
+        const d = date as Date;
+        column.setFilterValue(d);
+        handleInputChange(d, headerid, column);  // <-- keep external filter state keyed by header id
+      } else {
+        // range picker
+        const r = date as DateRange;
+        column.setFilterValue(r);
+        handleInputChange(r, headerid, column);  // <-- same here
+      }
+    };
+
     const contentWidthClass =
-      numberOfMonths > 1 ? 'w-[560px] max-w-[95vw]' : 'w-[340px] max-w-[95vw]';
+      numberOfMonths > 1 ? 'w-[550px] max-w-[95vw]' : 'w-[320px] max-w-[95vw]';
 
     return (
       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-        <div className="grid grid-cols-6 w-full h-7 text-white bg-[#2d3d52] font-bold border border-orange-500 rounded-md">
-          <PopoverTrigger asChild className="col-span-5 py-1">
-            <Button id="date" className='pl-1 text-white'>
-              {date?.from ? (
-                date.to ? (
-                  <span className='whitespace-nowrap text-ellipsis overflow-hidden'>
-                    {format(date.from, "LLL dd, y")} -{" "}
-                    {format(date.to, "LLL dd, y")}
+        <div className="flex items-center w-full h-8 text-white bg-[#2d3d52] border border-orange-500 rounded-md">
+          <PopoverTrigger asChild>
+            <Button
+              id="date"
+              className="flex-1 justify-start text-white text-sm bg-transparent hover:bg-transparent px-2 py-1 h-8"
+            >
+              {fv && (fv as DateRange).from ? (
+                (fv as DateRange).to ? (
+                  <span className="truncate">
+                    {format((fv as DateRange).from!, dateFormat)} -{' '}
+                    {format((fv as DateRange).to!, dateFormat)}
                   </span>
                 ) : (
-                  format(date.from, "LLL dd, y")
+                  format((fv as DateRange).from!, dateFormat)
                 )
               ) : (
-                <span>Pick a date</span>
+                <span className="text-muted-foreground">Pick a date</span>
               )}
             </Button>
           </PopoverTrigger>
-          <div className="col-span-1 flex justify-end mt-1">
-            <MdOutlineCancel className="h-5 w-5" onClick={clear} />
-          </div>
+
+          <MdOutlineCancel
+            className="mx-2 h-5 w-5 text-white cursor-pointer hover:text-orange-400"
+            onClick={clear}
+          />
         </div>
 
-        <PopoverContent align="center" className={`bg-[#2d3d52]  ${contentWidthClass}`}
+        <PopoverContent
+          align="center"
+          className={`p-2 bg-[#2d3d52] border border-orange-500 rounded-lg shadow-md ${contentWidthClass}`}
         >
           <Calendar
-            mode="range"
+            mode={calendarMode}
             numberOfMonths={numberOfMonths}
             defaultMonth={
               selectedRange?.from
                 ? selectedRange.from
-                : addMonths(new Date(), -1) // fallback to 1 month before today
+                : addMonths(new Date(), -1)
             }
             selected={selectedRange}
-            onSelect={(date) => {
-              if (!date) return
-              setFilters((prev) => ({
-                ...prev,
-                [column.id]: date, // store date under header id
-              }))
-            }}
-            required={false}
-            className="w-full shadow-sm bg-[#2d3d52]"
+            onSelect={handleSelect}
             classNames={{
-              day: "h-9 w-9 text-sm flex items-center justify-center rounded-md hover:bg-orange-500/30",
+              months: "flex gap-4",
+              month: "space-y-4",
+              caption: "text-sm text-white",
+              day: "h-9 w-9 text-sm flex items-center justify-center rounded-md hover:bg-orange-500/40 data-[selected]:bg-orange-500 data-[selected]:text-white",
+              day_selected: "bg-orange-500 text-white",
+              day_today: "border border-orange-400",
+              head_cell: "text-gray-300 font-medium text-xs",
             }}
           />
         </PopoverContent>
       </Popover>
     );
   };
-
 
 
 

@@ -3,6 +3,7 @@ import {
     getCoreRowModel,
     useReactTable,
     getPaginationRowModel,
+    type PaginationState,
 } from '@tanstack/react-table';
 import React, { Fragment, lazy, Suspense, useMemo, useState } from 'react';
 import { columns } from './HandleApiCall/columns';
@@ -23,6 +24,8 @@ import {
 } from "react-contexify";
 
 import "react-contexify/dist/ReactContexify.css";
+import { Button } from '@/components/ui/button';
+import Index from '@/components/Pagination/Index';
 
 const MENU_ID = "menu-id";
 
@@ -31,22 +34,38 @@ const Tabledata = () => {
     const [dropdownOpen, setDropdownOpen] = useState([]);
     const [openSearch, setSearchTag] = useState<any[]>([]);
     const { width } = useWindowSize();
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageIndex: 0,
+        pageSize: 50,
+    });
+
+    const body = {
+        "filters": {
+            "UUID": "",
+            "migratedObjectSize": "",
+            "sourceName": "",
+            "destinationName": "",
+            "objectName": "",
+            "status": ""
+        }
+    };
+
     const { data, isLoading, refetch, error } = useQuery({
-        queryKey: ['requestData'],
+        queryKey: ['uuidData', pagination],
         queryFn: () => {
-            const endpoint = `http://localhost:4000/uuids`
-            return fetchData<any>(endpoint);
+            const endpoint = `http://localhost:4000/uuids?page=${pagination.pageIndex}&limit=${pagination.pageSize}`;
+            return fetchData<any>(endpoint, "POST", body);
         },
         networkMode: 'always',
         refetchInterval: 20000,
-        retry: false
+        retry: false,
     });
 
     const { show } = useContextMenu({
         id: MENU_ID
     });
 
-    function displayMenu(e:any) {
+    function displayMenu(e: any) {
         // put whatever custom logic you need
         // you can even decide to not display the Menu
         show({
@@ -54,12 +73,12 @@ const Tabledata = () => {
         });
     }
 
-    function handleItemClick({ event, props, triggerEvent, data }:any) {
+    function handleItemClick({ event, props, triggerEvent, data }: any) {
         console.log(event, props, triggerEvent, data);
     }
 
     const tableData = useMemo(() =>
-        (isLoading === true ? Array(10).fill({}) : data),
+        (isLoading === true ? Array(10).fill({}) : data.data),
         [isLoading, data]
     );
 
@@ -87,6 +106,10 @@ const Tabledata = () => {
         manualPagination: true,
         enableColumnResizing: true,
         columnResizeMode: 'onChange',
+        onPaginationChange: setPagination,
+        state: {
+            pagination,
+        },
     });
 
     function clearFilter(idHeader: string) {
@@ -98,6 +121,7 @@ const Tabledata = () => {
     function handleInputChange(value: any, idHeader: string, column: any) {
         column.setFilterValue(value);
         setFilter({ id: idHeader, value: value });
+        console.log("Filter Value:", value, "Header ID:", idHeader);
     };
 
     const openSearchBtn = (Value: any, header: any) => {
@@ -125,132 +149,134 @@ const Tabledata = () => {
     };
 
     return (
-        <div
-            className="h-[93%] 2xl:w-[100%] lg:w-full overflow-auto"
-            style={{ direction: table.options.columnResizeDirection }}
-        >
-            <table className={"w-full "} style={{ width: table.getTotalSize() < width ? "100%" : table.getTotalSize(), }}>
-                <thead>
-                    {table.getHeaderGroups().map(headerGroup => (
-                        <Fragment key={headerGroup.id}>
-                            <tr>
-                                {headerGroup.headers.map(header => {
-                                    return (
-                                        <th
-                                            key={header.id}
-                                            colSpan={header.colSpan}
-                                            style={{ position: 'relative', width: header.getSize(), fontSize: "clamp(0.8rem, 1.5vw, 1rem)" }}
-                                            className="th select-none px-1.5 text-black dark:text-white sticky top-0 dark:bg-[#2d3d52] bg-slate-50 dark:drop-shadow-1 drop-shadow-md"
-                                        >
-                                            <div className="flex justify-between items-center w-full">
-                                                <span
-                                                    className={`flex items-center hover:border-r hover:border-[#414954] ${header.column.getCanFilter() ? 'w-[100%]' : 'w-[100%]'}`}
-                                                    onClick={header.column.getToggleSortingHandler()}
-                                                >
-                                                    <span className='flex justify-between w-full'>
-                                                        {flexRender(header.column.columnDef.header, header.getContext())}
-                                                        {{
-                                                            asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
-                                                            desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
-                                                        }[header.column.getIsSorted() as string] ?? null}
+        <>
+            <div
+                className="h-[93%] 2xl:w-[100%] lg:w-full overflow-auto"
+                style={{ direction: table.options.columnResizeDirection }}
+            >
+                <table className={"w-full "} style={{ width: table.getTotalSize() < width ? "100%" : table.getTotalSize(), }}>
+                    <thead className={`drop-shadow-1  bg-[#2d3d52]  z-50 `}>
+                        {table.getHeaderGroups().map(headerGroup => (
+                            <Fragment key={headerGroup.id}>
+                                <tr>
+                                    {headerGroup.headers.map(header => {
+                                        return (
+                                            <th
+                                                key={header.id}
+                                                colSpan={header.colSpan}
+                                                style={{ position: 'relative', width: header.getSize(), fontSize: "clamp(0.8rem, 1.5vw, 1rem)" }}
+                                                className="th select-none px-1.5 text-black dark:text-white sticky top-0 dark:bg-[#2d3d52] bg-slate-50 dark:drop-shadow-1 drop-shadow-md"
+                                            >
+                                                <div className="flex justify-between items-center w-full">
+                                                    <span
+                                                        className={`flex items-center hover:border-r hover:border-[#414954] ${header.column.getCanFilter() ? 'w-[100%]' : 'w-[100%]'}`}
+                                                        onClick={header.column.getToggleSortingHandler()}
+                                                    >
+                                                        <span className='flex justify-between w-full'>
+                                                            {flexRender(header.column.columnDef.header, header.getContext())}
+                                                            {{
+                                                                asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
+                                                                desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
+                                                            }[header.column.getIsSorted() as string] ?? null}
+                                                        </span>
                                                     </span>
-                                                </span>
-                                                <div className="flex justify-end items-center">
-                                                    {header.column.getCanFilter() &&
-                                                        (openSearch.includes(header.id) ? (
-                                                            <MdOutlineFilterAltOff
-                                                                className={` pt-1 h-[25px] w-[25px] `}
-                                                                onClick={() => {
-                                                                    closeDropMenu(header.id);
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <FiFilter
-                                                                className={` pt-1 h-[25px] w-[25px]  `}
-                                                                onClick={() => {
-                                                                    openSearchBtn(header.id, header);
-                                                                }}
-                                                            />
-                                                        ))}
+                                                    <div className="flex justify-end items-center">
+                                                        {header.column.getCanFilter() &&
+                                                            (openSearch.includes(header.id) ? (
+                                                                <MdOutlineFilterAltOff
+                                                                    className={` pt-1 h-[25px] w-[25px] `}
+                                                                    onClick={() => {
+                                                                        closeDropMenu(header.id);
+                                                                    }}
+                                                                />
+                                                            ) : (
+                                                                <FiFilter
+                                                                    className={` pt-1 h-[25px] w-[25px]  `}
+                                                                    onClick={() => {
+                                                                        openSearchBtn(header.id, header);
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            {header.column.getCanResize() && (
-                                                <div
-                                                    onDoubleClick={() => header.column.resetSize()}
-                                                    onMouseDown={header.getResizeHandler()}
-                                                    onTouchStart={header.getResizeHandler()}
-                                                    className={`resizer ${header.column.getIsResizing() ? 'isResizing' : ''
-                                                        }`}
-                                                ></div>
-                                            )}
-                                        </th>
-                                    )
-                                })}
-                            </tr>
-                            <tr key={headerGroup.id}>
-                                {headerGroup.headers.map(header => {
-                                    return (
-                                        <th
-                                            key={header.id}
-                                            colSpan={header.colSpan}
-                                            style={{ position: 'relative', width: header.getSize() }}
-                                            className="th select-none px-1.5 text-black dark:text-white sticky top-0 dark:bg-[#2d3d52] bg-slate-50 dark:drop-shadow-1 drop-shadow-md"
-                                        >
-                                            {dropdownOpen?.map((val: any) => {
-                                                if (val.value === header.id)
-                                                    return (
-                                                        <Fragment key={val.value}>
-                                                            <Suspense fallback={""} >
-                                                                <ColumnFilterDropdown
-                                                                    header={header}
-                                                                    handleInputChange={handleInputChange}
-                                                                    Filter={Filter}
-                                                                    isOpen={openSearch.includes(header.id)}
-                                                                    onClear={clearFilter}
-                                                                /> </Suspense>
-                                                        </Fragment>
-                                                    )
-                                            })}
+                                                {header.column.getCanResize() && (
+                                                    <div
+                                                        onDoubleClick={() => header.column.resetSize()}
+                                                        onMouseDown={header.getResizeHandler()}
+                                                        onTouchStart={header.getResizeHandler()}
+                                                        className={`resizer ${header.column.getIsResizing() ? 'isResizing' : ''
+                                                            }`}
+                                                    ></div>
+                                                )}
+                                            </th>
+                                        )
+                                    })}
+                                </tr>
+                                <tr key={headerGroup.id}>
+                                    {headerGroup.headers.map(header => {
+                                        return (
+                                            <th
+                                                key={header.id}
+                                                colSpan={header.colSpan}
+                                                style={{ position: 'relative', width: header.getSize() }}
 
-                                        </th>
-                                    )
-                                })}
-                            </tr>
-                        </Fragment>
-                    ))}
-                </thead>
-                <tbody>
-                    {table.getRowModel().rows.map(row => {
-                        return (
-                            <tr
-                                key={row.index}
-                                id={`row-${row.index}`}
-                                className={`font-medium h-7  text-white odd:bg-[#24303f] h-7  even:bg-[#2d3d52]`}
-                                onContextMenu={(e:any)=>(row.original as any).migrationState==="PARTIAL"?displayMenu(e):null}
-                            >
-                                {row.getVisibleCells().map(cell => {
-                                    return (
-                                        <td key={cell.id} style={{ width: cell.column.getSize() }} className='px-1'>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </td>
-                                    )
-                                })}
-                            </tr>
-                        )
-                    })}
-                </tbody>
-            </table>
+                                            >
+                                                {dropdownOpen?.map((val: any) => {
+                                                    if (val.value === header.id)
+                                                        return (
+                                                            <Fragment key={val.value}>
+                                                                <Suspense fallback={""} >
+                                                                    <ColumnFilterDropdown
+                                                                        header={header}
+                                                                        handleInputChange={handleInputChange}
+                                                                        Filter={Filter}
+                                                                        isOpen={openSearch.includes(header.id)}
+                                                                        onClear={clearFilter}
+                                                                    /> </Suspense>
+                                                            </Fragment>
+                                                        )
+                                                })}
 
-            <Menu id={MENU_ID}>
-                <Item onClick={handleItemClick}>
-                    Download Report
-                </Item>                
-            </Menu>
-        </div>
+                                            </th>
+                                        )
+                                    })}
+                                </tr>
+                            </Fragment>
+                        ))}
+                    </thead>
+                    <tbody>
+                        {table.getRowModel().rows.map(row => {
+                            return (
+                                <tr
+                                    key={row.index}
+                                    id={`row-${row.index}`}
+                                    className={`font-medium h-7  text-white odd:bg-[#24303f] h-7  even:bg-[#2d3d52]`}
+                                // onContextMenu={(e: any) => (row.original as any).migrationState === "PARTIAL" ? displayMenu(e) : null}
+                                >
+                                    {row.getVisibleCells().map(cell => {
+                                        return (
+                                            <td key={cell.id} style={{ width: cell.column.getSize() }} className='px-1'>
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </td>
+                                        )
+                                    })}
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+                {/* <Menu id={MENU_ID}>
+                    <Item onClick={handleItemClick}>
+                        Download Report
+                    </Item>
+                </Menu> */}
+            </div>
+            <Index table={table} data={data} />
+        </>
     )
 }
 

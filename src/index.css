@@ -45,6 +45,42 @@
   } 
 }
  
+.rmsc {
+  --rmsc-radius: calc(var(--radius) - 2px) !important;
+  /* Radius  */
+  --rmsc-h: 2rem !important;
+  /* Height */
+  width: 100% !important;
+}
+
+
+.rmsc.dark {
+  --rmsc-main: #f97316;
+  --rmsc-hover: #020817;
+  --rmsc-selected: #020817;
+  --rmsc-border: #f97316;
+  --rmsc-gray: #ffffff;
+  --rmsc-bg: #2d3d52;
+  color: #fff;
+}
+
+.rmsc.createDark {
+  --rmsc-main: #f97316;
+  --rmsc-hover: #020817;
+  --rmsc-selected: #020817;
+  --rmsc-border: #f97316;
+  --rmsc-gray: #ffffff;
+  --rmsc-bg: #1d2a39;
+  color: #fff;
+  --rmsc-h: 38px !important;
+  /* Height */
+}
+
+.rmsc {
+  position: relative;
+  z-index: 1000;
+  /* Adjust this value to ensure the dropdown is on top */
+}
  
 
 ::-webkit-scrollbar-track {

@@ -169,11 +169,11 @@ export const columns: ColumnDef<Person>[] = [
         meta: {
             filterVariant: 'select',
         },
-        size: 130
+        size: 145
     },
     {
         accessorKey: 'ddnPath',
-        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },
+        cell: (info: any) => { return (<div className="text-left" title={info.getValue()}>{info.getValue()}</div>) },
         header: ({ column }) => {
             return (
                 <Button
@@ -197,28 +197,70 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             )
         },
-        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },
+        cell: (info: any) => { return (<div className="text-left" title={info.getValue()}>{info.getValue()}</div>) },
         size: 130,
         minSize: 120
     },
-    // {
-    //     accessorKey: 'mediaName',
-    //     cell: (info: any) => { return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>) },
-    //     header: ({ column }) => {
-    //         return (
-    //             <Button
-    //                 variant="ghost" className="font-bold tableHeaderSize"
-    //             >
-    //                 Media Name
-    //             </Button>
-    //         )
-    //     },
-    //     meta: {
-    //         filterVariant: 'select',
-    //     },
-    //     size: 110,
-    //     minSize: 70,
-    // },
+    {
+        accessorKey: 'mediaType',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    Media Type
+                </Button>
+            )
+        },
+        cell: (info: any) => { return (<div className="text-left" title={info.getValue()}>{info.getValue()}</div>) },
+        size: 145,
+        minSize: 120
+    },
+    {
+        accessorKey: 'acs',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    acs
+                </Button>
+            )
+        },
+        cell: (info: any) => { return (<div className="text-left" title={info.getValue()}>{info.getValue()}</div>) },
+        size: 100,
+        minSize: 40
+    },
+    {
+        accessorKey: 'mediaName',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    Media Name
+                </Button>
+            )
+        },
+        cell: (info: any) => { return (<div className="text-left" title={info.getValue()}>{info.getValue()}</div>) },
+        size: 150,
+        minSize: 120
+    },
+    {
+        accessorKey: 'axfFileName',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    Axf File Name
+                </Button>
+            )
+        },
+        cell: (info: any) => { return (<div className="text-left" title={info.getValue()}>{info.getValue()}</div>) },
+        size: 165,
+        minSize: 120
+    },
     {
         accessorKey: 'objectUUID',
         header: ({ column }) => {
