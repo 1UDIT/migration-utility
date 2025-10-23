@@ -1,0 +1,57 @@
+{
+    "apiUrl": "127.0.0.1",
+    "LowResToggle": false,
+    "defaultStorage": "Tape",
+    "columns": [
+        {
+            "header": "Tape Barcode",
+            "dataKey": "UUID",
+            "Order":2
+        },
+        {
+            "header": "UUID Path",
+            "dataKey": "UUIDPath",
+            "Order":8
+        },
+        {
+            "header": "Object Size",
+            "dataKey": "totalObjectSize",
+            "Order":7
+        },
+        {
+            "header": "Object Size",
+            "dataKey": "totalObjectSize",
+            "Order":6
+        },
+        {
+            "header": "Migrated Object Size",
+            "dataKey": "migratedObjectSize",
+            "Order":5
+        },
+        {
+            "header": "Start Date",
+            "dataKey": "startDate",
+            "Order":4
+        },
+        {
+            "header": "End Date",
+            "dataKey": "endDate",
+            "Order":3
+        },
+        {
+            "header": "Migration Size Progress",
+            "dataKey": "migrationSizeProgressPercent",
+            "Order":1
+        },
+        {
+            "header": "Failed Object Count",
+            "dataKey": "failedObjectCount",
+            "Order":9
+        },
+        {
+            "header": "Migration State",
+            "dataKey": "migrationState",
+            "Order":10
+        }
+    ]
+}

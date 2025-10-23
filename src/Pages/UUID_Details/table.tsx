@@ -9,7 +9,7 @@ import React, { Fragment, lazy, Suspense, useMemo, useState } from 'react';
 import { columns } from './HandleApiCall/columns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FaSortUp, FaSortDown } from "react-icons/fa6";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchData } from '../Object_Details/HandleApiCall/Apicall';
 import useWindowSize from '@/hooks/usescreen';
 import { FiFilter } from "react-icons/fi";
@@ -23,14 +23,15 @@ import {
     useContextMenu
 } from "react-contexify";
 
-import "react-contexify/dist/ReactContexify.css";
-import { Button } from '@/components/ui/button';
+import "react-contexify/dist/ReactContexify.css"; 
 import Index from '@/components/Pagination/Index';
+import { useDispatch } from 'react-redux';
+import { setPaginationStore } from '@/Redux/tableDropFilter';
 
 const MENU_ID = "menu-id";
 
 const Tabledata = () => {
-    const [Filter, setFilter] = useState<any>({ id: "", value: "" });
+    const [Filter, setFilter] = useState<any>();
     const [dropdownOpen, setDropdownOpen] = useState([]);
     const [openSearch, setSearchTag] = useState<any[]>([]);
     const { width } = useWindowSize();
@@ -38,21 +39,20 @@ const Tabledata = () => {
         pageIndex: 0,
         pageSize: 50,
     });
+    const dispatch = useDispatch();
 
     const body = {
-        "filters": {
-            "UUID": "",
-            "migratedObjectSize": "",
-            "sourceName": "",
-            "destinationName": "",
-            "objectName": "",
-            "status": ""
-        }
+        "filters":  Filter
     };
 
     const { data, isLoading, refetch, error } = useQuery({
-        queryKey: ['uuidData', pagination],
+        queryKey: ['uuidData', pagination.pageIndex, pagination.pageSize, body],
         queryFn: () => {
+            dispatch(
+                setPaginationStore({
+                    filters: Filter,
+                })
+            );
             const endpoint = `http://localhost:4000/uuids?page=${pagination.pageIndex}&limit=${pagination.pageSize}`;
             return fetchData<any>(endpoint, "POST", body);
         },
@@ -60,6 +60,7 @@ const Tabledata = () => {
         refetchInterval: 20000,
         retry: false,
     });
+
 
     const { show } = useContextMenu({
         id: MENU_ID
@@ -78,9 +79,11 @@ const Tabledata = () => {
     }
 
     const tableData = useMemo(() =>
-        (isLoading === true ? Array(10).fill({}) : data.data),
+        (isLoading === true ? Array(10).fill({}) : data?.data),
         [isLoading, data]
     );
+
+    // console.log(Filter, "filter")
 
     const tableColumns = useMemo(
         () =>
@@ -120,9 +123,16 @@ const Tabledata = () => {
 
     function handleInputChange(value: any, idHeader: string, column: any) {
         column.setFilterValue(value);
-        setFilter({ id: idHeader, value: value });
-        console.log("Filter Value:", value, "Header ID:", idHeader);
-    };
+        setFilter((prev:any) => ({
+            ...prev,           // keep old filters
+            [idHeader]: value  // update or add this column’s filter
+        }));
+
+        // console.log("All Filters:", {
+        //     ...Filter,
+        //     [idHeader]: value
+        // });
+    }
 
     const openSearchBtn = (Value: any, header: any) => {
         const add: any = { value: Value };

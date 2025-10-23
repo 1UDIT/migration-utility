@@ -5,6 +5,10 @@ export const store = configureStore({
   reducer: {
     tableDownClick: TableDropDown
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false, // disable the warning
+    }),
 })
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

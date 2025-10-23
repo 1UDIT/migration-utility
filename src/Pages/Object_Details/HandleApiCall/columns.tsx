@@ -131,6 +131,12 @@ export const columns: ColumnDef<Person>[] = [
             </>
             )
         },
+        meta: {
+            filterVariant: 'calender',
+            calendarMode: 'range',
+            numberOfMonths: 2,
+            placeholder: 'Pick date',
+        },
         invertSorting: true,
         size: 200
     },

@@ -384,32 +384,38 @@ export const Filter = ({
 
     const clear = () => {
       column.setFilterValue(undefined);
+      clearFilter(headerid);
       setIsPopoverOpen(false);
     };
 
     const handleSelect = (date: DateRange | Date | undefined) => {
       if (!date) return;
 
-      if (calendarMode === 'single') {
-        // store a single date (you can also wrap as { from: d, to: d } if your filter expects a range)
-        const d = date as Date;
-        column.setFilterValue(d);
-        handleInputChange(d, headerid, column);  // <-- keep external filter state keyed by header id
-      } else {
-        // range picker
-        const r = date as DateRange;
-        column.setFilterValue(r);
-        handleInputChange(r, headerid, column);  // <-- same here
+      if (calendarMode === 'single' && date instanceof Date) {
+        column.setFilterValue(date);
+        handleInputChange(format(date, "yyyy-MM-dd"), headerid, column);
+      } else if (calendarMode === 'range' && typeof date === 'object' && 'from' in date) {
+        const range = date as DateRange;
+        column.setFilterValue(range);
+        handleInputChange(
+          {
+            from: range.from ? format(range.from, "yyyy-MM-dd") : "",
+            to: range.to ? format(range.to, "yyyy-MM-dd") : "",
+          },
+          headerid,
+          column
+        );
       }
     };
+
 
     const contentWidthClass =
       numberOfMonths > 1 ? 'w-[550px] max-w-[95vw]' : 'w-[320px] max-w-[95vw]';
 
     return (
       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-        <div className="flex items-center w-full h-8 text-white bg-[#2d3d52] border border-orange-500 rounded-md">
-          <PopoverTrigger asChild>
+        <div className="grid grid-cols-6 w-full justify-start items-center text-left font-normal h-8 px-1 text-white bg-[#2d3d52] font-bold border  border-orange-500 rounded-md" >
+           <PopoverTrigger asChild className='col-span-5'>
             <Button
               id="date"
               className="flex-1 justify-start text-white text-sm bg-transparent hover:bg-transparent px-2 py-1 h-8"
@@ -440,13 +446,13 @@ export const Filter = ({
           className={`p-2 bg-[#2d3d52] border border-orange-500 rounded-lg shadow-md ${contentWidthClass}`}
         >
           <Calendar
-            mode={calendarMode}
+            mode="range"
             numberOfMonths={numberOfMonths}
             defaultMonth={
               selectedRange?.from
                 ? selectedRange.from
                 : addMonths(new Date(), -1)
-            }
+            } 
             selected={selectedRange}
             onSelect={handleSelect}
             classNames={{

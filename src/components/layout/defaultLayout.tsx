@@ -16,7 +16,7 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -28,10 +28,11 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/Redux/Store";
 import { NavLink, useLocation, useNavigate } from "react-router";
 import { Button } from "../ui/button";
-import { Dialog } from "../ui/dialog";
+import { useQueryClient } from "@tanstack/react-query";
+import { saveAs } from "file-saver";
+
+import { fetchData } from "@/Pages/Object_Details/HandleApiCall/Apicall";
 import axios from "axios";
-import { QueryClient, useQueryClient } from "@tanstack/react-query";
-const DownloadReport = lazy(() => import('../Dialog/DownloadReport'));
 const basePath = import.meta.env.BASE_URL;
 
 const items = [
@@ -55,13 +56,12 @@ interface AppSidebarProps {
 
 export function DefaultLayout({ children }: AppSidebarProps) {
     const [name, setName] = useState<string>('Dashboard');
-    const [openDialog, setOpenDialog] = useState(false);
-    const userName = useSelector((state: RootState) => state.tableDownClick.userName);
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-
+    const Body = useSelector((state: RootState) => state.tableDownClick.paginationStore);
     const location = useLocation();
-
+    const [XLSX, setXLSX] = useState<typeof import("xlsx") | null>(null);
+    const [ReportsColumn, setReportsColumn] = useState<typeof import("xlsx") | null>(null);
 
     useEffect(() => {
         locationName();
@@ -83,14 +83,116 @@ export function DefaultLayout({ children }: AppSidebarProps) {
         }
     }
 
-    const queryData = queryClient.getQueryCache()
-    const cachedData = queryClient.getQueryData(["uuidData"])
+    // Load config.json to get API base URL
+    useEffect(() => {
+        axios
+            .get('./config.json')
+            .then((response) => {
+                setReportsColumn(response.data.columns);
+            })
+            .catch((err) => {
+                console.error('Error loading config.json:', err);
+            });
+    }, []);
 
-    const DownloadReport = () => {
+    useEffect(() => {
+        (async () => {
+            const xlsxModule = await import("xlsx");
+            setXLSX(xlsxModule);
+        })();
+    }, []);
 
-        console.log('Cached Data:', cachedData, queryData);
-    }
-    console.log('Cached Data:', cachedData);
+
+    const DownloadReport = useCallback(async () => {
+        try {
+            // Ensure XLSX is loaded
+            const xlsx = XLSX ?? (await import("xlsx"));
+            if (!XLSX) setXLSX(xlsx);
+
+            if (!Array.isArray(ReportsColumn) || ReportsColumn.length === 0) {
+                console.error("No columns found in config.json → `columns` missing/empty.");
+                return;
+            }
+
+            console.log(Body,"body")
+
+            // Fetch “all” data with a stable key; your fetcher can ignore pageSize
+            const response = await queryClient.fetchQuery({
+                queryKey: ["uuidData", "all", Body],
+                queryFn: () => {
+                    const endpoint = `http://localhost:4000/uuids?page=0&limit=`;
+                    return fetchData<any>(endpoint, "POST", Body);
+                },
+                staleTime: 0,
+            });
+
+            // Normalise payload: accept {data:[...]} or plain array
+            const payload = Array.isArray(response)
+                ? response
+                : Array.isArray(response?.data)
+                    ? response.data
+                    : Array.isArray(response?.data?.data)
+                        ? response.data.data
+                        : [];
+
+            if (payload.length === 0) {
+                console.error("No data available to export.");
+                return;
+            }
+
+            // Sort columns by Order (from config.json)
+            const sortedColumns = [...ReportsColumn].sort(
+                (a: any, b: any) => (a?.Order ?? 0) - (b?.Order ?? 0)
+            );
+
+            // Build the sheet rows using dataKey from config
+            const mainHeaders: string[] = sortedColumns.map((c: any) => String(c.header ?? ""));
+            const rows: any[][] = payload.map((item: any) =>
+                sortedColumns.map((c: any) => item?.[c.dataKey])
+            );
+
+            // Header block (you can customise as needed)
+            const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+            const detailHeaders = ["Total Object", "Generated Date"];
+            const detailRow = [String(payload.length), today];
+
+            // Assemble worksheet (AOA)
+            const wsData: any[] = [];
+            wsData.push(detailHeaders);
+            wsData.push(detailRow);
+            wsData.push([]); // empty line
+            wsData.push(mainHeaders);
+            rows.forEach(r => wsData.push(r));
+
+            // Auto column widths
+            const colWidths: number[] = wsData[3].map((_: any, colIdx: number) =>
+                Math.max(
+                    ...wsData.map((row: any[]) => {
+                        const v = row?.[colIdx];
+                        return v == null ? 0 : String(v).length;
+                    })
+                )
+            );
+            const cols = colWidths.map(w => ({ wch: w + 2 }));
+
+            const ws = xlsx.utils.aoa_to_sheet(wsData);
+            (ws as any)["!cols"] = cols;
+
+            const wb = xlsx.utils.book_new();
+            xlsx.utils.book_append_sheet(wb, ws, "Data Sheet");
+
+            const wbout = xlsx.write(wb, { bookType: "xlsx", type: "binary" });
+            const buf = new ArrayBuffer(wbout.length);
+            const view = new Uint8Array(buf);
+            for (let i = 0; i < wbout.length; i++) view[i] = wbout.charCodeAt(i) & 0xff;
+
+            saveAs(new Blob([buf], { type: "application/octet-stream" }), `Migration Data Report_${today}.xlsx`);
+            console.log("✅ Report generated");
+
+        } catch (err) {
+            console.error("❌ DownloadReport failed:", err);
+        }
+    },[Body]);
 
 
 
@@ -152,7 +254,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <SidebarMenuButton className="text-xl">
-                                            <User2 /> {userName}
+                                            <User2 />
                                             <ChevronUp className="ml-auto" />
                                         </SidebarMenuButton>
                                     </DropdownMenuTrigger>
@@ -189,15 +291,6 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                     <main className="flex-1 flex flex-col bg-[#1a222c] overflow-hidden">{children}</main>
                 </SidebarInset>
             </SidebarProvider>
-
-            {/* {
-                openDialog &&
-                <Dialog onOpenChange={() => { setOpenDialog(!openDialog) }} open={openDialog}>
-                    <Suspense fallback={""}>
-                        <DownloadReport setOpen={setOpenDialog}  />
-                    </Suspense>
-                </Dialog>
-            } */}
 
         </>
     )

@@ -3,6 +3,7 @@ import {
     getCoreRowModel,
     useReactTable,
     getPaginationRowModel,
+    type PaginationState,
 } from '@tanstack/react-table';
 import React, { Fragment, lazy, Suspense, useMemo, useState } from 'react';
 import { columns } from './HandleApiCall/columns';
@@ -12,31 +13,49 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchData } from '../Object_Details/HandleApiCall/Apicall';
 import useWindowSize from '@/hooks/usescreen';
 import { FiFilter } from "react-icons/fi";
-import { MdOutlineFilterAltOff } from "react-icons/md"; 
+import { MdOutlineFilterAltOff } from "react-icons/md";
 import Index from '@/components/Pagination/Index';
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
 
 
 const Tabledata = () => {
-    const [Filter, setFilter] = useState<any>({ id: "", value: "" });
+    const [Filter, setFilter] = useState<any>();
     const [dropdownOpen, setDropdownOpen] = useState([]);
     const [openSearch, setSearchTag] = useState<any[]>([]);
     const { width } = useWindowSize();
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageIndex: 0,
+        pageSize: 50,
+    });
+
+    // const { data, isLoading, refetch, error } = useQuery({
+    //     queryKey: ['requestData'],
+    //     queryFn: () => {
+    //         const endpoint = `http://localhost:4000/objects`
+    //          return fetchData<any>(endpoint, "GET");
+    //     },
+    //     networkMode: 'always',
+    //     refetchInterval: 20000,
+    //     retry: false, 
+    //     staleTime: 10000,
+    // });
+    const body = {
+        "filters": Filter
+    };
 
     const { data, isLoading, refetch, error } = useQuery({
-        queryKey: ['requestData'],
+        queryKey: ['uuidData', pagination.pageIndex, pagination.pageSize, body],
         queryFn: () => {
-            const endpoint = `http://localhost:4000/objects`
-             return fetchData<any>(endpoint, "GET");
+            const endpoint = `http://localhost:4000/objects?page=${pagination.pageIndex}&limit=${pagination.pageSize}`;
+            return fetchData<any>(endpoint, "POST", body);
         },
         networkMode: 'always',
         refetchInterval: 20000,
-        retry: false, 
-        staleTime: 10000,
+        retry: false,
     });
 
     const tableData = useMemo(() =>
-        (isLoading === true ? Array(10).fill({}) : data),
+        (isLoading === true ? Array(10).fill({}) : data?.data),
         [isLoading, data]
     );
 
@@ -64,7 +83,12 @@ const Tabledata = () => {
         manualPagination: true,
         enableColumnResizing: true,
         columnResizeMode: 'onChange',
+        onPaginationChange: setPagination,
+        state: {
+            pagination,
+        },
     });
+
 
     function clearFilter(idHeader: string) {
         setFilter({ id: idHeader, value: "" })
@@ -74,8 +98,16 @@ const Tabledata = () => {
 
     function handleInputChange(value: any, idHeader: string, column: any) {
         column.setFilterValue(value);
-        setFilter({ id: idHeader, value: value });
-    };
+        setFilter((prev:any) => ({
+            ...prev,           // keep old filters
+            [idHeader]: value  // update or add this column’s filter
+        }));
+
+        // console.log("All Filters:", {
+        //     ...Filter,
+        //     [idHeader]: value
+        // });
+    }
 
     const openSearchBtn = (Value: any, header: any) => {
         const add: any = { value: Value };
@@ -222,8 +254,8 @@ const Tabledata = () => {
                     </tbody>
                 </table>
             </div>
-           
-           <Index table={table} data={data}/>
+
+            <Index table={table} data={data} />
         </>
     )
 }

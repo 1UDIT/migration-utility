@@ -7,10 +7,10 @@ const Index = ({table, data}:any) => {
              2xl:pl-0  lg:pl-0 pt-1 text-[#81b2f7] font-bold   min-[320px]:hidden max-[600px]:text-xs">
                     {/* {`Display Data Is From ${date?.from !== undefined ? format((date?.from as Date), 'yyyy-MM-dd') : ''} To ${date?.to !== undefined ? format((date?.to as Date), 'yyyy-MM-dd') : ''}`} */}
                 </div>
-                <div className="2xl:w-[50%] lg:w-[70%] flex items-center     min-[320px]:w-[100%] max-[600px]:text-xs  justify-end pr-5">
+                <div className="2xl:w-[50%] lg:w-[70%] flex items-center px-2 min-[320px]:w-[100%] max-[600px]:text-xs  justify-end pr-5">
                     <Button
                         variant={"ghost"}
-                        className="border rounded p-1 text-white "
+                        className="border rounded p-1 text-white mr-2"
                         onClick={() => table.firstPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
@@ -18,7 +18,7 @@ const Index = ({table, data}:any) => {
                     </Button>
                     <Button
                         variant={"ghost"}
-                        className="border rounded p-1 text-white "
+                        className="border rounded p-1 text-white mr-2"
                         onClick={() => table.previousPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
@@ -26,14 +26,15 @@ const Index = ({table, data}:any) => {
                     </Button>
                     <Button
                         variant={"ghost"}
-                        className="border rounded p-1 text-white "
+                        className="border rounded p-1 text-white mr-2"
                         onClick={() => table.nextPage()}
+                        disabled={!table.getCanNextPage()}
                     >
                         {'>'}
                     </Button>
                     <Button
                         variant={"ghost"}
-                        className="border rounded p-1 text-white "
+                        className="border rounded p-1 text-white mr-2"
                         onClick={() => table.lastPage()}
                         disabled={!table.getCanNextPage()}
                     >
