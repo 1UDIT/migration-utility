@@ -23,7 +23,7 @@ import {
     useContextMenu
 } from "react-contexify";
 
-import "react-contexify/dist/ReactContexify.css"; 
+import "react-contexify/dist/ReactContexify.css";
 import Index from '@/components/Pagination/Index';
 import { useDispatch } from 'react-redux';
 import { setPaginationStore } from '@/Redux/tableDropFilter';
@@ -42,7 +42,7 @@ const Tabledata = () => {
     const dispatch = useDispatch();
 
     const body = {
-        "filters":  Filter
+        "filters": Filter
     };
 
     const { data, isLoading, refetch, error } = useQuery({
@@ -66,24 +66,10 @@ const Tabledata = () => {
         id: MENU_ID
     });
 
-    function displayMenu(e: any) {
-        // put whatever custom logic you need
-        // you can even decide to not display the Menu
-        show({
-            event: e,
-        });
-    }
-
-    function handleItemClick({ event, props, triggerEvent, data }: any) {
-        console.log(event, props, triggerEvent, data);
-    }
-
     const tableData = useMemo(() =>
         (isLoading === true ? Array(10).fill({}) : data?.data),
         [isLoading, data]
     );
-
-    // console.log(Filter, "filter")
 
     const tableColumns = useMemo(
         () =>
@@ -113,17 +99,25 @@ const Tabledata = () => {
         state: {
             pagination,
         },
+        pageCount: Math.ceil(data?.total / pagination.pageSize),
     });
 
     function clearFilter(idHeader: string) {
-        setFilter({ id: idHeader, value: "" })
+        setFilter((prev: any) => ({
+            ...prev,           // keep old filters
+            [idHeader]: ""  // update or add this column’s filter
+        }));
+
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
+        console.log("Cleared Filter for:", idHeader);
     };
+
+    console.log("Current Filters in Tabledata:", Filter);
 
 
     function handleInputChange(value: any, idHeader: string, column: any) {
         column.setFilterValue(value);
-        setFilter((prev:any) => ({
+        setFilter((prev: any) => ({
             ...prev,           // keep old filters
             [idHeader]: value  // update or add this column’s filter
         }));
@@ -165,7 +159,7 @@ const Tabledata = () => {
                 style={{ direction: table.options.columnResizeDirection }}
             >
                 <table className={"w-full "} style={{ width: table.getTotalSize() < width ? "100%" : table.getTotalSize(), }}>
-                    <thead className={`drop-shadow-1  bg-[#2d3d52]  z-50 `}>
+                    <thead className={`th select-none text-white sticky top-0 bg-[#2d3d52]  z-50 `}>
                         {table.getHeaderGroups().map(headerGroup => (
                             <Fragment key={headerGroup.id}>
                                 <tr>
@@ -230,7 +224,6 @@ const Tabledata = () => {
                                                 key={header.id}
                                                 colSpan={header.colSpan}
                                                 style={{ position: 'relative', width: header.getSize() }}
-
                                             >
                                                 {dropdownOpen?.map((val: any) => {
                                                     if (val.value === header.id)

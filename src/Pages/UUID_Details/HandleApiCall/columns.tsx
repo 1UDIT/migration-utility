@@ -292,10 +292,12 @@ export const columns: ColumnDef<Person>[] = [
         meta: {
             filterVariant: 'select',
             selectOptions: [
-                { label: 'Active', value: 'Active' },
-                { label: 'Inactive', value: 'Inactive' },
-                { label: 'Pending', value: 'Pending' },
+                { label: 'Completed', value: 'COMPLTED' },
+                { label: 'Processing', value: 'PROGRESS' },
+                { label: 'Pending', value: 'PENDING' },
+                { label: 'PARTIAL', value: 'PARTIAL' },
             ],
+            isMulti:true
         },
         size: 180
     },

@@ -87,6 +87,7 @@ const Tabledata = () => {
         state: {
             pagination,
         },
+        pageCount: Math.ceil(data?.total / pagination.pageSize),
     });
 
 
@@ -140,7 +141,7 @@ const Tabledata = () => {
                 style={{ direction: table.options.columnResizeDirection }}
             >
                 <table className={"w-full "} style={{ width: table.getTotalSize() < width ? "100%" : table.getTotalSize(), }}>
-                    <thead>
+                    <thead className={`th select-none text-white sticky top-0 bg-[#2d3d52]  z-50 `}>
                         {table.getHeaderGroups().map(headerGroup => (
                             <Fragment key={headerGroup.id}>
                                 <tr>
@@ -205,8 +206,7 @@ const Tabledata = () => {
                                                 key={header.id}
                                                 colSpan={header.colSpan}
                                                 style={{ position: 'relative', width: header.getSize() }}
-                                                className="th select-none px-1.5 text-black dark:text-white sticky top-0 dark:bg-[#2d3d52] bg-slate-50 dark:drop-shadow-1 drop-shadow-md"
-                                            >
+                                             >
                                                 {dropdownOpen?.map((val: any) => {
                                                     if (val.value === header.id)
                                                         return (

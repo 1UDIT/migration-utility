@@ -6,52 +6,67 @@
         {
             "header": "Tape Barcode",
             "dataKey": "UUID",
-            "Order":2
+            "Order": 2
         },
         {
             "header": "UUID Path",
             "dataKey": "UUIDPath",
-            "Order":8
+            "Order": 1
+        },
+        {
+            "header": "Media Type",
+            "dataKey": "mediaType",
+            "Order": 2
         },
         {
             "header": "Object Size",
             "dataKey": "totalObjectSize",
-            "Order":7
-        },
-        {
-            "header": "Object Size",
-            "dataKey": "totalObjectSize",
-            "Order":6
+            "Order": 3
         },
         {
             "header": "Migrated Object Size",
             "dataKey": "migratedObjectSize",
-            "Order":5
+            "Order": 4
         },
         {
             "header": "Start Date",
             "dataKey": "startDate",
-            "Order":4
+            "Order": 5
         },
         {
             "header": "End Date",
             "dataKey": "endDate",
-            "Order":3
+            "Order": 3
         },
         {
-            "header": "Migration Size Progress",
+            "header": "Migration Size Progress (%)",
             "dataKey": "migrationSizeProgressPercent",
-            "Order":1
+            "Order": 6
+        },
+        {
+            "header": "Migration Count Progress (%)",
+            "dataKey": "migrationCountProgressPercent",
+            "Order": 7
         },
         {
             "header": "Failed Object Count",
             "dataKey": "failedObjectCount",
-            "Order":9
+            "Order": 8
         },
         {
             "header": "Migration State",
             "dataKey": "migrationState",
-            "Order":10
+            "Order": 9
+        },
+        {
+            "header": "Object Count",
+            "dataKey": "totalObjectCount",
+            "Order": 10
+        },
+        {
+            "header": "Migrated Object Count",
+            "dataKey": "migratedObjectCount",
+            "Order": 11
         }
     ]
 }

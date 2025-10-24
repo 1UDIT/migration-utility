@@ -153,10 +153,7 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             </>
             )
-        },
-        meta: {
-            filterVariant: 'calender',
-        },
+        }, 
         size: 120
     },
     {
@@ -171,10 +168,7 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             )
         },
-        enableColumnFilter: true,
-        meta: {
-            filterVariant: 'select',
-        },
+        enableColumnFilter: true, 
         size: 145
     },
     {
@@ -190,7 +184,7 @@ export const columns: ColumnDef<Person>[] = [
             )
         },
         size: 220,
-        enableColumnFilter: false,
+        enableColumnFilter: true,
     },
     {
         accessorKey: 'barcode',
@@ -280,7 +274,7 @@ export const columns: ColumnDef<Person>[] = [
         },
         cell: (info: any) => { return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>) },
         enableSorting: false,
-        enableColumnFilter: false,
+        enableColumnFilter: true,
         size: 350
     },
     {
@@ -296,8 +290,16 @@ export const columns: ColumnDef<Person>[] = [
         },
         cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },
         enableSorting: false,
-        enableColumnFilter: false,
-        size: 160
+        enableColumnFilter: true,
+        meta: {
+            filterVariant: 'select',
+            selectOptions: [
+                { label: 'Yes', value: 'YES' },
+                { label: 'No', value: 'NO' },
+            ],
+            isMulti: false
+        },
+        size: 180
     },
     // {
     //     accessorKey: 'fileName',
@@ -344,7 +346,17 @@ export const columns: ColumnDef<Person>[] = [
         },
         cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{statusCall(info.getValue())}</div>) },
         enableSorting: false,
-        enableColumnFilter: false,
-        size: 106
+        enableColumnFilter: true,
+        size: 106,
+        meta: {
+            filterVariant: 'select',
+            selectOptions: [
+                { label: 'Completed', value: 'COMPLTED' },
+                { label: 'Processing', value: 'PROGRESS' },
+                { label: 'Pending', value: 'PENDING' },
+                { label: 'PARTIAL', value: 'PARTIAL' },
+            ],
+            isMulti: true
+        },
     },
 ]

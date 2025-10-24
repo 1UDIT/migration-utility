@@ -169,9 +169,6 @@ export const Filter = ({
   const columnFilterValue = column.getFilterValue();
   const meta = column.columnDef.meta ?? {};
   const { filterVariant } = meta;
-  const today = new Date();
-  const nextMonth = addMonths(today, -1);
-  const dateStart = endOfYesterday();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
 
@@ -212,12 +209,14 @@ export const Filter = ({
         options={options}
         isMulti={isMulti}
         value={current}
-        onChange={(val: any) => {
+        onChange={(val: any) => { 
           if (isMulti) {
             const next = Array.isArray(val) ? val.map((o) => o.value) : [];
             column.setFilterValue(next.length ? next : undefined);
+            handleInputChange(next, headerid, column);
           } else {
-            column.setFilterValue(val ? val.value : undefined);
+            column.setFilterValue(val?.value ?? undefined);
+            handleInputChange(val?.value ?? '', headerid, column);
           }
         }}
         isClearable
@@ -231,143 +230,6 @@ export const Filter = ({
     );
   };
 
-  // const calenderContent = (Value: string) => {
-  //   switch (Value) {
-  //     case "Invoice_Generation_Date":
-  //       return (
-  //         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-  //           <div className="grid grid-cols-6 w-full justify-start text-left font-normal h-8 px-1 text-white bg-[#2d3d52] font-bold border  border-orange-500 rounded-md" >
-  //             <PopoverTrigger asChild className='col-span-5'>
-  //               <Button
-  //                 id="date" className='pl-1 text-white'
-  //               >
-  //                 {date?.from ? (
-  //                   date.to ? (
-  //                     <span className='whitespace-nowrap text-ellipsis overflow-hidden'>
-  //                       {format(date.from, "LLL dd, y")} -{" "}
-  //                       {format(date.to, "LLL dd, y")}
-  //                     </span>
-  //                   ) : (
-  //                     format(date.from, "LLL dd, y")
-  //                   )
-  //                 ) : (
-  //                   <span>Pick a date</span>
-  //                 )}
-  //               </Button>
-  //             </PopoverTrigger>
-  //             <div className="col-span-1 flex justify-end mt-1" >
-  //               <MdOutlineCancel className='h-5 w-5' onClick={() => {
-  //                 setDate({
-  //                   from: (formatISO(dateStart) as any),
-  //                   to: (formatISO(new Date()) as any),
-  //                 });
-  //               }} />
-  //             </div>
-  //           </div>
-  //           <PopoverContent className="w-auto p-0" align="start">
-  //             <Calendar
-  //               mode="single"
-  //               defaultMonth={today}
-  //               selected={today}
-  //               onSelect={(e: any) => { setDate(e); setIsPopoverOpen(false) }}
-  //               numberOfMonths={2}
-  //               className="rounded-lg border shadow-sm bg-[#2d3d52]"
-  //             />
-  //           </PopoverContent>
-  //         </Popover>
-  //       )
-  //     default:
-  //       break;
-  //   }
-  // }
-
-  // const renderCalendar = () => {
-  //   const {
-  //     calendarMode = 'single',
-  //     numberOfMonths = 2, 
-  //   } = meta;
-
-  //   const fv = column.getFilterValue();
-
-
-  //   const selectedRange: DateRange | undefined =
-  //     calendarMode === 'range'
-  //       ? (fv && typeof fv === 'object' && 'from' in (fv as any)
-  //         ? (fv as DateRange)
-  //         : undefined)
-  //       : undefined;
-
-  //   const clear = () => column.setFilterValue(undefined);
-
-  //   // Responsive width: roomy for 2 months
-  //   const contentWidthClass =
-  //     numberOfMonths > 1 ? 'w-[560px] max-w-[95vw]' : 'w-[340px] max-w-[95vw]';
-
-  //   return (
-  //     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-  //       <div className="grid grid-cols-6 w-full h-7 text-white bg-[#2d3d52] font-bold border border-orange-500 rounded-md">
-  //         <PopoverTrigger asChild className="col-span-5 py-1">
-  //           <Button id="date" className='pl-1 text-white bg-transparent hover:bg-transparent'>
-  //             {date?.from ? (
-  //               date.to ? (
-  //                 <span className='whitespace-nowrap text-ellipsis overflow-hidden'>
-  //                   {format(date.from, "LLL dd, y")} -{" "}
-  //                   {format(date.to, "LLL dd, y")}
-  //                 </span>
-  //               ) : (
-  //                 format(date.from, "LLL dd, y")
-  //               )
-  //             ) : (
-  //               <span>Pick a date</span>
-  //             )}
-  //           </Button>
-  //         </PopoverTrigger>
-  //         <div className="col-span-1 flex justify-end mt-1">
-  //           <MdOutlineCancel className="h-5 w-5" onClick={clear} />
-  //         </div>
-  //       </div>
-
-  //       <PopoverContent align="center" className={`bg-[#2d3d52]  ${contentWidthClass}`}>
-  //         <Calendar
-  //           mode="range"
-  //           numberOfMonths={numberOfMonths}
-  //           defaultMonth={
-  //             selectedRange?.from
-  //               ? selectedRange.from
-  //               : addMonths(new Date(), -1) // fallback to 1 month before today
-  //           }
-  //           selected={selectedRange}
-  //           onSelect={(date) => {
-  //             if (!date) return 
-  //           }}
-  //           required={false}
-  //           // className="w-full shadow-sm bg-[#2d3d52]"
-  //           classNames={{
-  //             day: "h-9 w-9 text-sm flex items-center justify-center rounded-md hover:bg-orange-500/30",
-  //           }}
-  //         />
-  //         {/* <Calendar
-  //           mode="range"
-  //           defaultMonth={
-  //             selectedRange?.from
-  //               ? selectedRange.from
-  //               : addMonths(new Date(), -1) // fallback to 1 month before today
-  //           }
-  //           selected={selectedRange}
-  //           onSelect={(date) => {
-  //             if (!date) return
-  //             setFilters((prev) => ({
-  //               ...prev,
-  //               [column.id]: date, // store date under header id
-  //             }))
-  //           }}
-  //           numberOfMonths={2}
-  //           className="rounded-lg border shadow-sm"
-  //         /> */}
-  //       </PopoverContent>
-  //     </Popover>
-  //   );
-  // };
 
   const renderCalendar = () => {
     const {
@@ -415,7 +277,7 @@ export const Filter = ({
     return (
       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
         <div className="grid grid-cols-6 w-full justify-start items-center text-left font-normal h-8 px-1 text-white bg-[#2d3d52] font-bold border  border-orange-500 rounded-md" >
-           <PopoverTrigger asChild className='col-span-5'>
+          <PopoverTrigger asChild className='col-span-5'>
             <Button
               id="date"
               className="flex-1 justify-start text-white text-sm bg-transparent hover:bg-transparent px-2 py-1 h-8"
@@ -452,7 +314,7 @@ export const Filter = ({
               selectedRange?.from
                 ? selectedRange.from
                 : addMonths(new Date(), -1)
-            } 
+            }
             selected={selectedRange}
             onSelect={handleSelect}
             classNames={{
