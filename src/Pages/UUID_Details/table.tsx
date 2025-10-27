@@ -15,23 +15,27 @@ import useWindowSize from '@/hooks/usescreen';
 import { FiFilter } from "react-icons/fi";
 import { MdOutlineFilterAltOff } from "react-icons/md";
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
-import {
-    Menu,
-    Item,
-    Separator,
-    Submenu,
-    useContextMenu
-} from "react-contexify";
 
 import "react-contexify/dist/ReactContexify.css";
 import Index from '@/components/Pagination/Index';
 import { useDispatch } from 'react-redux';
 import { setPaginationStore } from '@/Redux/tableDropFilter';
+import { endOfYesterday, format } from 'date-fns';
 
-const MENU_ID = "menu-id";
+interface DateInterface {
+    from: Date; // Assuming the dates are in string format
+    to: Date;
+}
+
+const dateStart = endOfYesterday();
+const initialDateRange: DateInterface = {
+    from: dateStart,
+    to: new Date(),
+};
+
 
 const Tabledata = () => {
-    const [Filter, setFilter] = useState<any>();
+    const [Filter, setFilter] = useState<any>({ startDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') } });
     const [dropdownOpen, setDropdownOpen] = useState([]);
     const [openSearch, setSearchTag] = useState<any[]>([]);
     const { width } = useWindowSize();
@@ -47,23 +51,18 @@ const Tabledata = () => {
 
     const { data, isLoading, refetch, error } = useQuery({
         queryKey: ['uuidData', pagination.pageIndex, pagination.pageSize, body],
-        queryFn: () => {
+        queryFn: async ({ signal }) => {
             dispatch(
                 setPaginationStore({
                     filters: Filter,
                 })
             );
             const endpoint = `http://localhost:4000/uuids?page=${pagination.pageIndex}&limit=${pagination.pageSize}`;
-            return fetchData<any>(endpoint, "POST", body);
+            return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
         refetchInterval: 20000,
         retry: false,
-    });
-
-
-    const { show } = useContextMenu({
-        id: MENU_ID
     });
 
     const tableData = useMemo(() =>
@@ -116,16 +115,12 @@ const Tabledata = () => {
 
 
     function handleInputChange(value: any, idHeader: string, column: any) {
+        setFilter({})
         column.setFilterValue(value);
         setFilter((prev: any) => ({
             ...prev,           // keep old filters
             [idHeader]: value  // update or add this column’s filter
-        }));
-
-        // console.log("All Filters:", {
-        //     ...Filter,
-        //     [idHeader]: value
-        // });
+        })); 
     }
 
     const openSearchBtn = (Value: any, header: any) => {
@@ -278,7 +273,7 @@ const Tabledata = () => {
                     </Item>
                 </Menu> */}
             </div>
-            <Index table={table} data={data} />
+            <Index table={table} data={data} initialDateRange={Filter.startDate}/>
         </>
     )
 }

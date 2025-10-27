@@ -15,11 +15,23 @@ import useWindowSize from '@/hooks/usescreen';
 import { FiFilter } from "react-icons/fi";
 import { MdOutlineFilterAltOff } from "react-icons/md";
 import Index from '@/components/Pagination/Index';
+import { endOfYesterday, format } from 'date-fns';
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
+
+interface DateInterface {
+    from: Date; // Assuming the dates are in string format
+    to: Date;
+}
+
+const dateStart = endOfYesterday();
+const initialDateRange: DateInterface = {
+    from: dateStart,
+    to: new Date(),
+};
 
 
 const Tabledata = () => {
-    const [Filter, setFilter] = useState<any>();
+    const [Filter, setFilter] = useState<any>({ archiveDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') } });
     const [dropdownOpen, setDropdownOpen] = useState([]);
     const [openSearch, setSearchTag] = useState<any[]>([]);
     const { width } = useWindowSize();
@@ -28,29 +40,17 @@ const Tabledata = () => {
         pageSize: 50,
     });
 
-    // const { data, isLoading, refetch, error } = useQuery({
-    //     queryKey: ['requestData'],
-    //     queryFn: () => {
-    //         const endpoint = `http://localhost:4000/objects`
-    //          return fetchData<any>(endpoint, "GET");
-    //     },
-    //     networkMode: 'always',
-    //     refetchInterval: 20000,
-    //     retry: false, 
-    //     staleTime: 10000,
-    // });
     const body = {
         "filters": Filter
     };
 
-    const { data, isLoading, refetch, error } = useQuery({
+    const { data, isLoading, error } = useQuery({
         queryKey: ['uuidData', pagination.pageIndex, pagination.pageSize, body],
-        queryFn: () => {
+        queryFn: async ({ signal }) => {
             const endpoint = `http://localhost:4000/objects?page=${pagination.pageIndex}&limit=${pagination.pageSize}`;
-            return fetchData<any>(endpoint, "POST", body);
+            return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
-        refetchInterval: 20000,
         retry: false,
     });
 
@@ -97,17 +97,13 @@ const Tabledata = () => {
     };
 
 
-    function handleInputChange(value: any, idHeader: string, column: any) {
+    async function handleInputChange(value: any, idHeader: string, column: any) {
+        await setFilter({})
         column.setFilterValue(value);
-        setFilter((prev:any) => ({
+        setFilter((prev: any) => ({
             ...prev,           // keep old filters
             [idHeader]: value  // update or add this column’s filter
         }));
-
-        // console.log("All Filters:", {
-        //     ...Filter,
-        //     [idHeader]: value
-        // });
     }
 
     const openSearchBtn = (Value: any, header: any) => {
@@ -206,7 +202,7 @@ const Tabledata = () => {
                                                 key={header.id}
                                                 colSpan={header.colSpan}
                                                 style={{ position: 'relative', width: header.getSize() }}
-                                             >
+                                            >
                                                 {dropdownOpen?.map((val: any) => {
                                                     if (val.value === header.id)
                                                         return (
@@ -255,7 +251,7 @@ const Tabledata = () => {
                 </table>
             </div>
 
-            <Index table={table} data={data} />
+            <Index table={table} data={data} initialDateRange={Filter.archiveDate}/>
         </>
     )
 }

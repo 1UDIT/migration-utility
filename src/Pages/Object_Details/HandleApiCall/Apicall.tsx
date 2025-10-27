@@ -1,13 +1,15 @@
-import axios from "axios";
+export async function fetchData(url, method, body, signal?: AbortSignal) {
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal, // 👈 attach abort signal
+  });
 
-export async function fetchData<T>(url: string, method: "GET" | "POST" | "PUT" | "DELETE" = "GET", body?: any): Promise<T> {
-    const config = {
-        method,
-        url,
-        data: body || {},
-    };
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || res.statusText);
+  }
 
-     const response = await axios.request<T>(config);
-
-    return response.data;
+  return res.json();
 }

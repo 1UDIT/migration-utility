@@ -67,6 +67,16 @@
             "header": "Migrated Object Count",
             "dataKey": "migratedObjectCount",
             "Order": 11
+        },
+        {
+            "header": "Invoice ID",
+            "dataKey": "invoiceID",
+            "Order": 12
+        },
+        {
+            "header": "Invoice Date",
+            "dataKey": "invoiceDate",
+            "Order": 13
         }
     ]
 }

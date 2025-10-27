@@ -1,4 +1,3 @@
-import { Progress } from "@/components/ui/progress"
 import { FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { GrInProgress } from "react-icons/gr";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ export type Person = {
 
 const statusCall = (status: string) => {
     switch (status) {
-        case "Completed":
+        case "COMPLETED":
             return (
                 <span className='flex cols-2 '>
                     <div className="col-span-1 pr-1">
@@ -31,18 +30,18 @@ const statusCall = (status: string) => {
                     </div>
                 </span>
             )
-        case "Aborted":
+        case "FAILED":
             return (
                 <span className='flex cols-2  '>
                     <div className="col-span-1 pr-1">
                         <FaExclamationCircle className='text-[#ff3842] inline-block ' />
                     </div>
                     <div className="col-span-1">
-                        Aborted
+                        FAILED
                     </div>
                 </span>
             )
-        case "Processing":
+        case "IN PROGRESS":
             return (
                 <span className='flex cols-2  '>
                     <div className="col-span-1 pr-1">
@@ -60,7 +59,7 @@ const statusCall = (status: string) => {
                         <GrInProgress className='text-[#28a5ad] inline-block animate-spin-slow' />
                     </div>
                     <div className="col-span-1">
-                        Waiting
+                        Pending
                     </div>
                 </span>
             )
@@ -92,10 +91,10 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             )
         },
-        cell: (info: any) => { return (<div className="text-right" title={info.getValue()}>{info.getValue()}</div>) },
-        size: 140,
+        cell: (info: any) => { return (<div className="text-left" title={info.getValue()}>{info.getValue()}</div>) },
+        size: 330,
         minSize: 45,
-        enableResizing: false,
+        enableResizing: true,
         sortDescFirst: true,
         sortUndefined: 1
     },

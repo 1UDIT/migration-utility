@@ -83,7 +83,7 @@ export const columns: ColumnDef<Person>[] = [
             )
         },
         invertSorting: true,
-        size: 460
+        size: 210
     },
     {
         accessorKey: 'UUIDPath',
@@ -174,6 +174,44 @@ export const columns: ColumnDef<Person>[] = [
                     variant="ghost" className="font-bold tableHeaderSize"
                 >
                     Migrated Object Count
+                </Button>
+            )
+        },
+        cell: (info: any) => {
+            // return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>{info.getValue()?.split("T")[0]}</span>)
+            return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
+        }, 
+        enableSorting: false,
+        enableColumnFilter: true,
+        size: 210
+    }, 
+    {
+        accessorKey: 'invoiceID',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    Invoice ID 
+                </Button>
+            )
+        },
+        cell: (info: any) => {
+            // return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>{info.getValue()?.split("T")[0]}</span>)
+            return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
+        }, 
+        enableSorting: false,
+        enableColumnFilter: true,
+        size: 210
+    }, 
+    {
+        accessorKey: 'invoiceDate',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    Invoice Date
                 </Button>
             )
         },
