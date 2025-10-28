@@ -54,7 +54,7 @@ interface props {
 const customStyles = {
   container: (base: any) => ({
     ...base,
-    width: '165px',
+    width: '100%',
     padding: "1px"
   }),
   control: (base: any, state: any) => ({
@@ -77,7 +77,7 @@ const customStyles = {
     color: 'white',
     borderRadius: 0,
     marginTop: 0,
-    width: '165px'
+    width: '150px'
   }),
   multiValue: (base: any) => ({
     ...base,

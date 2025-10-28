@@ -1,7 +1,7 @@
 import { Progress } from "@/components/ui/progress"
 import { FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { MdOutlinePendingActions } from "react-icons/md";
-import { Button } from "@/components/ui/button"; 
+import { Button } from "@/components/ui/button";
 import { HiArrowPath } from "react-icons/hi2";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -116,6 +116,50 @@ export const columns: ColumnDef<Person>[] = [
         size: 120
     },
     {
+        accessorKey: 'startDate',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    Start Date & Time
+                </Button>
+            )
+        },
+        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },
+        meta: {
+            filterVariant: 'calender',
+            calendarMode: 'range',
+            numberOfMonths: 2,
+            placeholder: 'Pick date',
+        },
+        enableSorting: false,
+        enableColumnFilter: true,
+        size: 210
+    },
+    {
+        accessorKey: 'endDate',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    End Date & Time
+                </Button>
+            )
+        },
+        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },
+        enableSorting: false,
+        enableColumnFilter: true,
+        size: 210,
+        meta: {
+            filterVariant: 'calender',
+            calendarMode: 'range',
+            numberOfMonths: 2,
+            placeholder: 'Pick date',
+        },
+    },
+    {
         accessorKey: 'totalObjectSize',
         cell: (info: any) => {
             return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
@@ -130,7 +174,7 @@ export const columns: ColumnDef<Person>[] = [
             )
         },
         size: 120,
-        minSize:70,
+        minSize: 70,
         enableColumnFilter: false,
     },
     {
@@ -161,7 +205,7 @@ export const columns: ColumnDef<Person>[] = [
         cell: (info: any) => {
             return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>)
         },
-        
+
         enableSorting: false,
         enableColumnFilter: true,
         size: 160
@@ -180,92 +224,10 @@ export const columns: ColumnDef<Person>[] = [
         cell: (info: any) => {
             // return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>{info.getValue()?.split("T")[0]}</span>)
             return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
-        }, 
-        enableSorting: false,
-        enableColumnFilter: true,
-        size: 210
-    }, 
-    {
-        accessorKey: 'invoiceID',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost" className="font-bold tableHeaderSize"
-                >
-                    Invoice ID 
-                </Button>
-            )
-        },
-        cell: (info: any) => {
-            // return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>{info.getValue()?.split("T")[0]}</span>)
-            return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
-        }, 
-        enableSorting: false,
-        enableColumnFilter: true,
-        size: 210
-    }, 
-    {
-        accessorKey: 'invoiceDate',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost" className="font-bold tableHeaderSize"
-                >
-                    Invoice Date
-                </Button>
-            )
-        },
-        cell: (info: any) => {
-            // return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>{info.getValue()?.split("T")[0]}</span>)
-            return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
-        }, 
-        enableSorting: false,
-        enableColumnFilter: true,
-        size: 210
-    }, 
-    {
-        accessorKey: 'startDate',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost" className="font-bold tableHeaderSize"
-                >
-                    Start Date
-                </Button>
-            )
-        },
-        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },        
-        meta: {
-            filterVariant: 'calender',
-            calendarMode: 'range',
-            numberOfMonths: 2,
-            placeholder: 'Pick date',
         },
         enableSorting: false,
         enableColumnFilter: true,
         size: 210
-    },
-    {
-        accessorKey: 'endDate',
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost" className="font-bold tableHeaderSize"
-                >
-                    End Date
-                </Button>
-            )
-        },
-        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },  
-        enableSorting: false,
-        enableColumnFilter: true,
-        size: 210,        
-        meta: {
-            filterVariant: 'calender',
-            calendarMode: 'range',
-            numberOfMonths: 2,
-            placeholder: 'Pick date',
-        },
     },
     {
         accessorKey: 'migrationSizeProgressPercent',
@@ -316,6 +278,20 @@ export const columns: ColumnDef<Person>[] = [
         size: 160
     },
     {
+        accessorKey: 'Priority',
+        header: ({ column }) => {
+            return (
+                <Button variant="ghost" className="font-bold tableHeaderSize">
+                    Priority
+                </Button>
+            )
+        },
+        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },
+        enableSorting: false,
+        enableColumnFilter: true,
+        size: 180
+    },
+    {
         accessorKey: 'migrationState',
         header: ({ column }) => {
             return (
@@ -335,8 +311,46 @@ export const columns: ColumnDef<Person>[] = [
                 { label: 'Pending', value: 'PENDING' },
                 { label: 'PARTIAL', value: 'PARTIAL' },
             ],
-            isMulti:true
+            isMulti: true
         },
         size: 180
+    },
+    {
+        accessorKey: 'invoiceID',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    Invoice ID
+                </Button>
+            )
+        },
+        cell: (info: any) => {
+            // return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>{info.getValue()?.split("T")[0]}</span>)
+            return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
+        },
+        enableSorting: false,
+        enableColumnFilter: true,
+        size: 210
+    },
+    {
+        accessorKey: 'invoiceDate',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost" className="font-bold tableHeaderSize"
+                >
+                    Invoice Date
+                </Button>
+            )
+        },
+        cell: (info: any) => {
+            // return (<span className="tableHeaderSize wrapword" title={info.getValue()?.split("T")[0]}>{info.getValue()?.split("T")[0]}</span>)
+            return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>)
+        },
+        enableSorting: false,
+        enableColumnFilter: true,
+        size: 210
     },
 ]

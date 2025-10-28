@@ -39,7 +39,7 @@ const items = [
 
     {
         title: "Object Detail",
-        url: "/",
+        url: "/Object",
     },
     {
         title: "Uuid Detail",
@@ -119,9 +119,9 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             // Fetch “all” data with a stable key; your fetcher can ignore pageSize
             const response = await queryClient.fetchQuery({
                 queryKey: ["uuidData", "all", Body],
-                queryFn: () => {
+                 queryFn: async ({ signal }) => {
                     const endpoint = `http://localhost:4000/uuids?page=0&limit=`;
-                    return fetchData<any>(endpoint, "POST", Body);
+                    return fetchData(endpoint, "POST", Body, signal);
                 },
                 staleTime: 0,
             });

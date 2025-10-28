@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-     --contexify-menu-padding: 1px;
+    --contexify-menu-padding: 1px;
 
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -42,9 +42,9 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-  } 
+  }
 }
- 
+
 .rmsc {
   --rmsc-radius: calc(var(--radius) - 2px) !important;
   /* Radius  */
@@ -81,7 +81,7 @@
   z-index: 1000;
   /* Adjust this value to ensure the dropdown is on top */
 }
- 
+
 
 ::-webkit-scrollbar-track {
   -webkit-box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.3);
@@ -89,12 +89,12 @@
 }
 
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  height: 10px;
   background-color: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
+  border-radius: 10px;
   background-color: #ffffff;
 }
 
@@ -110,7 +110,7 @@ table>:not(caption)>*>* {
   padding-bottom: 0px !important;
 }
 
- 
+
 .resizer {
   position: absolute;
   right: 0;
@@ -129,7 +129,7 @@ table>:not(caption)>*>* {
 }
 
 
- 
+
 
 @layer base {
   :root {
@@ -156,12 +156,14 @@ table>:not(caption)>*>* {
 }
 
 table {
-  table-layout: fixed; /* prevents auto-resize by browser */
+  table-layout: fixed;
+  /* prevents auto-resize by browser */
   border-collapse: collapse;
   width: 100%;
 }
 
-th, td {
+th,
+td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -205,12 +207,25 @@ table tbody tr td {
 }
 
 .wrapword {
-  white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
-  white-space: -webkit-pre-wrap;          /* Chrome & Safari */ 
-  white-space: -pre-wrap;                 /* Opera 4-6 */
-  white-space: -o-pre-wrap;               /* Opera 7 */
-  white-space: pre-wrap;                  /* CSS3 */
-  word-wrap: break-word;                  /* Internet Explorer 5.5+ */
+  white-space: -moz-pre-wrap !important;
+  /* Mozilla, since 1999 */
+  white-space: -webkit-pre-wrap;
+  /* Chrome & Safari */
+  white-space: -pre-wrap;
+  /* Opera 4-6 */
+  white-space: -o-pre-wrap;
+  /* Opera 7 */
+  white-space: pre-wrap;
+  /* CSS3 */
+  word-wrap: break-word;
+  /* Internet Explorer 5.5+ */
   word-break: break-all;
   white-space: normal;
+}
+
+.tableHeaderSize {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

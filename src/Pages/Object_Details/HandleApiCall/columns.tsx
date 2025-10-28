@@ -91,7 +91,7 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             )
         },
-        cell: (info: any) => { return (<div className="text-left" title={info.getValue()}>{info.getValue()}</div>) },
+        cell: (info: any) => { return (<div className="text-left tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</div>) },
         size: 330,
         minSize: 45,
         enableResizing: true,
@@ -100,14 +100,13 @@ export const columns: ColumnDef<Person>[] = [
     },
     {
         accessorKey: 'category',
-        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{info.getValue()}</div>) },
+        cell: (info: any) => { return (<div className="text-left tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</div>) },
         header: ({ column }) => {
             return (<>
                 <Button
                     variant="ghost" className="font-bold tableHeaderSize"
                 >
                     Category
-
                 </Button>
             </>
             )
@@ -125,7 +124,6 @@ export const columns: ColumnDef<Person>[] = [
                     variant="ghost" className="font-bold tableHeaderSize"
                 >
                     Date
-
                 </Button>
             </>
             )
@@ -141,14 +139,13 @@ export const columns: ColumnDef<Person>[] = [
     },
     {
         accessorKey: 'sizeKB',
-        cell: (info: any) => { return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>) },
+        cell: (info: any) => { return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>) },
         header: ({ column }) => {
             return (<>
                 <Button
                     variant="ghost" className="font-bold tableHeaderSize"
                 >
                     Size(KB)
-
                 </Button>
             </>
             )
@@ -211,7 +208,7 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             )
         },
-        cell: (info: any) => { return (<div className="text-left" title={info.getValue()}>{info.getValue()}</div>) },
+        cell: (info: any) => { return (<div className="text-left tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</div>) },
         size: 145,
         minSize: 120
     },
@@ -241,7 +238,7 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             )
         },
-        cell: (info: any) => { return (<div className="text-left" title={info.getValue()}>{info.getValue()}</div>) },
+        cell: (info: any) => { return (<div className="text-left tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</div>) },
         size: 150,
         minSize: 120
     },
@@ -256,7 +253,7 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             )
         },
-        cell: (info: any) => { return (<div className="text-left" title={info.getValue()}>{info.getValue()}</div>) },
+        cell: (info: any) => { return (<div className="text-left tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</div>) },
         size: 165,
         minSize: 120
     },
@@ -271,7 +268,7 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             )
         },
-        cell: (info: any) => { return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>) },
+        cell: (info: any) => { return (<span className="tableHeaderSize wrapword" title={info.getValue()}>{info.getValue()}</span>) },
         enableSorting: false,
         enableColumnFilter: true,
         size: 350
@@ -299,23 +296,7 @@ export const columns: ColumnDef<Person>[] = [
             isMulti: false
         },
         size: 180
-    },
-    // {
-    //     accessorKey: 'fileName',
-    //     header: ({ column }) => {
-    //         return (
-    //             <Button
-    //                 variant="ghost" className="font-bold tableHeaderSize"
-    //             >
-    //                 File Name
-    //             </Button>
-    //         )
-    //     },
-    //     cell: (info: any) => { return (<span className="tableHeaderSize" title={info.getValue()}>{info.getValue()}</span>) },
-    //     enableSorting: false,
-    //     enableColumnFilter: false,
-    //     size:106
-    // },
+    }, 
     {
         accessorKey: 'instanceMigrated',
         header: ({ column }) => {
@@ -343,10 +324,10 @@ export const columns: ColumnDef<Person>[] = [
                 </Button>
             )
         },
-        cell: (info: any) => { return (<div className="text-center" title={info.getValue()}>{statusCall(info.getValue())}</div>) },
+        cell: (info: any) => { return (<div className="text-center tableHeaderSize wrapword" title={info.getValue()}>{statusCall(info.getValue())}</div>) },
         enableSorting: false,
         enableColumnFilter: true,
-        size: 106,
+        size: 160,
         meta: {
             filterVariant: 'select',
             selectOptions: [

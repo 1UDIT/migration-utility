@@ -21,6 +21,7 @@ import Index from '@/components/Pagination/Index';
 import { useDispatch } from 'react-redux';
 import { setPaginationStore } from '@/Redux/tableDropFilter';
 import { endOfYesterday, format } from 'date-fns';
+import FetchColumnDetail from './HandleApiCall/FetchColumnDetail';
 
 interface DateInterface {
     from: Date; // Assuming the dates are in string format
@@ -44,6 +45,7 @@ const Tabledata = () => {
         pageSize: 50,
     });
     const dispatch = useDispatch();
+    const [Columns] = FetchColumnDetail();
 
     const body = {
         "filters": Filter
@@ -61,7 +63,7 @@ const Tabledata = () => {
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
-        refetchInterval: 20000,
+        refetchInterval:20000,
         retry: false,
     });
 
@@ -73,7 +75,7 @@ const Tabledata = () => {
     const tableColumns = useMemo(
         () =>
             isLoading === true
-                ? columns.map((column) => ({
+                ? Columns.map((column) => ({
                     ...column,
                     cell: () => (
                         <div className="flex flex-col space-y-3">
@@ -81,8 +83,8 @@ const Tabledata = () => {
                         </div>
                     )
                 }))
-                : columns,
-        [isLoading]
+                : Columns,
+        [isLoading, Columns]
     );
 
 
@@ -110,8 +112,7 @@ const Tabledata = () => {
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
         console.log("Cleared Filter for:", idHeader);
     };
-
-    console.log("Current Filters in Tabledata:", Filter);
+ 
 
 
     function handleInputChange(value: any, idHeader: string, column: any) {

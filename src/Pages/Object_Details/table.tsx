@@ -16,6 +16,7 @@ import { FiFilter } from "react-icons/fi";
 import { MdOutlineFilterAltOff } from "react-icons/md";
 import Index from '@/components/Pagination/Index';
 import { endOfYesterday, format } from 'date-fns';
+import FetchColumnDetail from './HandleApiCall/FetchColumnDetail';
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
 
 interface DateInterface {
@@ -39,10 +40,12 @@ const Tabledata = () => {
         pageIndex: 0,
         pageSize: 50,
     });
-
+    const [Columns] = FetchColumnDetail();
     const body = {
         "filters": Filter
     };
+
+    console.log(Columns, "column")
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['uuidData', pagination.pageIndex, pagination.pageSize, body],
@@ -52,6 +55,7 @@ const Tabledata = () => {
         },
         networkMode: 'always',
         retry: false,
+        refetchInterval: 20000
     });
 
     const tableData = useMemo(() =>
@@ -62,7 +66,7 @@ const Tabledata = () => {
     const tableColumns = useMemo(
         () =>
             isLoading === true
-                ? columns.map((column) => ({
+                ? Columns.map((column) => ({
                     ...column,
                     cell: () => (
                         <div className="flex flex-col space-y-3">
@@ -70,8 +74,8 @@ const Tabledata = () => {
                         </div>
                     )
                 }))
-                : columns,
-        [isLoading]
+                : Columns,
+        [isLoading, Columns]
     );
 
 
@@ -251,7 +255,7 @@ const Tabledata = () => {
                 </table>
             </div>
 
-            <Index table={table} data={data} initialDateRange={Filter.archiveDate}/>
+            <Index table={table} data={data} initialDateRange={Filter.archiveDate} />
         </>
     )
 }

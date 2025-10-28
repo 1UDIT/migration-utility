@@ -2,11 +2,11 @@ import { format } from 'date-fns'
 import { Button } from '../ui/button'
 
 const Index = ({ table, data, initialDateRange }: any) => {
-    console.log("Initial Date Range in Pagination:", initialDateRange);
+    // console.log("Initial Date Range in Pagination:", initialDateRange);
     return (
         <div className="flex flex-row h-[6%] items-center">
             <div className="2xl:w-[50%] 2xl:block lg:block lg:w-[50%] items-center flex justify-start 
-             2xl:pl-0  lg:pl-0 pt-1 text-[#81b2f7] font-bold   min-[320px]:hidden max-[600px]:text-xs">
+             2xl:pl-2  lg:pl-0 pt-1 text-[#81b2f7] font-bold   min-[320px]:hidden max-[600px]:text-xs">
                 {initialDateRange?.from && initialDateRange?.to ? (
                     <>Display Data Is From {format(initialDateRange.from, 'yyyy-MM-dd')} To {format(initialDateRange.to, 'yyyy-MM-dd')}</>
                 ) : (
