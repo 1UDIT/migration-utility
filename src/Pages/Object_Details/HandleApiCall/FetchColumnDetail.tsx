@@ -37,9 +37,10 @@ const FetchColumnDetail = () => {
                     size: value.size,
                     minSize: value.minSize,
                     // Add a small mapping in your component
-                    cell: (props) => getCelldetail(props, value.accessorKey, alignClass),
+                    cell: (props:any) => getCelldetail(props, value.accessorKey, alignClass),
                     enableResizing: value.enableResizing,
-                    meta: value.meta
+                    meta: value.meta,
+                    enableColumnFilter: value.enableColumnFilter
                 }
             })
             SetColumn(Column);

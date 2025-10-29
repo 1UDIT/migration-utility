@@ -136,16 +136,17 @@
             "enableResizing": false,
             "size": 150,
             "minSize": 30,
-            "textAlign": "text-right"
+            "textAlign": "text-right",
+            "enableColumnFilter": false
         },
-       
         {
             "accessorKey": "totalObjectCount",
             "header": "Object Count",
             "enableResizing": false,
             "size": 150,
             "minSize": 30,
-            "textAlign": "text-right"
+            "textAlign": "text-right",
+            "enableColumnFilter": false
         },
         {
             "accessorKey": "migrationSizeProgressPercent",
@@ -153,7 +154,8 @@
             "enableResizing": true,
             "size": 260,
             "minSize": 30,
-            "textAlign": "text-center"
+            "textAlign": "text-center",
+            "enableColumnFilter": false
         },
         {
             "accessorKey": "migrationCountProgressPercent",
@@ -161,7 +163,8 @@
             "enableResizing": false,
             "size": 260,
             "minSize": 30,
-            "textAlign": "text-center"
+            "textAlign": "text-center",
+            "enableColumnFilter": false
         },
         {
             "accessorKey": "failedObjectCount",
@@ -169,7 +172,8 @@
             "size": 190,
             "minSize": 30,
             "textAlign": "text-right",
-            "enableResizing": true
+            "enableResizing": true,
+            "enableColumnFilter": false
         },
         {
             "accessorKey": "migratedObjectCount",
@@ -177,15 +181,26 @@
             "enableResizing": true,
             "size": 230,
             "minSize": 130,
-            "textAlign": "text-right"
-        }, 
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "Priority",
+            "header": "Priority",
+            "size": 220,
+            "minSize": 70,
+            "textAlign": "text-right",
+            "enableResizing": true,
+            "enableColumnFilter": false
+        },
         {
             "accessorKey": "migratedObjectSize",
             "header": "Migrated Object Size",
             "size": 220,
             "minSize": 70,
             "textAlign": "text-right",
-            "enableResizing": true
+            "enableResizing": true,
+            "enableColumnFilter": false
         },
         {
             "accessorKey": "migrationState",
@@ -241,6 +256,22 @@
     ],
     "Object_column": [
         {
+            "accessorKey": "objectName",
+            "textAlign": "text-left",
+            "header": "Object Name",
+            "size": 220,
+            "minSize": 60,
+            "enableResizing": true
+        },
+        {
+            "accessorKey": "category",
+            "textAlign": "text-left",
+            "header": "Category",
+            "size": 160,
+            "minSize": 60,
+            "enableResizing": true
+        },
+        {
             "accessorKey": "barcode",
             "textAlign": "text-right",
             "header": "Barcode",
@@ -262,7 +293,17 @@
             "enableResizing": true,
             "size": "110",
             "minSize": "50",
-            "textAlign": "text-right"
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "barcodeLastArchiveDate",
+            "header": "Barcode Last Archive Date",
+            "size": "180",
+            "minSize": "125",
+            "enableResizing": "true",
+            "textAlign": "text-center",
+            "enableColumnFilter": false
         },
         {
             "accessorKey": "archiveDate",
@@ -284,7 +325,8 @@
             "enableResizing": true,
             "size": 140,
             "minSize": 70,
-            "textAlign": "text-right"
+            "textAlign": "text-right",
+            "enableColumnFilter": false
         },
         {
             "accessorKey": "ddnPath",
@@ -292,7 +334,8 @@
             "enableResizing": true,
             "size": 180,
             "minSize": 130,
-            "textAlign": "text-right"
+            "textAlign": "text-right",
+            "enableColumnFilter": false
         },
         {
             "accessorKey": "mediaType",
@@ -303,14 +346,6 @@
             "textAlign": "text-left"
         },
         {
-            "accessorKey": "acs",
-            "header": "acs",
-            "size": 220,
-            "minSize": 70,
-            "textAlign": "text-right",
-            "enableResizing": true
-        },
-        {
             "accessorKey": "mediaName",
             "header": "Media Name",
             "enableResizing": false,
@@ -319,12 +354,40 @@
             "textAlign": "text-left"
         },
         {
+            "accessorKey": "fileName",
+            "header": "File Name",
+            "enableResizing": true,
+            "size": 180,
+            "minSize": 130,
+            "textAlign": "text-left",
+            "enableColumnFilter": false
+        },
+        {
             "accessorKey": "axfFileName",
             "header": "Axf File Name",
             "enableResizing": true,
             "size": 230,
             "minSize": 130,
-            "textAlign": "text-left"
+            "textAlign": "text-left",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "instanceMigrated",
+            "header": "Instance Migrated",
+            "enableResizing": false,
+            "size": 260,
+            "minSize": 30,
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "watchFolderName",
+            "header": "Watch Folder Name",
+            "size": 190,
+            "minSize": 30,
+            "textAlign": "text-Left",
+            "enableResizing": true,
+            "enableColumnFilter": false
         },
         {
             "accessorKey": "isMatched",
@@ -335,8 +398,8 @@
             "textAlign": "text-center"
         },
         {
-            "accessorKey": "instanceMigrated",
-            "header": "instance Migrated",
+            "accessorKey": "appInstanceName",
+            "header": "App Instance Name",
             "size": 190,
             "minSize": 30,
             "textAlign": "text-left",
@@ -370,6 +433,14 @@
                 ],
                 "isMulti": true
             }
+        },
+        {
+            "accessorKey": "remarks",
+            "header": "Remarks",
+            "size": 190,
+            "minSize": 30,
+            "textAlign": "text-left",
+            "enableResizing": true
         }
     ]
 }

@@ -39,7 +39,7 @@ const items = [
 
     {
         title: "Object Detail",
-        url: "/Object",
+        url: "/",
     },
     {
         title: "Uuid Detail",
@@ -248,7 +248,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                     </SidebarContent>
                     <SidebarHeader />
                     {/* Sidebar Footer - Admin Dropdown */}
-                    <SidebarFooter>
+                    {/* <SidebarFooter>
                         <SidebarMenu className="text-white">
                             <SidebarMenuItem>
                                 <DropdownMenu>
@@ -264,7 +264,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                                 </DropdownMenu>
                             </SidebarMenuItem>
                         </SidebarMenu>
-                    </SidebarFooter>
+                    </SidebarFooter> */}
 
                 </Sidebar>
                 <SidebarInset className="h-screen flex flex-col overflow-hidden">

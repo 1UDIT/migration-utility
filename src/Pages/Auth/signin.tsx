@@ -9,12 +9,10 @@ const SignIn: React.FC = () => {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [IpAddress, setIpAddress] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   // TODO: re-enable when config is ready
   // useEffect(() => {
@@ -36,55 +34,26 @@ const SignIn: React.FC = () => {
 
       const dataBody = { user: userName, password };
 
-      if (!IpAddress) {
-        setError('Server not ready. Please try again in a moment.');
+      if (userName === 'admin' && password === 'admin') {
+        const from = (location as any).state?.from?.pathname || '/Request';
+        navigate(from, { replace: true });
+      } else {
+        setError('Invalid credentials. Please try again.');
         setLoading(false);
         return;
-      }
-
-      axios({
-        method: 'post',
-        url: `http://${IpAddress}:7001/internal/api/login`,
-        data: dataBody,
-      })
-        .then((res) => {
-          if (res.status === 200) {
-            setLoading(false);
-            sessionStorage.setItem('Session', res.data.sessionID);
-            sessionStorage.setItem('userType', res.data.userType);
-            sessionStorage.setItem('Dropdown', JSON.stringify(res.data.sourcedestination));
-            sessionStorage.setItem('Media', JSON.stringify(res.data.media));
-            sessionStorage.setItem('userCategory', JSON.stringify(res.data.catgeory));
-            sessionStorage.setItem('user_Name', userName);
-
-            const from = (location as any).state?.from?.pathname || '/Request';
-            navigate(from, { replace: true });
-          } else {
-            setError('Login failed. Please try again.');
-          }
-        })
-        .catch((err) => {
-          if (err.code === 'ECONNABORTED') {
-            setError('Request timed out. Please check your connection or try again.');
-          } else if (err.response?.status === 401 || err.response?.data?.status === 1004) {
-            setError('Invalid credentials. Please try again.');
-          } else {
-            setError('Server unavailable. Please try again later.');
-          }
-        })
-        .finally(() => setLoading(false));
+      } 
     },
-    [userName, password, IpAddress, location, navigate]
+    [userName, password, location, navigate]
   );
 
   return (
     <div className="min-h-screen w-full overflow-hidden bg-[#0b1320] relative flex items-center justify-center">
       {/* faint radial glow */}
       <div className="pointer-events-none absolute inset-0 opacity-50"
-           style={{
-             background:
-               'radial-gradient(800px 400px at 50% 20%, rgba(59,130,246,0.20), transparent 60%)'
-           }}
+        style={{
+          background:
+            'radial-gradient(800px 400px at 50% 20%, rgba(59,130,246,0.20), transparent 60%)'
+        }}
       />
 
       <div className="relative z-10 w-[90%] max-w-md rounded-2xl border border-[#2a3550] bg-white/5 backdrop-blur-md shadow-2xl p-8">
