@@ -45,7 +45,6 @@ const Tabledata = () => {
         "filters": Filter
     };
 
-    console.log(Columns, "column")
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['uuidData', pagination.pageIndex, pagination.pageSize, body],
@@ -87,6 +86,7 @@ const Tabledata = () => {
         manualPagination: true,
         enableColumnResizing: true,
         columnResizeMode: 'onChange',
+        manualSorting: false,
         onPaginationChange: setPagination,
         state: {
             pagination,
@@ -160,10 +160,10 @@ const Tabledata = () => {
                                                     >
                                                         <span className='flex justify-between w-full'>
                                                             {flexRender(header.column.columnDef.header, header.getContext())}
-                                                            {{
+                                                            {/* {{
                                                                 asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
                                                                 desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
-                                                            }[header.column.getIsSorted() as string] ?? null}
+                                                            }[header.column.getIsSorted() as string] ?? null} */}
                                                         </span>
                                                     </span>
                                                     <div className="flex justify-end items-center">

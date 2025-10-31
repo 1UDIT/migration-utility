@@ -101,6 +101,7 @@ const Tabledata = () => {
             pagination,
         },
         pageCount: Math.ceil(data?.total / pagination.pageSize),
+        manualSorting:false
     });
 
     function clearFilter(idHeader: string) {
@@ -113,8 +114,6 @@ const Tabledata = () => {
         console.log("Cleared Filter for:", idHeader);
     };
  
-
-
     function handleInputChange(value: any, idHeader: string, column: any) {
         setFilter({})
         column.setFilterValue(value);
@@ -174,10 +173,10 @@ const Tabledata = () => {
                                                     >
                                                         <span className='flex justify-between w-full'>
                                                             {flexRender(header.column.columnDef.header, header.getContext())}
-                                                            {{
+                                                            {/* {{
                                                                 asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
                                                                 desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
-                                                            }[header.column.getIsSorted() as string] ?? null}
+                                                            }[header.column.getIsSorted() as string] ?? null} */}
                                                         </span>
                                                     </span>
                                                     <div className="flex justify-end items-center">
