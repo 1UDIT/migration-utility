@@ -63,7 +63,7 @@ const Tabledata = () => {
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
-        refetchInterval:20000,
+        refetchInterval: 20000,
         retry: false,
     });
 
@@ -101,7 +101,7 @@ const Tabledata = () => {
             pagination,
         },
         pageCount: Math.ceil(data?.total / pagination.pageSize),
-        manualSorting:false
+        manualSorting: false
     });
 
     function clearFilter(idHeader: string) {
@@ -113,15 +113,19 @@ const Tabledata = () => {
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
         console.log("Cleared Filter for:", idHeader);
     };
- 
-    function handleInputChange(value: any, idHeader: string, column: any) {
-        setFilter({})
-        column.setFilterValue(value);
+
+    function handleInputChange(value: any, idHeader: string, column: any) { 
+        column.setFilterValue(value); 
         setFilter((prev: any) => ({
-            ...prev,           // keep old filters
-            [idHeader]: value  // update or add this column’s filter
-        })); 
+            ...prev,
+            startDate: {
+                from: '',
+                to: ''
+            },
+            [idHeader]: value
+        }));
     }
+
 
     const openSearchBtn = (Value: any, header: any) => {
         const add: any = { value: Value };
@@ -164,7 +168,7 @@ const Tabledata = () => {
                                                 key={header.id}
                                                 colSpan={header.colSpan}
                                                 style={{ position: 'relative', width: header.getSize(), fontSize: "clamp(0.8rem, 1.5vw, 1rem)" }}
-                                                className="th select-none px-1.5 text-black dark:text-white sticky top-0 dark:bg-[#2d3d52] bg-slate-50 dark:drop-shadow-1 drop-shadow-md"
+                                                className="th select-none px-1.5 text-white sticky top-0 bg-[#2d3d52] drop-shadow-md"
                                             >
                                                 <div className="flex justify-between items-center w-full">
                                                     <span
@@ -273,7 +277,7 @@ const Tabledata = () => {
                     </Item>
                 </Menu> */}
             </div>
-            <Index table={table} data={data} initialDateRange={Filter.startDate}/>
+            <Index table={table} data={data} initialDateRange={Filter.startDate} />
         </>
     )
 }

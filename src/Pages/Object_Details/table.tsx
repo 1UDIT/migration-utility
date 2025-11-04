@@ -5,7 +5,7 @@ import {
     getPaginationRowModel,
     type PaginationState,
 } from '@tanstack/react-table';
-import React, { Fragment, lazy, Suspense, useMemo, useState } from 'react';
+import React, { Fragment, lazy, Suspense, useMemo, useRef, useState } from 'react';
 import { columns } from './HandleApiCall/columns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FaSortUp, FaSortDown } from "react-icons/fa6";
@@ -32,6 +32,7 @@ const initialDateRange: DateInterface = {
 
 
 const Tabledata = () => {
+    const typingTimeoutRef = useRef< null>(null);
     const [Filter, setFilter] = useState<any>({ archiveDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') } });
     const [dropdownOpen, setDropdownOpen] = useState([]);
     const [openSearch, setSearchTag] = useState<any[]>([]);
@@ -101,14 +102,18 @@ const Tabledata = () => {
     };
 
 
-    async function handleInputChange(value: any, idHeader: string, column: any) {
-        await setFilter({})
+    function handleInputChange(value: any, idHeader: string, column: any) {
         column.setFilterValue(value);
         setFilter((prev: any) => ({
-            ...prev,           // keep old filters
-            [idHeader]: value  // update or add this column’s filter
+            ...prev,
+            archiveDate: {
+                from: '',
+                to: ''
+            },
+            [idHeader]: value
         }));
     }
+
 
     const openSearchBtn = (Value: any, header: any) => {
         const add: any = { value: Value };
@@ -151,7 +156,7 @@ const Tabledata = () => {
                                                 key={header.id}
                                                 colSpan={header.colSpan}
                                                 style={{ position: 'relative', width: header.getSize(), fontSize: "clamp(0.8rem, 1.5vw, 1rem)" }}
-                                                className="th select-none px-1.5 text-black dark:text-white sticky top-0 dark:bg-[#2d3d52] bg-slate-50 dark:drop-shadow-1 drop-shadow-md"
+                                                className="th select-none px-1.5 text-white sticky top-0 bg-[#2d3d52] drop-shadow-md"
                                             >
                                                 <div className="flex justify-between items-center w-full">
                                                     <span
