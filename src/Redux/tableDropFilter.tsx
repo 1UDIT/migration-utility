@@ -33,8 +33,7 @@ const tableDropDownSlice = createSlice({
     initialState,
     reducers: {
         setPaginationStore: (state, action) => {
-            state.paginationStore = action.payload;
-            console.log('Updated paginationStore:', state.paginationStore);
+            state.paginationStore = action.payload; 
         },
     },
 });

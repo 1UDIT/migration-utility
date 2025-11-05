@@ -32,7 +32,7 @@ const initialDateRange: DateInterface = {
 
 
 const Tabledata = () => {
-    const typingTimeoutRef = useRef< null>(null);
+    const typingTimeoutRef = useRef<null>(null);
     const [Filter, setFilter] = useState<any>({ archiveDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') } });
     const [dropdownOpen, setDropdownOpen] = useState([]);
     const [openSearch, setSearchTag] = useState<any[]>([]);
@@ -48,14 +48,23 @@ const Tabledata = () => {
 
 
     const { data, isLoading, error } = useQuery({
-        queryKey: ['uuidData', pagination.pageIndex, pagination.pageSize, body],
+        queryKey: ['uuidData', pagination, body],
         queryFn: async ({ signal }) => {
-            const endpoint = `http://localhost:4000/objects?page=${pagination.pageIndex}&limit=${pagination.pageSize}`;
+            const endpoint = `http://localhost:4000/objects?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
         retry: false,
-        refetchInterval: 20000
+        refetchInterval: 10000
+    });
+
+    const totalQuery = useQuery({
+        queryKey: ["uuidTotal", body],
+        queryFn: ({ signal }) =>
+            fetchData(`http://localhost:4000/objects/total`, "POST", body, signal),
+        networkMode: "always",
+        retry: false,
+        refetchOnWindowFocus: false, // optional, avoid spam
     });
 
     const tableData = useMemo(() =>
@@ -92,9 +101,10 @@ const Tabledata = () => {
         state: {
             pagination,
         },
-        pageCount: Math.ceil(data?.total / pagination.pageSize),
+        pageCount: Math.ceil(totalQuery?.data?.total / pagination.pageSize),
     });
 
+    console.log(totalQuery?.data?.total / pagination.pageSize)
 
     function clearFilter(idHeader: string) {
         setFilter({ id: idHeader, value: "" })
@@ -103,6 +113,10 @@ const Tabledata = () => {
 
 
     function handleInputChange(value: any, idHeader: string, column: any) {
+        setPagination({
+            pageIndex: 0,
+            pageSize: pagination.pageSize,
+        });
         column.setFilterValue(value);
         setFilter((prev: any) => ({
             ...prev,
@@ -260,7 +274,7 @@ const Tabledata = () => {
                 </table>
             </div>
 
-            <Index table={table} data={data} initialDateRange={Filter.archiveDate} />
+            <Index table={table} data={data} initialDateRange={Filter.archiveDate} totalPage={totalQuery?.data?.total} />
         </>
     )
 }

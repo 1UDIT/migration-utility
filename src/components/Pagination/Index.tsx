@@ -1,8 +1,7 @@
 import { format } from 'date-fns'
 import { Button } from '../ui/button'
 
-const Index = ({ table, data, initialDateRange }: any) => {
-    // console.log("Initial Date Range in Pagination:", initialDateRange);
+const Index = ({ table, data, initialDateRange, totalPage }: any) => { 
     return (
         <div className="flex flex-row h-[6%] items-center">
             <div className="2xl:w-[50%] 2xl:block lg:block lg:w-[50%] items-center flex justify-start 
@@ -51,7 +50,7 @@ const Index = ({ table, data, initialDateRange }: any) => {
                 <span className="flex items-center gap-1 text-white pr-2">
                     <div>Page</div>
                     <strong>
-                        {table.getState().pagination.pageIndex + 1} of{' '}
+                        {table.getState().pagination.pageIndex +1} of{' '}
                         {table.getPageCount().toLocaleString()}
                     </strong>
                 </span>
@@ -68,7 +67,7 @@ const Index = ({ table, data, initialDateRange }: any) => {
                         </option>
                     ))}
                 </select>
-                <span className="flex items-center gap-1 text-white pl-2">of {data?.total} Total</span>
+                <span className="flex items-center gap-1 text-white pl-2">of {totalPage} Total</span>
             </div>
         </div>
     )

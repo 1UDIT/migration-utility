@@ -52,20 +52,21 @@ const Tabledata = () => {
     };
 
     const { data, isLoading, refetch, error } = useQuery({
-        queryKey: ['uuidData', pagination.pageIndex, pagination.pageSize, body],
+        queryKey: ['uuidData', pagination, body],
         queryFn: async ({ signal }) => {
             dispatch(
                 setPaginationStore({
                     filters: Filter,
                 })
             );
-            const endpoint = `http://localhost:4000/uuids?page=${pagination.pageIndex}&limit=${pagination.pageSize}`;
+            const endpoint = `http://localhost:4000/uuids?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
         refetchInterval: 20000,
         retry: false,
     });
+
 
     const tableData = useMemo(() =>
         (isLoading === true ? Array(10).fill({}) : data?.data),
@@ -87,6 +88,16 @@ const Tabledata = () => {
         [isLoading, Columns]
     );
 
+    const totalQuery = useQuery({
+        queryKey: ["uuidTotal", body],
+        queryFn: ({ signal }) =>
+            fetchData(`http://localhost:4000/uuids/total`, "POST", body, signal),
+        networkMode: "always",
+        retry: false,
+        refetchOnWindowFocus: false, // optional, avoid spam
+    });
+
+
 
     const table = useReactTable({
         data: tableData || [],
@@ -100,22 +111,22 @@ const Tabledata = () => {
         state: {
             pagination,
         },
-        pageCount: Math.ceil(data?.total / pagination.pageSize),
-        manualSorting: false
+        pageCount: Math.ceil(totalQuery?.data?.total / pagination.pageSize),
+        manualSorting: false,
     });
 
     function clearFilter(idHeader: string) {
-        setFilter((prev: any) => ({
-            ...prev,           // keep old filters
-            [idHeader]: ""  // update or add this column’s filter
-        }));
-
+        setFilter({ id: idHeader, value: "" })
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
-        console.log("Cleared Filter for:", idHeader);
     };
 
-    function handleInputChange(value: any, idHeader: string, column: any) { 
-        column.setFilterValue(value); 
+
+    function handleInputChange(value: any, idHeader: string, column: any) {
+        setPagination({
+            pageIndex: 0,
+            pageSize: pagination.pageSize,
+        });
+        column.setFilterValue(value);
         setFilter((prev: any) => ({
             ...prev,
             startDate: {
@@ -277,7 +288,7 @@ const Tabledata = () => {
                     </Item>
                 </Menu> */}
             </div>
-            <Index table={table} data={data} initialDateRange={Filter.startDate} />
+            <Index table={table} data={data} initialDateRange={Filter.startDate} totalPage={totalQuery?.data?.total} />
         </>
     )
 }
