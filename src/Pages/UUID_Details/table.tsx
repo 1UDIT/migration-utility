@@ -46,6 +46,7 @@ const Tabledata = () => {
     });
     const dispatch = useDispatch();
     const [Columns] = FetchColumnDetail();
+    const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
 
     const body = {
         "filters": Filter
@@ -116,8 +117,9 @@ const Tabledata = () => {
     });
 
     function clearFilter(idHeader: string) {
-        setFilter({ id: idHeader, value: "" })
+        setFilter({startDate: {from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd')}})
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
+        setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
     };
 
 
@@ -135,6 +137,17 @@ const Tabledata = () => {
             },
             [idHeader]: value
         }));
+        if (value.trim()) {
+            // Only update if text has a value
+            setStoreFilterId((prev) => {
+                if (prev.some((val) => (val === idHeader))) return prev;
+                else {
+                    return [...prev, idHeader];
+                }
+            });
+        } else {
+            console.log("Text is empty; no action taken.");
+        }
     }
 
 
@@ -198,14 +211,14 @@ const Tabledata = () => {
                                                         {header.column.getCanFilter() &&
                                                             (openSearch.includes(header.id) ? (
                                                                 <MdOutlineFilterAltOff
-                                                                    className={` pt-1 h-[25px] w-[25px] `}
+                                                                     className={` pt-1 h-[25px] w-[25px] ${storeFilterId.includes(header.id) ? "text-red-500" : "text-white"}`}
                                                                     onClick={() => {
                                                                         closeDropMenu(header.id);
                                                                     }}
                                                                 />
                                                             ) : (
                                                                 <FiFilter
-                                                                    className={` pt-1 h-[25px] w-[25px]  `}
+                                                                    className={` pt-1 h-[25px] w-[25px] ${storeFilterId.includes(header.id) ? "text-red-500" : "text-white"}`}
                                                                     onClick={() => {
                                                                         openSearchBtn(header.id, header);
                                                                     }}
@@ -245,7 +258,7 @@ const Tabledata = () => {
                                                                         handleInputChange={handleInputChange}
                                                                         Filter={Filter}
                                                                         isOpen={openSearch.includes(header.id)}
-                                                                        onClear={clearFilter}
+                                                                        onClear={clearFilter} 
                                                                     /> </Suspense>
                                                             </Fragment>
                                                         )
@@ -281,12 +294,7 @@ const Tabledata = () => {
                             )
                         })}
                     </tbody>
-                </table>
-                {/* <Menu id={MENU_ID}>
-                    <Item onClick={handleItemClick}>
-                        Download Report
-                    </Item>
-                </Menu> */}
+                </table> 
             </div>
             <Index table={table} data={data} initialDateRange={Filter.startDate} totalPage={totalQuery?.data?.total} />
         </>

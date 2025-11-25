@@ -5,7 +5,7 @@ interface ColumnFilterDropdownProps {
   header: any;
   isOpen: boolean;  
   onClear: (id: string) => void;
-  Filter: any;
+  Filter: any; 
   handleInputChange: (value: string, idHeader: string, column: any) => void;
 }
 
@@ -14,7 +14,7 @@ const ColumnFilterDropdown: React.FC<ColumnFilterDropdownProps> = ({
   isOpen, 
   onClear,
   Filter,
-  handleInputChange,
+  handleInputChange, 
 }) => {
   return (
     <div className="flex items-center">      
@@ -25,7 +25,7 @@ const ColumnFilterDropdown: React.FC<ColumnFilterDropdownProps> = ({
             headerid={header.id}
             handleInputChange={handleInputChange}
             Filter={Filter}
-            clearFilter={onClear}
+            clearFilter={onClear} 
           />
         </Suspense>
       )}

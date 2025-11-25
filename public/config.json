@@ -1,6 +1,6 @@
 {
     "apiUrl": "127.0.0.1",
-    "columns": [
+    "ReportColumns": [
         {
             "header": "Tape Barcode",
             "dataKey": "UUID",
@@ -114,7 +114,8 @@
                 "calendarMode": "range",
                 "numberOfMonths": 2,
                 "placeholder": "Pick date"
-            }
+            },
+            "enableSorting": false
         },
         {
             "accessorKey": "endDate",
@@ -128,7 +129,8 @@
                 "numberOfMonths": 2,
                 "placeholder": "Pick date"
             },
-            "enableResizing": true
+            "enableResizing": true,
+            "enableSorting": false
         },
         {
             "accessorKey": "totalObjectSize",
@@ -251,7 +253,8 @@
                 "calendarMode": "range",
                 "numberOfMonths": 2,
                 "placeholder": "Pick date"
-            }
+            },
+            "enableSorting": false
         }
     ],
     "Object_column": [
@@ -303,10 +306,11 @@
             "minSize": "125",
             "enableResizing": "true",
             "textAlign": "text-center",
-            "enableColumnFilter": false
+            "enableColumnFilter": false,
+            "enableSorting": false
         },
         {
-            "accessorKey": "archiveDate",
+            "accessorKey": "lastUpdateDate",
             "header": "Date",
             "size": "160",
             "minSize": "125",
@@ -327,16 +331,7 @@
             "minSize": 70,
             "textAlign": "text-right",
             "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "ddnPath",
-            "header": "Path",
-            "enableResizing": true,
-            "size": 180,
-            "minSize": 130,
-            "textAlign": "text-right",
-            "enableColumnFilter": false
-        },
+        }, 
         {
             "accessorKey": "mediaType",
             "header": "Media Type",
@@ -432,7 +427,8 @@
                     }
                 ],
                 "isMulti": true
-            }
+            },
+            "enableSorting": false
         },
         {
             "accessorKey": "remarks",
@@ -440,7 +436,8 @@
             "size": 190,
             "minSize": 30,
             "textAlign": "text-left",
-            "enableResizing": true
+            "enableResizing": true,
+            "enableSorting": false
         }
     ]
 }

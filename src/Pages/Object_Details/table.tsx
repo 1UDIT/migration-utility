@@ -4,6 +4,7 @@ import {
     useReactTable,
     getPaginationRowModel,
     type PaginationState,
+    type SortingState,
 } from '@tanstack/react-table';
 import React, { Fragment, lazy, Suspense, useMemo, useRef, useState } from 'react';
 import { columns } from './HandleApiCall/columns';
@@ -32,8 +33,7 @@ const initialDateRange: DateInterface = {
 
 
 const Tabledata = () => {
-    const typingTimeoutRef = useRef<null>(null);
-    const [Filter, setFilter] = useState<any>({ archiveDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') } });
+    const [Filter, setFilter] = useState<any>({ lastUpdateDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') } });
     const [dropdownOpen, setDropdownOpen] = useState([]);
     const [openSearch, setSearchTag] = useState<any[]>([]);
     const { width } = useWindowSize();
@@ -42,13 +42,15 @@ const Tabledata = () => {
         pageSize: 50,
     });
     const [Columns] = FetchColumnDetail();
+    const [sorting, setSorting] = useState<SortingState>([]);
+    const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
     const body = {
-        "filters": Filter
+        "filters": Filter,
+        "sorting": sorting
     };
 
-
     const { data, isLoading, error } = useQuery({
-        queryKey: ['uuidData', pagination, body],
+        queryKey: ['uuidData', pagination, body, sorting],
         queryFn: async ({ signal }) => {
             const endpoint = `http://localhost:4000/objects?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
@@ -96,19 +98,26 @@ const Tabledata = () => {
         manualPagination: true,
         enableColumnResizing: true,
         columnResizeMode: 'onChange',
-        manualSorting: false,
+        manualSorting: true,
         onPaginationChange: setPagination,
+        onSortingChange: setSorting,
         state: {
+            sorting,
             pagination,
         },
         pageCount: Math.ceil(totalQuery?.data?.total / pagination.pageSize),
     });
 
-    console.log(totalQuery?.data?.total / pagination.pageSize)
 
     function clearFilter(idHeader: string) {
-        setFilter({ id: idHeader, value: "" })
+        setFilter({
+            lastUpdateDate: {
+                from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd')
+            }
+        })
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
+        setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
+
     };
 
 
@@ -120,12 +129,18 @@ const Tabledata = () => {
         column.setFilterValue(value);
         setFilter((prev: any) => ({
             ...prev,
-            archiveDate: {
+            lastUpdateDate: {
                 from: '',
                 to: ''
             },
             [idHeader]: value
         }));
+        setStoreFilterId((prev) => {
+            if (prev.some((val) => (val === idHeader))) return prev;
+            else {
+                return [...prev, idHeader];
+            }
+        });
     }
 
 
@@ -179,24 +194,24 @@ const Tabledata = () => {
                                                     >
                                                         <span className='flex justify-between w-full'>
                                                             {flexRender(header.column.columnDef.header, header.getContext())}
-                                                            {/* {{
+                                                            {{
                                                                 asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
                                                                 desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
-                                                            }[header.column.getIsSorted() as string] ?? null} */}
+                                                            }[header.column.getIsSorted() as string] ?? null}
                                                         </span>
                                                     </span>
                                                     <div className="flex justify-end items-center">
                                                         {header.column.getCanFilter() &&
                                                             (openSearch.includes(header.id) ? (
                                                                 <MdOutlineFilterAltOff
-                                                                    className={` pt-1 h-[25px] w-[25px] `}
+                                                                    className={` pt-1 h-[25px] w-[25px] ${storeFilterId.includes(header.id) ? "text-red-500" : "text-white"}`}
                                                                     onClick={() => {
                                                                         closeDropMenu(header.id);
                                                                     }}
                                                                 />
                                                             ) : (
                                                                 <FiFilter
-                                                                    className={` pt-1 h-[25px] w-[25px]  `}
+                                                                    className={` pt-1 h-[25px] w-[25px] ${storeFilterId.includes(header.id) ? "text-red-500" : "text-white"}`}
                                                                     onClick={() => {
                                                                         openSearchBtn(header.id, header);
                                                                     }}
@@ -274,7 +289,7 @@ const Tabledata = () => {
                 </table>
             </div>
 
-            <Index table={table} data={data} initialDateRange={Filter.archiveDate} totalPage={totalQuery?.data?.total} />
+            <Index table={table} data={data} initialDateRange={Filter.lastUpdateDate} totalPage={totalQuery?.data?.total} />
         </>
     )
 }

@@ -40,7 +40,9 @@ const FetchColumnDetail = () => {
                     cell: (props: any) => getCelldetail(props, value.accessorKey, alignClass),
                     enableResizing: value.enableResizing,
                     meta: value.meta,
-                    enableColumnFilter: value.enableColumnFilter
+                    enableColumnFilter: value.enableColumnFilter,
+                    enableSorting: value.enableSorting,
+
                 }
             })
             SetColumn(Column);

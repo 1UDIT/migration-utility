@@ -164,7 +164,7 @@ const ValueContainer = ({ children, ...props }: ValueContainerProps) => {
 
 
 export const Filter = ({
-  column, headerid, handleInputChange, clearFilter, date,
+  column, headerid, handleInputChange, clearFilter, date
 }: props) => {
   const columnFilterValue = column.getFilterValue();
   const meta = column.columnDef.meta ?? {};
@@ -248,17 +248,18 @@ export const Filter = ({
       column.setFilterValue(undefined);
       clearFilter(headerid);
       setIsPopoverOpen(false);
+      // setStoreFilterId(headerid);
     };
 
     const handleSelect = (date: DateRange | Date | undefined) => {
       if (!date) return;
 
       if (calendarMode === 'single' && date instanceof Date) {
-        column.setFilterValue(date);
+        column.setFilterValue(date); 
         handleInputChange(format(date, "yyyy-MM-dd"), headerid, column);
       } else if (calendarMode === 'range' && typeof date === 'object' && 'from' in date) {
         const range = date as DateRange;
-        column.setFilterValue(range);
+        column.setFilterValue(range); 
         handleInputChange(
           {
             from: range.from ? format(range.from, "yyyy-MM-dd") : "",

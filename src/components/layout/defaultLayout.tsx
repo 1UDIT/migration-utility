@@ -88,7 +88,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
         axios
             .get('./config.json')
             .then((response) => {
-                setReportsColumn(response.data.columns);
+                setReportsColumn(response.data.ReportColumns);
             })
             .catch((err) => {
                 console.error('Error loading config.json:', err);
