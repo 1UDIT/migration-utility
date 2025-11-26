@@ -12,20 +12,16 @@ interface PaginationState {
 }
 
 interface CounterState {
-    paginationStore: PaginationState;
+    paginationStore: any;
+    ipAddressStore?: any;
 }
 
 const initialState: CounterState = {
     paginationStore: {
-        "filters": {
-            "UUID": "",
-            "migratedObjectSize": "",
-            "sourceName": "",
-            "destinationName": "",
-            "objectName": "",
-            "status": ""
+        "filters": { 
         }
     },
+    ipAddressStore: ""
 };
 
 const tableDropDownSlice = createSlice({
@@ -35,8 +31,11 @@ const tableDropDownSlice = createSlice({
         setPaginationStore: (state, action) => {
             state.paginationStore = action.payload; 
         },
+        ipAddressStore: (state, action) => {
+            state.ipAddressStore = action.payload; 
+        }
     },
 });
 
-export const { setPaginationStore } = tableDropDownSlice.actions;
+export const { setPaginationStore,ipAddressStore } = tableDropDownSlice.actions;
 export default tableDropDownSlice.reducer;

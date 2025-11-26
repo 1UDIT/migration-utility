@@ -6,7 +6,7 @@ import {
     type PaginationState,
     type SortingState,
 } from '@tanstack/react-table';
-import React, { Fragment, lazy, Suspense, useMemo, useRef, useState } from 'react';
+import React, { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { columns } from './HandleApiCall/columns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FaSortUp, FaSortDown } from "react-icons/fa6";
@@ -18,6 +18,8 @@ import { MdOutlineFilterAltOff } from "react-icons/md";
 import Index from '@/components/Pagination/Index';
 import { endOfYesterday, format } from 'date-fns';
 import FetchColumnDetail from './HandleApiCall/FetchColumnDetail';
+import { useDispatch, useSelector } from 'react-redux';
+import { setPaginationStore } from '@/Redux/tableDropFilter';
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
 
 interface DateInterface {
@@ -48,11 +50,47 @@ const Tabledata = () => {
         "filters": Filter,
         "sorting": sorting
     };
+    const dispatch = useDispatch();
+    const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
+
+    // inside Tabledata component
+    useEffect(() => {
+        function updateDateAtMidnight() {
+            const newFrom = endOfYesterday();
+            const newTo = new Date();
+            setFilter(
+                { lastUpdateDate: { from: newFrom, to: newTo } });
+
+            // Schedule the next run for the following midnight
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setHours(24, 0, 0, 0);
+            const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+            setTimeout(updateDateAtMidnight, msUntilMidnight);
+        }
+
+        // Schedule first midnight update
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setHours(24, 0, 0, 0);
+        const msUntilMidnight = tomorrow.getTime() - now.getTime();
+        console.log("Midnight update scheduled in", msUntilMidnight, "milliseconds");
+        // Schedule the first run
+        const timer = setTimeout(updateDateAtMidnight, msUntilMidnight);
+
+        return () => clearTimeout(timer);
+    }, []);
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['uuidData', pagination, body, sorting],
         queryFn: async ({ signal }) => {
-            const endpoint = `http://localhost:4000/objects?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+            dispatch(
+                setPaginationStore({
+                    filters: Filter,
+                })
+            );
+            const endpoint = `http://${ipAddress}:4000/objects?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
@@ -61,9 +99,9 @@ const Tabledata = () => {
     });
 
     const totalQuery = useQuery({
-        queryKey: ["uuidTotal", body],
+        queryKey: ["uuidTotal", Filter],
         queryFn: ({ signal }) =>
-            fetchData(`http://localhost:4000/objects/total`, "POST", body, signal),
+            fetchData(`http://${ipAddress}:4000/objects/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
         refetchOnWindowFocus: false, // optional, avoid spam

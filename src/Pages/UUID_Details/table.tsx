@@ -18,7 +18,7 @@ const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/Column
 
 import "react-contexify/dist/ReactContexify.css";
 import Index from '@/components/Pagination/Index';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setPaginationStore } from '@/Redux/tableDropFilter';
 import { endOfYesterday, format } from 'date-fns';
 import FetchColumnDetail from './HandleApiCall/FetchColumnDetail';
@@ -47,6 +47,7 @@ const Tabledata = () => {
     const dispatch = useDispatch();
     const [Columns] = FetchColumnDetail();
     const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
+    const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
 
     const body = {
         "filters": Filter
@@ -60,7 +61,7 @@ const Tabledata = () => {
                     filters: Filter,
                 })
             );
-            const endpoint = `http://localhost:4000/uuids?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+            const endpoint = `http://${ipAddress}:4000/uuids?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
@@ -92,7 +93,7 @@ const Tabledata = () => {
     const totalQuery = useQuery({
         queryKey: ["uuidTotal", body],
         queryFn: ({ signal }) =>
-            fetchData(`http://localhost:4000/uuids/total`, "POST", body, signal),
+            fetchData(`http://${ipAddress}:4000/uuids/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
         refetchOnWindowFocus: false, // optional, avoid spam

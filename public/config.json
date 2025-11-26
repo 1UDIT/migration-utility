@@ -1,82 +1,161 @@
 {
     "apiUrl": "127.0.0.1",
-    "ReportColumns": [
-        {
-            "header": "Tape Barcode",
-            "dataKey": "UUID",
-            "Order": 2
-        },
-        {
-            "header": "UUID Path",
-            "dataKey": "UUIDPath",
-            "Order": 1
-        },
-        {
-            "header": "Media Type",
-            "dataKey": "mediaType",
-            "Order": 2
-        },
-        {
-            "header": "Object Size",
-            "dataKey": "totalObjectSize",
-            "Order": 3
-        },
-        {
-            "header": "Migrated Object Size",
-            "dataKey": "migratedObjectSize",
-            "Order": 4
-        },
-        {
-            "header": "Start Date",
-            "dataKey": "startDate",
-            "Order": 5
-        },
-        {
-            "header": "End Date",
-            "dataKey": "endDate",
-            "Order": 3
-        },
-        {
-            "header": "Migration Size Progress (%)",
-            "dataKey": "migrationSizeProgressPercent",
-            "Order": 6
-        },
-        {
-            "header": "Migration Count Progress (%)",
-            "dataKey": "migrationCountProgressPercent",
-            "Order": 7
-        },
-        {
-            "header": "Failed Object Count",
-            "dataKey": "failedObjectCount",
-            "Order": 8
-        },
-        {
-            "header": "Migration State",
-            "dataKey": "migrationState",
-            "Order": 9
-        },
-        {
-            "header": "Object Count",
-            "dataKey": "totalObjectCount",
-            "Order": 10
-        },
-        {
-            "header": "Migrated Object Count",
-            "dataKey": "migratedObjectCount",
-            "Order": 11
-        },
-        {
-            "header": "Invoice ID",
-            "dataKey": "invoiceID",
-            "Order": 12
-        },
-        {
-            "header": "Invoice Date",
-            "dataKey": "invoiceDate",
-            "Order": 13
-        }
-    ],
+    "ReportColumns": {
+        "UUID": [
+            {
+                "header": "Tape Barcode",
+                "dataKey": "UUID",
+                "Order": 2
+            },
+            {
+                "header": "UUID Path",
+                "dataKey": "UUIDPath",
+                "Order": 1
+            },
+            {
+                "header": "Media Type",
+                "dataKey": "mediaType",
+                "Order": 2
+            },
+            {
+                "header": "Object Size",
+                "dataKey": "totalObjectSize",
+                "Order": 3
+            },
+            {
+                "header": "Migrated Object Size",
+                "dataKey": "migratedObjectSize",
+                "Order": 4
+            },
+            {
+                "header": "Start Date",
+                "dataKey": "startDate",
+                "Order": 5
+            },
+            {
+                "header": "End Date",
+                "dataKey": "endDate",
+                "Order": 3
+            },
+            {
+                "header": "Migration Size Progress (%)",
+                "dataKey": "migrationSizeProgressPercent",
+                "Order": 6
+            },
+            {
+                "header": "Migration Count Progress (%)",
+                "dataKey": "migrationCountProgressPercent",
+                "Order": 7
+            },
+            {
+                "header": "Failed Object Count",
+                "dataKey": "failedObjectCount",
+                "Order": 8
+            },
+            {
+                "header": "Migration State",
+                "dataKey": "migrationState",
+                "Order": 9
+            },
+            {
+                "header": "Object Count",
+                "dataKey": "totalObjectCount",
+                "Order": 10
+            },
+            {
+                "header": "Migrated Object Count",
+                "dataKey": "migratedObjectCount",
+                "Order": 11
+            },
+            {
+                "header": "Invoice ID",
+                "dataKey": "invoiceID",
+                "Order": 12
+            },
+            {
+                "header": "Invoice Date",
+                "dataKey": "invoiceDate",
+                "Order": 13
+            }
+        ],
+        "Objectlist": [
+            {
+                "header": "object Name",
+                "dataKey": "objectName",
+                "Order": 2
+            },
+            {
+                "header": "Barcode",
+                "dataKey": "barcode",
+                "Order": 1
+            },
+            {
+                "header": "Category",
+                "dataKey": "category",
+                "Order": 2
+            },
+            {
+                "header": "object UUID",
+                "dataKey": "objectUUID",
+                "Order": 3
+            },
+            {
+                "header": "size(KB)",
+                "dataKey": "sizeKB",
+                "Order": 4
+            },
+            {
+                "header": "lastUpdateDate",
+                "dataKey": "Date",
+                "Order": 5
+            },
+            {
+                "header": "barcodeLastArchiveDate",
+                "dataKey": "Barcode Last Archive Date",
+                "Order": 3
+            },
+            {
+                "header": "Instance Id",
+                "dataKey": "divaInstanceNB",
+                "Order": 6
+            },
+            {
+                "header": "Media Type",
+                "dataKey": "mediaType",
+                "Order": 7
+            },
+            {
+                "header": "Media Name",
+                "dataKey": "mediaName",
+                "Order": 8
+            },
+            {
+                "header": "File Name",
+                "dataKey": "fileName",
+                "Order": 9
+            },
+            {
+                "header": "Axf File Name",
+                "dataKey": "axfFileName",
+                "Order": 10
+            },
+            {
+                "header": "Instance Migrated",
+                "dataKey": "instanceMigrated",
+                "Order": 11
+            },
+            {
+                "header": "Watch Folder Name",
+                "dataKey": "watchFolderName",
+                "Order": 12
+            },
+            {
+                "header": "Already Migrated",
+                "dataKey": "isMatched",
+                "Order": 13
+            }
+        ]
+    },
     "Uuid_column": [
         {
             "accessorKey": "UUID",
@@ -262,7 +341,7 @@
             "accessorKey": "objectName",
             "textAlign": "text-left",
             "header": "Object Name",
-            "size": 220,
+            "size": 600,
             "minSize": 60,
             "enableResizing": true
         },
@@ -278,7 +357,7 @@
             "accessorKey": "barcode",
             "textAlign": "text-right",
             "header": "Barcode",
-            "size": 120,
+            "size": 220,
             "minSize": 60,
             "enableResizing": true
         },
@@ -300,16 +379,6 @@
             "enableColumnFilter": false
         },
         {
-            "accessorKey": "barcodeLastArchiveDate",
-            "header": "Barcode Last Archive Date",
-            "size": "180",
-            "minSize": "125",
-            "enableResizing": "true",
-            "textAlign": "text-center",
-            "enableColumnFilter": false,
-            "enableSorting": false
-        },
-        {
             "accessorKey": "lastUpdateDate",
             "header": "Date",
             "size": "160",
@@ -324,6 +393,16 @@
             }
         },
         {
+            "accessorKey": "barcodeLastArchiveDate",
+            "header": "Barcode Last Archive Date",
+            "size": "180",
+            "minSize": "125",
+            "enableResizing": "true",
+            "textAlign": "text-center",
+            "enableColumnFilter": false,
+            "enableSorting": false
+        },
+        {
             "accessorKey": "divaInstanceNB",
             "header": "Instance Id",
             "enableResizing": true,
@@ -331,7 +410,7 @@
             "minSize": 70,
             "textAlign": "text-right",
             "enableColumnFilter": false
-        }, 
+        },
         {
             "accessorKey": "mediaType",
             "header": "Media Type",

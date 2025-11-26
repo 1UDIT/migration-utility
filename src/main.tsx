@@ -9,7 +9,7 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
 import { Provider } from 'react-redux';
-import SignIn from './Pages/Auth/signin.tsx';
+import { Toaster } from 'sonner';
 
 // console.log('Base path:', basePath);
 const queryClient = new QueryClient()
@@ -30,6 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={queryClient}>
     <Provider store={store}>
       <RouterProvider router={router} />
+       <Toaster />
     </Provider>
   </QueryClientProvider>
   ,

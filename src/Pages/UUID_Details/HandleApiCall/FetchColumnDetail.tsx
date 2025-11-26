@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 
 const FetchColumnDetail = () => {
     const [Column, SetColumn] = useState([]);
+    
     const getCelldetail = (props: any, header: any, alignText: string) => {
 
         if (header === "migrationSizeProgressPercent") {

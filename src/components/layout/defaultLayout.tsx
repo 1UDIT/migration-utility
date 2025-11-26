@@ -23,8 +23,8 @@ import {
     BreadcrumbLink,
     BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useSelector } from "react-redux";
+import { toast } from 'sonner';
+import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/Redux/Store";
 import { NavLink, useLocation, useNavigate } from "react-router";
 import { Button } from "../ui/button";
@@ -33,6 +33,7 @@ import { saveAs } from "file-saver";
 
 import { fetchData } from "@/Pages/Object_Details/HandleApiCall/Apicall";
 import axios from "axios";
+import { ipAddressStore } from "@/Redux/tableDropFilter";
 const basePath = import.meta.env.BASE_URL;
 
 const items = [
@@ -56,21 +57,17 @@ interface AppSidebarProps {
 
 export function DefaultLayout({ children }: AppSidebarProps) {
     const [name, setName] = useState<string>('Dashboard');
-    const navigate = useNavigate();
+    const [ipAddress, setIpAddress] = useState<any>();
     const queryClient = useQueryClient();
     const Body = useSelector((state: RootState) => state.tableDownClick.paginationStore);
     const location = useLocation();
     const [XLSX, setXLSX] = useState<typeof import("xlsx") | null>(null);
-    const [ReportsColumn, setReportsColumn] = useState<typeof import("xlsx") | null>(null);
+    const [DownloadColumn, setReportsColumn] = useState<typeof import("xlsx") | any>(null);
+    const Dispatch = useDispatch()
 
     useEffect(() => {
         locationName();
     }, [location]);
-
-    const signOut = useCallback(() => {
-        sessionStorage.clear();
-        navigate("/");
-    }, [])
 
     const locationName = () => {
         switch (location.pathname) {
@@ -89,6 +86,8 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             .get('./config.json')
             .then((response) => {
                 setReportsColumn(response.data.ReportColumns);
+                setIpAddress(response.data.apiUrl);
+                Dispatch(ipAddressStore(response.data.apiUrl));
             })
             .catch((err) => {
                 console.error('Error loading config.json:', err);
@@ -103,8 +102,11 @@ export function DefaultLayout({ children }: AppSidebarProps) {
     }, []);
 
 
-    const DownloadReport = useCallback(async () => {
+    const DownloadReport = useCallback(async (nameUrl: string) => {
         try {
+            const ReportsColumn = nameUrl === "objects" ? [...DownloadColumn?.Objectlist] : [...DownloadColumn?.Uuidlist];
+            console.log("📥 Generating report...", nameUrl,);
+
             // Ensure XLSX is loaded
             const xlsx = XLSX ?? (await import("xlsx"));
             if (!XLSX) setXLSX(xlsx);
@@ -113,14 +115,16 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 console.error("No columns found in config.json → `columns` missing/empty.");
                 return;
             }
+            toast(
+                `Your Request Submitted`
+            )
 
-            console.log(Body,"body")
 
             // Fetch “all” data with a stable key; your fetcher can ignore pageSize
             const response = await queryClient.fetchQuery({
                 queryKey: ["uuidData", "all", Body],
-                 queryFn: async ({ signal }) => {
-                    const endpoint = `http://localhost:4000/uuids?page=0&limit=`;
+                queryFn: async ({ signal }) => {
+                    const endpoint = `http://${ipAddress}:4000/${nameUrl}/?page=0&limit=0`;
                     return fetchData(endpoint, "POST", Body, signal);
                 },
                 staleTime: 0,
@@ -188,11 +192,17 @@ export function DefaultLayout({ children }: AppSidebarProps) {
 
             saveAs(new Blob([buf], { type: "application/octet-stream" }), `Migration Data Report_${today}.xlsx`);
             console.log("✅ Report generated");
-
+            toast(
+                `Your Request Submitted For Download Completed`
+            )
         } catch (err) {
             console.error("❌ DownloadReport failed:", err);
+            toast(
+                `Download Report failed`
+            )
         }
-    },[Body]);
+    }, [Body, DownloadColumn]);
+
 
 
 
@@ -247,24 +257,6 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                         </SidebarGroup>
                     </SidebarContent>
                     <SidebarHeader />
-                    {/* Sidebar Footer - Admin Dropdown */}
-                    {/* <SidebarFooter>
-                        <SidebarMenu className="text-white">
-                            <SidebarMenuItem>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <SidebarMenuButton className="text-xl">
-                                            <User2 />
-                                            <ChevronUp className="ml-auto" />
-                                        </SidebarMenuButton>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width] text-white">
-                                        <DropdownMenuItem onClick={signOut}>Sign out</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </SidebarMenuItem>
-                        </SidebarMenu>
-                    </SidebarFooter> */}
 
                 </Sidebar>
                 <SidebarInset className="h-screen flex flex-col overflow-hidden">
@@ -279,13 +271,16 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                                     </BreadcrumbItem>
                                 </BreadcrumbList>
                             </Breadcrumb>
-                            {
-                                name === "Uuid List" &&
-                                <Button onClick={() => DownloadReport()}
-                                    className="hidden md:block text-[#FFFFFF] font-semibold shadow-lg bg-[#007BFF] border-2 border-[#ff0000] rounded-md hover:bg-[#339CFF]" variant={"ghost"}>
-                                    <span>Download Report</span>
-                                </Button>
-                            }
+                            <Button
+                                onClick={() => DownloadReport(name === "Object List" ? "objects" : "uuids")}
+                                disabled={name === "Object List" && Object.keys(Body.filters).length < 2}
+                                className="disabled:cursor-not-allowed hidden md:block text-[#FFFFFF] font-semibold shadow-lg bg-[#007BFF] border-2 border-[#ff0000] rounded-md hover:bg-[#005aaf]"
+                                variant="ghost"
+                            >
+                                <span>Download Report</span>
+                            </Button>
+
+
                         </nav>
                     </header>
                     <main className="flex-1 flex flex-col bg-[#1a222c] overflow-hidden">{children}</main>
