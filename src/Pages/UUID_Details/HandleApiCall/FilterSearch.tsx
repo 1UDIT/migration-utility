@@ -77,7 +77,7 @@ const customStyles = {
     color: 'white',
     borderRadius: 0,
     marginTop: 0,
-    width: '150px'
+    width: '100%'
   }),
   multiValue: (base: any) => ({
     ...base,
@@ -209,7 +209,16 @@ export const Filter = ({
         options={options}
         isMulti={isMulti}
         value={current}
-        onChange={(val: any) => { 
+        onChange={(val: any, actionMeta: any) => {
+          console.log({ val, actionMeta }, val.value);
+          // ⬇️ user clicked clear
+          if (actionMeta?.action === "clear") {
+            column.setFilterValue(undefined);
+            clearFilter(headerid);
+            return;
+          }
+
+          // normal behaviour
           if (isMulti) {
             const next = Array.isArray(val) ? val.map((o) => o.value) : [];
             column.setFilterValue(next.length ? next : undefined);
@@ -255,11 +264,11 @@ export const Filter = ({
       if (!date) return;
 
       if (calendarMode === 'single' && date instanceof Date) {
-        column.setFilterValue(date); 
+        column.setFilterValue(date);
         handleInputChange(format(date, "yyyy-MM-dd"), headerid, column);
       } else if (calendarMode === 'range' && typeof date === 'object' && 'from' in date) {
         const range = date as DateRange;
-        column.setFilterValue(range); 
+        column.setFilterValue(range);
         handleInputChange(
           {
             from: range.from ? format(range.from, "yyyy-MM-dd") : "",
@@ -273,7 +282,7 @@ export const Filter = ({
 
 
     const contentWidthClass =
-      numberOfMonths > 1 ? 'w-[550px] max-w-[95vw]' : 'w-[320px] max-w-[95vw]';
+      numberOfMonths > 1 ? 'w-[500px] max-w-[95vw]' : 'w-[320px] max-w-[95vw]';
 
     return (
       <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -306,7 +315,7 @@ export const Filter = ({
 
         <PopoverContent
           align="center"
-          className={`p-2 bg-[#2d3d52] border border-orange-500 rounded-lg shadow-md ${contentWidthClass}`}
+          className={`p-2 bg-[#020517] border border-orange-500 rounded-lg shadow-md ${contentWidthClass}`}
         >
           <Calendar
             mode="range"
@@ -318,15 +327,7 @@ export const Filter = ({
             }
             selected={selectedRange}
             onSelect={handleSelect}
-            classNames={{
-              months: "flex gap-4",
-              month: "space-y-4",
-              caption: "text-sm text-white",
-              day: "h-9 w-9 text-sm flex items-center justify-center rounded-md hover:bg-orange-500/40 data-[selected]:bg-orange-500 data-[selected]:text-white",
-              day_selected: "bg-orange-500 text-white",
-              day_today: "border border-orange-400",
-              head_cell: "text-gray-300 font-medium text-xs",
-            }}
+
           />
         </PopoverContent>
       </Popover>

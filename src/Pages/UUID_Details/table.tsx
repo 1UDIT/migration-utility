@@ -118,7 +118,11 @@ const Tabledata = () => {
     });
 
     function clearFilter(idHeader: string) {
-        setFilter({startDate: {from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd')}})
+        setPagination({
+            pageIndex: 0,
+            pageSize: pagination.pageSize,
+        });
+        setFilter({ startDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') } })
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
         setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
     };
@@ -212,7 +216,7 @@ const Tabledata = () => {
                                                         {header.column.getCanFilter() &&
                                                             (openSearch.includes(header.id) ? (
                                                                 <MdOutlineFilterAltOff
-                                                                     className={` pt-1 h-[25px] w-[25px] ${storeFilterId.includes(header.id) ? "text-red-500" : "text-white"}`}
+                                                                    className={` pt-1 h-[25px] w-[25px] ${storeFilterId.includes(header.id) ? "text-red-500" : "text-white"}`}
                                                                     onClick={() => {
                                                                         closeDropMenu(header.id);
                                                                     }}
@@ -259,7 +263,7 @@ const Tabledata = () => {
                                                                         handleInputChange={handleInputChange}
                                                                         Filter={Filter}
                                                                         isOpen={openSearch.includes(header.id)}
-                                                                        onClear={clearFilter} 
+                                                                        onClear={clearFilter}
                                                                     /> </Suspense>
                                                             </Fragment>
                                                         )
@@ -295,7 +299,7 @@ const Tabledata = () => {
                             )
                         })}
                     </tbody>
-                </table> 
+                </table>
             </div>
             <Index table={table} data={data} initialDateRange={Filter.startDate} totalPage={totalQuery?.data?.total} />
         </>

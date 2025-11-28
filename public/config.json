@@ -297,16 +297,20 @@
                         "value": "COMPLTED"
                     },
                     {
-                        "label": "Processing",
-                        "value": "PROGRESS"
+                        "label": "Failed",
+                        "value": "FAILED"
                     },
                     {
                         "label": "Pending",
                         "value": "PENDING"
                     },
                     {
-                        "label": "PARTIAL",
+                        "label": "Partial",
                         "value": "PARTIAL"
+                    },
+                    {
+                        "label":"Started",
+                        "value":"STARTED"
                     }
                 ],
                 "isMulti": true
@@ -484,25 +488,37 @@
             "header": "Status",
             "size": 160,
             "minSize": 30,
-            "textAlign": "text-left",
+            "textAlign": "text-left", 
             "meta": {
                 "filterVariant": "select",
                 "selectOptions": [
                     {
-                        "label": "Completed",
-                        "value": "COMPLTED"
+                        "label": "MIGRATION_COMPLETED",
+                        "value": "MIGRATION_COMPLETED"
                     },
                     {
-                        "label": "Processing",
-                        "value": "PROGRESS"
+                        "label": "MIGRATION_SUBMITTED",
+                        "value": "MIGRATION_SUBMITTED"
                     },
                     {
                         "label": "Pending",
                         "value": "PENDING"
                     },
                     {
-                        "label": "PARTIAL",
-                        "value": "PARTIAL"
+                        "label": "MIGRATION_FAILED",
+                        "value": "MIGRATION_FAILED"
+                    },
+					{
+                        "label": "DECODE_STARTED",
+                        "value": "DECODE_STARTED"
+                    },
+					{
+                        "label": "DECODE_COMPLETED",
+                        "value": "DECODE_COMPLETED"
+                    },
+					{
+                        "label": "DECODE_FAILED",
+                        "value": "DECODE_FAILED"
                     }
                 ],
                 "isMulti": true

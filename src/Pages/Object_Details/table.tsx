@@ -148,6 +148,10 @@ const Tabledata = () => {
 
 
     function clearFilter(idHeader: string) {
+        setPagination({
+            pageIndex: 0,
+            pageSize: pagination.pageSize,
+        });
         setFilter({
             lastUpdateDate: {
                 from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd')
