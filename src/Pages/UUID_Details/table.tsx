@@ -5,10 +5,8 @@ import {
     getPaginationRowModel,
     type PaginationState,
 } from '@tanstack/react-table';
-import React, { Fragment, lazy, Suspense, useMemo, useState } from 'react';
-import { columns } from './HandleApiCall/columns';
-import { Skeleton } from '@/components/ui/skeleton';
-import { FaSortUp, FaSortDown } from "react-icons/fa6";
+import React, { Fragment, lazy, Suspense, useMemo, useState } from 'react'; 
+import { Skeleton } from '@/components/ui/skeleton'; 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchData } from '../Object_Details/HandleApiCall/Apicall';
 import useWindowSize from '@/hooks/usescreen';
@@ -20,8 +18,8 @@ import "react-contexify/dist/ReactContexify.css";
 import Index from '@/components/Pagination/Index';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPaginationStore } from '@/Redux/tableDropFilter';
-import { endOfYesterday, format } from 'date-fns';
-import FetchColumnDetail from './HandleApiCall/FetchColumnDetail';
+import { endOfYesterday, format } from 'date-fns'; 
+import FetchColumnDetail from '@/components/Column/FetchColumnDetail';
 
 interface DateInterface {
     from: Date; // Assuming the dates are in string format
@@ -45,7 +43,7 @@ const Tabledata = () => {
         pageSize: 50,
     });
     const dispatch = useDispatch();
-    const [Columns] = FetchColumnDetail();
+    const {ColumnUUID} = FetchColumnDetail();
     const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
     const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
 
@@ -61,7 +59,7 @@ const Tabledata = () => {
                     filters: Filter,
                 })
             );
-            const endpoint = `http://${ipAddress}:4000/uuids?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+            const endpoint = `http://${ipAddress}:4004/uuids?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
@@ -78,7 +76,7 @@ const Tabledata = () => {
     const tableColumns = useMemo(
         () =>
             isLoading === true
-                ? Columns.map((column) => ({
+                ? ColumnUUID.map((column) => ({
                     ...column,
                     cell: () => (
                         <div className="flex flex-col space-y-3">
@@ -86,14 +84,14 @@ const Tabledata = () => {
                         </div>
                     )
                 }))
-                : Columns,
-        [isLoading, Columns]
+                : ColumnUUID,
+        [isLoading, ColumnUUID]
     );
 
     const totalQuery = useQuery({
         queryKey: ["uuidTotal", body],
         queryFn: ({ signal }) =>
-            fetchData(`http://${ipAddress}:4000/uuids/total`, "POST", body, signal),
+            fetchData(`http://${ipAddress}:4004/uuids/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
         refetchOnWindowFocus: false, // optional, avoid spam

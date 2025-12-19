@@ -29,6 +29,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "jspdf-autotable": "^5.0.2",
     "lodash.debounce": "^4.0.8",
@@ -40,11 +41,13 @@
     "react-dom": "^19.1.1",
     "react-icons": "^5.5.0",
     "react-redux": "^9.2.0",
+    "react-resizable-panels": "^3.0.6",
     "react-router": "^7.9.3",
     "react-select": "^5.10.2",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "xlsx-js-style": "^1.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

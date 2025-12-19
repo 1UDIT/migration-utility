@@ -327,7 +327,6 @@ export const Filter = ({
             }
             selected={selectedRange}
             onSelect={handleSelect}
-
           />
         </PopoverContent>
       </Popover>

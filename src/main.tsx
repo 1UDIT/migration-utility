@@ -20,6 +20,7 @@ const router = createBrowserRouter(
       <Route >
         <Route path="/uuid" lazy={() => import("@/Pages/UUID_Details/page.tsx")} />
         <Route path="/" lazy={() => import("@/Pages/Object_Details/page.tsx")} />
+        <Route path="/reportViewer" lazy={() => import("@/Pages/ReportViewer/page.tsx")} />
       </Route>
       {/* <Route path="*" element={<SignIn />} /> */}
     </>

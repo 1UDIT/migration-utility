@@ -309,8 +309,8 @@
                         "value": "PARTIAL"
                     },
                     {
-                        "label":"Started",
-                        "value":"STARTED"
+                        "label": "Started",
+                        "value": "STARTED"
                     }
                 ],
                 "isMulti": true
@@ -338,6 +338,116 @@
                 "placeholder": "Pick date"
             },
             "enableSorting": false
+        }
+    ],
+    "ReportGenerate": [
+        {
+            "accessorKey": "barcode",
+            "header": "Barcode",
+            "enableResizing": true,
+            "size": 160,
+            "minSize": 70,
+            "textAlign": "text-left"
+        },
+        {
+            "accessorKey": "MigrationDate",
+            "header": "Migration Date",
+            "size": "260",
+            "minSize": "125",
+            "enableResizing": "true",
+            "textAlign": "text-left",
+            "meta": {
+                "filterVariant": "calender",
+                "calendarMode": "range",
+                "numberOfMonths": 2,
+                "placeholder": "Pick date"
+            }
+        },
+        {
+            "accessorKey": "acs",
+            "header": "acs",
+            "enableResizing": true,
+            "size": "150",
+            "minSize": "60",
+            "textAlign": "text-left"
+        },
+        {
+            "accessorKey": "SourceType",
+            "header": "Source Type",
+            "enableResizing": true,
+            "size": 180,
+            "minSize": 130,
+            "textAlign": "text-left",
+            "meta": {
+                "filterVariant": "calender",
+                "calendarMode": "range",
+                "numberOfMonths": 2,
+                "placeholder": "Pick date"
+            },
+            "enableSorting": false
+        },
+        {
+            "accessorKey": "sizeInTB",
+            "header": "size (TB)",
+            "size": 180,
+            "minSize": 130,
+            "textAlign": "text-center",
+            "enableResizing": true,
+            "enableSorting": false
+        },
+        {
+            "accessorKey": "objectsCount",
+            "header": "Objects Count",
+            "enableResizing": false,
+            "size": 150,
+            "minSize": 30,
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "reserve1",
+            "header": "Reserve 1",
+            "enableResizing": false,
+            "size": 150,
+            "minSize": 30,
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "reserve2",
+            "header": "Reserve 2",
+            "enableResizing": true,
+            "size": 260,
+            "minSize": 30,
+            "textAlign": "text-center",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "Remarks",
+            "header": "Remarks",
+            "enableResizing": false,
+            "size": 260,
+            "minSize": 30,
+            "textAlign": "text-center",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "createdAt",
+            "header": "createdAt",
+            "enableResizing": false,
+            "size": 260,
+            "minSize": 30,
+            "textAlign": "text-center",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "updatedAt",
+            "header": "updatedAt",
+            "enableResizing": false,
+            "size": 260,
+            "minSize": 30,
+            "textAlign": "text-center",
+            "enableColumnFilter": false
         }
     ],
     "Object_column": [
@@ -488,7 +598,7 @@
             "header": "Status",
             "size": 160,
             "minSize": 30,
-            "textAlign": "text-left", 
+            "textAlign": "text-left",
             "meta": {
                 "filterVariant": "select",
                 "selectOptions": [
@@ -508,15 +618,15 @@
                         "label": "MIGRATION_FAILED",
                         "value": "MIGRATION_FAILED"
                     },
-					{
+                    {
                         "label": "DECODE_STARTED",
                         "value": "DECODE_STARTED"
                     },
-					{
+                    {
                         "label": "DECODE_COMPLETED",
                         "value": "DECODE_COMPLETED"
                     },
-					{
+                    {
                         "label": "DECODE_FAILED",
                         "value": "DECODE_FAILED"
                     }
@@ -534,5 +644,95 @@
             "enableResizing": true,
             "enableSorting": false
         }
-    ]
+    ],
+    "reportPanel": {
+        "TODAY_REPORT": [
+            {
+                "header": "Total Barcode",
+                "dataKey": "totalBarcodes",
+                "Order": 1
+            },
+            {
+                "header": "Total Objects",
+                "dataKey": "totalObjects",
+                "Order": 2
+            },
+            {
+                "header": "Total Size(TB)",
+                "dataKey": "totalSizeTB",
+                "Order": 3
+            }
+        ],
+        "TOTAL_MIGRATED_TILL_DATE":[
+            {
+                "header": "Source Type",
+                "dataKey": "sourceType",
+                "Order": 1
+            },
+            {
+                "header": "total Size(TB)",
+                "dataKey": "totalSizeTB",
+                "Order": 2
+            },
+            {
+                "header": "Total Objects",
+                "dataKey": "totalObjects",
+                "Order": 3
+            } ,
+            {
+                "header": "Total Barcodes",
+                "dataKey": "totalBarcodes",
+                "Order": 4
+            }
+        ],
+        "OBJECT_LIST":[
+            {
+                "header": "Object Name",
+                "dataKey": "objectName",
+                "Order": 1
+            },
+            {
+                "header": "Category",
+                "dataKey": "category",
+                "Order": 2
+            },
+            {
+                "header": "Barcode",
+                "dataKey": "barcode",
+                "Order": 3
+            } ,
+            {
+                "header": "Media Name",
+                "dataKey": "medianame",
+                "Order": 4
+            },
+            {
+                "header": "Media Type",
+                "dataKey": "mediaType",
+                "Order": 5
+            }
+        ],
+        "TOTAL_MIGRATED":[
+            {
+                "header": "acs",
+                "dataKey": "acs",
+                "Order": 1
+            },
+            {
+                "header": "Total Size(TB)",
+                "dataKey": "totalSizeTB",
+                "Order": 2
+            },
+            {
+                "header": "Total Objects",
+                "dataKey": "totalObjects",
+                "Order": 3
+            } ,
+            {
+                "header": "Total Barcodes",
+                "dataKey": "totalBarcodes",
+                "Order": 4
+            } 
+        ]
+    }
 }

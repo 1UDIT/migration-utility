@@ -6,8 +6,7 @@ import {
     type PaginationState,
     type SortingState,
 } from '@tanstack/react-table';
-import React, { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { columns } from './HandleApiCall/columns';
+import React, { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'; 
 import { Skeleton } from '@/components/ui/skeleton';
 import { FaSortUp, FaSortDown } from "react-icons/fa6";
 import { useQuery } from '@tanstack/react-query';
@@ -16,10 +15,11 @@ import useWindowSize from '@/hooks/usescreen';
 import { FiFilter } from "react-icons/fi";
 import { MdOutlineFilterAltOff } from "react-icons/md";
 import Index from '@/components/Pagination/Index';
-import { endOfYesterday, format } from 'date-fns';
-import FetchColumnDetail from './HandleApiCall/FetchColumnDetail';
+import { endOfYesterday, format } from 'date-fns'; 
 import { useDispatch, useSelector } from 'react-redux';
 import { setPaginationStore } from '@/Redux/tableDropFilter';
+import FetchColumnDetail from '@/components/Column/FetchColumnDetail';
+import type { RootState } from '@/Redux/Store';
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
 
 interface DateInterface {
@@ -43,7 +43,7 @@ const Tabledata = () => {
         pageIndex: 0,
         pageSize: 50,
     });
-    const [Columns] = FetchColumnDetail();
+    const {ColumnObject} = FetchColumnDetail();
     const [sorting, setSorting] = useState<SortingState>([]);
     const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
     const body = {
@@ -51,7 +51,7 @@ const Tabledata = () => {
         "sorting": sorting
     };
     const dispatch = useDispatch();
-    const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
+    const ipAddress = useSelector((state:RootState) => state.tableDownClick.ipAddressStore);
 
     // inside Tabledata component
     useEffect(() => {
@@ -90,18 +90,19 @@ const Tabledata = () => {
                     filters: Filter,
                 })
             );
-            const endpoint = `http://${ipAddress}:4000/objects?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+            const endpoint = `http://${ipAddress}:4004/objects?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
         retry: false,
         refetchInterval: 10000
     });
+    
 
     const totalQuery = useQuery({
         queryKey: ["uuidTotal", Filter],
         queryFn: ({ signal }) =>
-            fetchData(`http://${ipAddress}:4000/objects/total`, "POST", body, signal),
+            fetchData(`http://${ipAddress}:4004/objects/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
         refetchOnWindowFocus: false, // optional, avoid spam
@@ -115,7 +116,7 @@ const Tabledata = () => {
     const tableColumns = useMemo(
         () =>
             isLoading === true
-                ? Columns.map((column) => ({
+                ? ColumnObject.map((column) => ({
                     ...column,
                     cell: () => (
                         <div className="flex flex-col space-y-3">
@@ -123,8 +124,8 @@ const Tabledata = () => {
                         </div>
                     )
                 }))
-                : Columns,
-        [isLoading, Columns]
+                : ColumnObject,
+        [isLoading, ColumnObject]
     );
 
 
