@@ -80,20 +80,6 @@ export function DefaultLayout({ children }: AppSidebarProps) {
         }
     }
 
-    // Load config.json to get API base URL
-    // useEffect(() => {
-    //     axios
-    //         .get('./config.json')
-    //         .then((response) => {
-    //             setReportsColumn(response.data.ReportColumns);
-    //             setIpAddress(response.data.apiUrl);
-    //             Dispatch(ipAddressStore(response.data.apiUrl));
-    //         })
-    //         .catch((err) => {
-    //             console.error('Error loading config.json:', err);
-    //         });
-    // }, []);
-
     useEffect(() => {
         (async () => {
             const xlsxModule = await import("xlsx");
@@ -108,8 +94,9 @@ export function DefaultLayout({ children }: AppSidebarProps) {
     };
 
     const DownloadReport = useCallback(async (nameUrl: string) => {
-        if (nameUrl !== "Report") {
-            try {
+        try {
+            if (nameUrl !== "Report") {
+
                 const ReportsColumn = nameUrl === "Object List" ? [...Downloadbtn?.Objectlist] : [...Downloadbtn?.UUID];
                 console.log("📥 Generating report...", nameUrl,);
 
@@ -121,16 +108,13 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                     console.error("No columns found in config.json → `columns` missing/empty.");
                     return;
                 }
-                toast(
-                    `Your Request Submitted`
-                )
 
 
                 // Fetch “all” data with a stable key; your fetcher can ignore pageSize
                 const response = await queryClient.fetchQuery({
                     queryKey: ["uuidData", "all", Body],
                     queryFn: async ({ signal }) => {
-                        const endpoint = `http://${ipAddress}:4004/${nameUrl}/?page=0&limit=0`;
+                        const endpoint = `http://${ipAddress}:4004/${nameUrl === 'Object List' ? "objects" : "uuids"}/?page=0&limit=0`;
                         return fetchData(endpoint, "POST", Body, signal);
                     },
                     staleTime: 0,
@@ -198,39 +182,38 @@ export function DefaultLayout({ children }: AppSidebarProps) {
 
                 saveAs(new Blob([buf], { type: "application/octet-stream" }), `Migration Data Report_${today}.xlsx`);
                 console.log("✅ Report generated");
-                toast(
-                    `Your Request Submitted For Download Completed`
-                )
-            } catch (err) {
-                console.error("❌ DownloadReport failed:", err);
-                toast(
-                    `Download Report failed`
-                )
+                return "Migration Data Report";
             }
-        } else {
-            const body: any = {
-                reportType: ["Query_Daily_Trend_TB_ACS","TOTAL_MIGRATED","TODAY_REPORT","OBJECT_LIST",'Yesterday_report']
-            };
-            const endpoint = `http://${ipAddress}:4004/Report/DownloadReport`;
-            const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
-            const res = await fetch(endpoint, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
+            else {
+                const body: any = {
+                    reportType: ["Last_Week_Status", "TOTAL_MIGRATED", "TODAY_REPORT", "OBJECT_LIST", 'Yesterday_report', "Yesterday Transfer DDN ALTO", "mediaType wise total"]
+                };
+                const endpoint = `http://${ipAddress}:4004/Report/DownloadReport`;
+                const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+                const res = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
 
-            if (!res.ok) {
-                const msg = await res.text().catch(() => "");
-                throw new Error(msg || `Chart report failed: HTTP ${res.status}`);
+                if (!res.ok) {
+                    const msg = await res.text().catch(() => "");
+                    throw new Error(msg || `Chart report failed: HTTP ${res.status}`);
+                }
+
+                const blob = await res.blob();
+                const filename = getFileNameFromDisposition(
+                    res.headers.get("content-disposition"),
+                    `migrationReport_${today}.zip`
+                );
+
+                saveAs(blob, filename);
+                return filename;
             }
-
-            const blob = await res.blob();
-            const filename = getFileNameFromDisposition(
-                res.headers.get("content-disposition"),
-                `Daily_Trend_${today}.xlsx` 
-            );
-
-            saveAs(blob, filename);
+        }
+        catch (err) {
+            console.error("❌ DownloadReport failed:", err);
+            throw err; // ❌ IMPORTANT
         }
     }, [Body, Downloadbtn]);
 
@@ -302,27 +285,28 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                                     </BreadcrumbItem>
                                 </BreadcrumbList>
                             </Breadcrumb>
-                            {/* <Button
-                                onClick={() => DownloadReport(name === "Object List" ? "objects" : "uuids")}
-                                disabled={name === "Object List" && Object.keys(Body.filters).length < 2}
-                                className="disabled:cursor-not-allowed hidden md:block text-[#FFFFFF] font-semibold shadow-lg bg-[#007BFF] border-2 border-[#ff0000] rounded-md hover:bg-[#005aaf]"
-                                variant="ghost"
-                            >
-                                <span>Download Report</span>
-                            </Button> */}
-                            {/* {name === "Object List" || name === "Uuid List" ? ( */}
                             <Button
+                                // onClick={() =>  
+                                //     DownloadReport(name) 
+                                // }
                                 onClick={() =>
-                                    DownloadReport(name)
+                                    toast.promise(
+                                        DownloadReport(name),
+                                        {
+                                            loading: "Generating XLSX report...",
+                                            success: (fileName) => `${fileName} downloaded`,
+                                            error: (err) => err.message || "❌ Report download failed",
+                                        }
+                                    )
                                 }
                                 disabled={name === "Object List" && Object.keys(Body.filters).length < 2}
                                 className="
-                                                hidden md:block
-                                                text-white font-semibold shadow-lg
-                                                bg-[#007BFF] border-2 border-red-500
-                                                rounded-md hover:bg-[#005aaf]
-                                                disabled:cursor-not-allowed
-                                            "
+                            hidden md:block
+                            text-white font-semibold shadow-lg
+                            bg-[#007BFF] border-2 border-red-500
+                            rounded-md hover:bg-[#005aaf]
+                            disabled:cursor-not-allowed
+                            "
                                 variant="ghost"
                             >
                                 Download Report
@@ -334,7 +318,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                     </header>
                     <main className="flex-1 flex flex-col bg-[#1a222c] overflow-hidden">{children}</main>
                 </SidebarInset>
-            </SidebarProvider>
+            </SidebarProvider >
 
         </>
     )
