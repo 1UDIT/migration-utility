@@ -186,7 +186,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             }
             else {
                 const body: any = {
-                    reportType: ["Last_Week_Status", "TOTAL_MIGRATED", "TODAY_REPORT", "OBJECT_LIST", 'Yesterday_report', "Yesterday Transfer DDN ALTO", "mediaType wise total"]
+                    reportType: ["Last 1 Week", "Yesterday ACS Wise","Yesterday_Transfer", "OBJECT_LIST", "Yesterday_Transfer_Rate_Details"]
                 };
                 const endpoint = `http://${ipAddress}:4004/Report/DownloadReport`;
                 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
@@ -204,7 +204,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 const blob = await res.blob();
                 const filename = getFileNameFromDisposition(
                     res.headers.get("content-disposition"),
-                    `migrationReport_${today}.zip`
+                    `Yesterday Transfer.zip`
                 );
 
                 saveAs(blob, filename);
