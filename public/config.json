@@ -277,7 +277,7 @@
         {
             "accessorKey": "migratedObjectSize",
             "header": "Migrated Object Size",
-            "size": 220,
+            "size": 140,
             "minSize": 70,
             "textAlign": "text-right",
             "enableResizing": true,
@@ -479,7 +479,7 @@
             "accessorKey": "barcode",
             "textAlign": "text-right",
             "header": "Barcode",
-            "size": 220,
+            "size": 180,
             "minSize": 60,
             "enableResizing": true
         },

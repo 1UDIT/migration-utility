@@ -79,7 +79,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
     const { Downloadbtn } = FetchColumnDetail();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
     const [open, setOpen] = useState<boolean>(false);
-    const [downloadChoice, setDownloadChoice] = useState<"OBJECT_LIST" | "CHECKSUM">("OBJECT_LIST");
+    const [downloadChoice, setDownloadChoice] = useState<"OBJECT_LIST" | "CHECKSUM" | "Report">("OBJECT_LIST");
 
     useEffect(() => {
         locationName();
@@ -92,6 +92,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             case `/uuid`:
                 return setName('Uuid List')
             case `/reportViewer`:
+                setDownloadChoice("Report")
                 return setName('Report')
             default:
                 break;
@@ -199,7 +200,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 const view = new Uint8Array(buf);
                 for (let i = 0; i < wbout.length; i++) view[i] = wbout.charCodeAt(i) & 0xff;
 
-                saveAs(new Blob([buf], { type: "application/octet-stream" }), `Migration Data Report_${today}.xlsx`);
+                saveAs(new Blob([buf], { type: "application/octet-stream" }), `${nameUrl === 'Object List' ? "objects" : "uuids"} Data Report_${today}.xlsx`);
                 console.log("✅ Report generated");
                 return "Migration Data Report";
             }
@@ -209,7 +210,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 const res = await fetch(endpoint, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body:JSON.stringify(Body)
+                    body: JSON.stringify(Body)
                 });
 
                 if (!res.ok) {
@@ -273,7 +274,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
         setOpen(false);
     }, [downloadChoice, DownloadReport]);
 
-    
+
 
     return (
         <>
@@ -345,7 +346,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                                 //     DownloadReport(name) 
                                 // }
                                 onClick={() => {
-                                    name === "Report" ? toast.promise(
+                                    name === "Report" || name === 'Uuid List'  ? toast.promise(
                                         DownloadReport(name),
                                         {
                                             loading: "Generating XLSX report...",
@@ -394,7 +395,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                                     <Label htmlFor="opt-object" className="text-white cursor-pointer">
                                         Object List (XLSX)
                                     </Label>
-                                </div> 
+                                </div>
                                 <div className="flex items-center gap-3 rounded-md border border-gray-600 p-3">
                                     <RadioGroupItem value="CHECKSUM" id="opt-checksum" />
                                     <Label htmlFor="opt-checksum" className="text-white cursor-pointer">
