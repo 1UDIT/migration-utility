@@ -77,7 +77,8 @@ const customStyles = {
     color: 'white',
     borderRadius: 0,
     marginTop: 0,
-    width: '100%'
+    width: '100%',
+    fontWeight: "500"
   }),
   multiValue: (base: any) => ({
     ...base,
@@ -96,6 +97,8 @@ const customStyles = {
   option: (base: any, state: any) => ({
     ...base,
     backgroundColor: state.isSelected ? "rgba(189,197,209,.3)" : "black",
+    padding:"2px 8px"
+
   }),
   valueContainer: (styles: any) => ({
     ...styles,
@@ -203,12 +206,14 @@ export const Filter = ({
       return null;
     })();
 
+    console.log(options, "options")
 
     return (
       <Select
         options={options}
         isMulti={isMulti}
         value={current}
+        isSearchable={false}
         onChange={(val: any, actionMeta: any) => {
           console.log({ val, actionMeta }, val.value);
           // ⬇️ user clicked clear
@@ -229,8 +234,9 @@ export const Filter = ({
           }
         }}
         isClearable
-        menuPosition="fixed"
-        menuPlacement="auto"
+        menuPosition="absolute"
+        menuPlacement="bottom"
+        menuPortalTarget={document.body}
         placeholder={placeholder}
         styles={customStyles}
         className="text-sm"

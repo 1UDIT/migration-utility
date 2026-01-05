@@ -15,7 +15,7 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -23,15 +23,28 @@ import {
     BreadcrumbList,
 } from "@/components/ui/breadcrumb";
 import { toast } from 'sonner';
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import type { RootState } from "@/Redux/Store";
-import { NavLink, useLocation, useNavigate } from "react-router";
+import { NavLink, useLocation } from "react-router";
 import { Button } from "../ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { saveAs } from "file-saver";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import type { DateRange } from "react-day-picker";
 
 import { fetchData } from "@/Pages/Object_Details/HandleApiCall/Apicall";
 import FetchColumnDetail from "../Column/FetchColumnDetail";
+import { Calendar } from "../ui/calendar";
 const basePath = import.meta.env.BASE_URL;
 
 const items = [
@@ -54,6 +67,9 @@ interface AppSidebarProps {
     children: ReactNode;
 }
 
+const calendarMode = 'range', numberOfMonths = 2, dateFormat = "LLL dd, y";
+
+
 export function DefaultLayout({ children }: AppSidebarProps) {
     const [name, setName] = useState<string>('Dashboard');
     const queryClient = useQueryClient();
@@ -62,6 +78,8 @@ export function DefaultLayout({ children }: AppSidebarProps) {
     const [XLSX, setXLSX] = useState<typeof import("xlsx") | null>(null);
     const { Downloadbtn } = FetchColumnDetail();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
+    const [open, setOpen] = useState<boolean>(false);
+    const [downloadChoice, setDownloadChoice] = useState<"OBJECT_LIST" | "CHECKSUM">("OBJECT_LIST");
 
     useEffect(() => {
         locationName();
@@ -94,8 +112,9 @@ export function DefaultLayout({ children }: AppSidebarProps) {
     };
 
     const DownloadReport = useCallback(async (nameUrl: string) => {
+        console.log(downloadChoice, "download", Body)
         try {
-            if (nameUrl !== "Report") {
+            if (downloadChoice === "OBJECT_LIST") {
 
                 const ReportsColumn = nameUrl === "Object List" ? [...Downloadbtn?.Objectlist] : [...Downloadbtn?.UUID];
                 console.log("📥 Generating report...", nameUrl,);
@@ -114,7 +133,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 const response = await queryClient.fetchQuery({
                     queryKey: ["uuidData", "all", Body],
                     queryFn: async ({ signal }) => {
-                        const endpoint = `http://${ipAddress}:4004/${nameUrl === 'Object List' ? "objects" : "uuids"}/?page=0&limit=0`;
+                        const endpoint = `http://${ipAddress}:4004/${nameUrl === 'Object List' ? "objects" : "uuids"}?page=0&limit=0`;
                         return fetchData(endpoint, "POST", Body, signal);
                     },
                     staleTime: 0,
@@ -184,10 +203,33 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 console.log("✅ Report generated");
                 return "Migration Data Report";
             }
+            else if (downloadChoice === "CHECKSUM") {
+                const endpoint = `http://${ipAddress}:4004/objects/checkSumDownloader`;
+                const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+                const res = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body:JSON.stringify(Body)
+                });
+
+                if (!res.ok) {
+                    const msg = await res.text().catch(() => "");
+                    throw new Error(msg || `Chart report failed: HTTP ${res.status}`);
+                }
+
+                const blob = await res.blob();
+                const filename = getFileNameFromDisposition(
+                    res.headers.get("content-disposition"),
+                    `CheckSumDetial_${today}.xlsx`
+                );
+                saveAs(blob, filename);
+                return filename;
+            }
             else {
                 const body: any = {
-                    reportType: ["Last 1 Week", "Yesterday ACS Wise","Yesterday_Transfer", "OBJECT_LIST", "Yesterday_Transfer_Rate_Details"]
+                    reportType: ["Last 1 Week", "Yesterday ACS Wise", "Yesterday_Transfer", "OBJECT_LIST", "Yesterday_Transfer_Rate_Details"]
                 };
+                // const endpoint = `http://${ipAddress}:4004/objects/checkSumDownloader`;
                 const endpoint = `http://${ipAddress}:4004/Report/DownloadReport`;
                 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
                 const res = await fetch(endpoint, {
@@ -215,10 +257,23 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             console.error("❌ DownloadReport failed:", err);
             throw err; // ❌ IMPORTANT
         }
-    }, [Body, Downloadbtn]);
+    }, [Body, Downloadbtn, downloadChoice]);
 
+    const handleDialogDownload = useCallback(() => {
+        const choiceName = downloadChoice === "OBJECT_LIST" ? "Object List" : "CHECKSUM";
 
+        toast.promise(DownloadReport(choiceName), {
+            loading: downloadChoice === "OBJECT_LIST"
+                ? "Generating Object List XLSX..."
+                : "Downloading checksum report...",
+            success: (fileName) => `${fileName} downloaded`,
+            error: (err) => err?.message || "❌ Report download failed",
+        });
 
+        setOpen(false);
+    }, [downloadChoice, DownloadReport]);
+
+    
 
     return (
         <>
@@ -289,36 +344,89 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                                 // onClick={() =>  
                                 //     DownloadReport(name) 
                                 // }
-                                onClick={() =>
-                                    toast.promise(
+                                onClick={() => {
+                                    name === "Report" ? toast.promise(
                                         DownloadReport(name),
                                         {
                                             loading: "Generating XLSX report...",
                                             success: (fileName) => `${fileName} downloaded`,
                                             error: (err) => err.message || "❌ Report download failed",
                                         }
-                                    )
+                                    ) : setOpen(true)
                                 }
-                                disabled={name === "Object List" && Object.keys(Body.filters).length < 2}
+                                }
                                 className="
-                            hidden md:block
-                            text-white font-semibold shadow-lg
-                            bg-[#007BFF] border-2 border-red-500
-                            rounded-md hover:bg-[#005aaf]
-                            disabled:cursor-not-allowed
-                            "
+                                    hidden md:block
+                                    text-white font-semibold shadow-lg
+                                    bg-[#007BFF] border-2 border-red-500
+                                    rounded-md hover:bg-[#005aaf]
+                                    disabled:cursor-not-allowed
+                                    "
                                 variant="ghost"
                             >
                                 Download Report
                             </Button>
-                            {/* ) : null} */}
-
 
                         </nav>
                     </header>
                     <main className="flex-1 flex flex-col bg-[#1a222c] overflow-hidden">{children}</main>
                 </SidebarInset>
             </SidebarProvider >
+
+            {open === true ? (
+                <Dialog onOpenChange={() => setOpen(!open)} open={open} modal={open}>
+                    <DialogContent>
+                        <DialogHeader className="pb-4">
+                            <DialogTitle className="text-white">Download</DialogTitle>
+                            <DialogDescription className="text-gray-300">
+                                Choose what you want to download.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="flex-1 overflow-auto">
+                            <RadioGroup
+                                value={downloadChoice}
+                                onValueChange={(v) => setDownloadChoice(v as any)}
+                                className="grid gap-3"
+                            >
+                                <div className="flex items-center gap-3 rounded-md border border-gray-600 p-3">
+                                    <RadioGroupItem value="OBJECT_LIST" id="opt-object" />
+                                    <Label htmlFor="opt-object" className="text-white cursor-pointer">
+                                        Object List (XLSX)
+                                    </Label>
+                                </div> 
+                                <div className="flex items-center gap-3 rounded-md border border-gray-600 p-3">
+                                    <RadioGroupItem value="CHECKSUM" id="opt-checksum" />
+                                    <Label htmlFor="opt-checksum" className="text-white cursor-pointer">
+                                        Checksum Report
+                                    </Label>
+                                </div>
+                            </RadioGroup>
+                        </div>
+
+                        <DialogFooter className="sm:justify-center pt-2 gap-2">
+                            <Button
+                                type="button"
+                                size="lg"
+                                className="bg-[#007BFF] text-white rounded-md border border-black relative text-sm px-8 py-2 hover:bg-[#005aaf]"
+                                onClick={handleDialogDownload}
+                            >
+                                Download
+                            </Button>
+
+                            <DialogClose asChild>
+                                <Button
+                                    type="button"
+                                    size="lg"
+                                    className="bg-[#d94040] text-white rounded-md border border-black relative text-sm px-8 py-2"
+                                >
+                                    Close
+                                </Button>
+                            </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            ) : null}
 
         </>
     )

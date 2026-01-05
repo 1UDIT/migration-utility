@@ -1,3 +1,6 @@
+// divaChecksum
+// mediatorCheckSum
+
 import {
     flexRender,
     getCoreRowModel,
@@ -6,7 +9,7 @@ import {
     type PaginationState,
     type SortingState,
 } from '@tanstack/react-table';
-import React, { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'; 
+import React, { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FaSortUp, FaSortDown } from "react-icons/fa6";
 import { useQuery } from '@tanstack/react-query';
@@ -15,13 +18,23 @@ import useWindowSize from '@/hooks/usescreen';
 import { FiFilter } from "react-icons/fi";
 import { MdOutlineFilterAltOff } from "react-icons/md";
 import Index from '@/components/Pagination/Index';
-import { endOfYesterday, format } from 'date-fns'; 
+import { endOfYesterday, format } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPaginationStore } from '@/Redux/tableDropFilter';
 import FetchColumnDetail from '@/components/Column/FetchColumnDetail';
 import type { RootState } from '@/Redux/Store';
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
+import ContextRight from './ContextRight/Index';
+import useKeyNavigationx from '@/hooks/useKeyNavigation';
+import { useSelectionRow } from '@/hooks/useSelectionRow.tsx';
+import "react-contexify/dist/ReactContexify.css";
+import {
+    useContextMenu
+} from "react-contexify";
 
+import Pagination from '@/components/Pagination/Index';
+
+const MENU_ID = "menu-id";
 interface DateInterface {
     from: Date; // Assuming the dates are in string format
     to: Date;
@@ -33,6 +46,13 @@ const initialDateRange: DateInterface = {
     to: new Date(),
 };
 
+interface TDatas {
+    acs: number;
+    status: string; // Correct the spelling if needed
+    barcode: string;
+}
+
+
 
 const Tabledata = () => {
     const [Filter, setFilter] = useState<any>({ lastUpdateDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') } });
@@ -43,7 +63,7 @@ const Tabledata = () => {
         pageIndex: 0,
         pageSize: 50,
     });
-    const {ColumnObject} = FetchColumnDetail();
+    const { ColumnObject } = FetchColumnDetail();
     const [sorting, setSorting] = useState<SortingState>([]);
     const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
     const body = {
@@ -51,7 +71,21 @@ const Tabledata = () => {
         "sorting": sorting
     };
     const dispatch = useDispatch();
-    const ipAddress = useSelector((state:RootState) => state.tableDownClick.ipAddressStore);
+    const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
+    // const [Rescheduled, setRescheduled] = useState<any>([]);
+    const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
+    const parentRef = useRef<HTMLDivElement>(null);
+
+    const { show } = useContextMenu({
+        id: MENU_ID
+    });
+    function displayMenu(e: React.MouseEvent<HTMLTableRowElement>) {
+        // put whatever custom logic you need
+        // you can even decide to not display the Menu
+        show({
+            event: e,
+        });
+    }
 
     // inside Tabledata component
     useEffect(() => {
@@ -75,14 +109,14 @@ const Tabledata = () => {
         const tomorrow = new Date(now);
         tomorrow.setHours(24, 0, 0, 0);
         const msUntilMidnight = tomorrow.getTime() - now.getTime();
-        console.log("Midnight update scheduled in", msUntilMidnight, "milliseconds");
+        // console.log("Midnight update scheduled in", msUntilMidnight, "milliseconds");
         // Schedule the first run
         const timer = setTimeout(updateDateAtMidnight, msUntilMidnight);
 
         return () => clearTimeout(timer);
     }, []);
 
-    const { data, isLoading, error } = useQuery({
+    const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['uuidData', pagination, body, sorting],
         queryFn: async ({ signal }) => {
             dispatch(
@@ -97,7 +131,8 @@ const Tabledata = () => {
         retry: false,
         refetchInterval: 10000
     });
-    
+
+
 
     const totalQuery = useQuery({
         queryKey: ["uuidTotal", Filter],
@@ -128,7 +163,6 @@ const Tabledata = () => {
         [isLoading, ColumnObject]
     );
 
-
     const table = useReactTable({
         data: tableData || [],
         columns: tableColumns,
@@ -144,9 +178,39 @@ const Tabledata = () => {
             sorting,
             pagination,
         },
-        pageCount: Math.ceil(totalQuery?.data?.total / pagination.pageSize),
+        pageCount: Math.ceil(totalQuery?.data?.total / pagination.pageSize)
     });
 
+    const [previousSelection, setPreviousSelection] = useState<number | null>(null);
+    // const [keyNavigation, setActiveCursor] = useKeyNavigationx(tableData, setPreviousSelection, SetMultipleRowsSelection, (index, opts) => rowVirtualizer.scrollToIndex(index, opts));
+    const [keyNavigation, setActiveCursor] = useKeyNavigationx(
+        tableData,
+        setPreviousSelection,
+        SetMultipleRowsSelection,
+        (index) => {
+            requestAnimationFrame(() => {
+                document.getElementById(`row-${index}`)?.scrollIntoView({
+                    block: "center",
+                    behavior: "auto",
+                });
+            });
+        }
+
+    );
+
+
+    const handleRowClick = (event: React.MouseEvent, id: number) => {
+        useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection);
+    };
+
+    const getSelectedRowData = (e: React.MouseEvent, rows: any, activeRow: any) => {
+        // console.log(highlightedRows, "highlightedRows");
+        const isHighlighted = highlightedRows.includes(activeRow);//Highlight multiple rows  
+        if (isHighlighted === false) {
+            setActiveCursor(activeRow);
+            handleRowClick(e, activeRow);
+        }
+    };
 
     function clearFilter(idHeader: string) {
         setPagination({
@@ -211,13 +275,25 @@ const Tabledata = () => {
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
     };
 
+    const Rescheduled = useMemo(() => {
+        return highlightedRows.map((index: any) => {
+            const row = table.getRowModel().rows[index]?.original as TDatas;
+            return {
+                acs: row?.acs,
+                status: row?.status,
+                barcode: row?.barcode,
+            };
+        });
+    }, [highlightedRows, table]);
+
     return (
         <>
             <div
-                className="h-[93%] 2xl:w-[100%] lg:w-full overflow-auto"
-                style={{ direction: table.options.columnResizeDirection }}
+                ref={parentRef}
+                className="h-[94%] 2xl:w-[100%] lg:w-full overflow-auto lg:text-sm 2xl:text-base"
+                style={{ direction: table.options.columnResizeDirection, contain: "strict" }}
             >
-                <table className={"w-full "} style={{ width: table.getTotalSize() < width ? "100%" : table.getTotalSize(), }}>
+                <table className={"w-full"} style={{ width: table.getTotalSize() < width ? "100%" : table.getTotalSize(), }}>
                     <thead className={`th select-none text-white sticky top-0 bg-[#2d3d52]  z-50 `}>
                         {table.getHeaderGroups().map(headerGroup => (
                             <Fragment key={headerGroup.id}>
@@ -235,7 +311,7 @@ const Tabledata = () => {
                                                         className={`flex items-center hover:border-r hover:border-[#414954] ${header.column.getCanFilter() ? 'w-[100%]' : 'w-[100%]'}`}
                                                         onClick={header.column.getToggleSortingHandler()}
                                                     >
-                                                        <span className='flex justify-between w-full'>
+                                                        <span className='tableHeaderSize wrapword text-left flex justify-between w-full'>
                                                             {flexRender(header.column.columnDef.header, header.getContext())}
                                                             {{
                                                                 asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
@@ -309,11 +385,32 @@ const Tabledata = () => {
                     </thead>
                     <tbody>
                         {table.getRowModel().rows.map(row => {
+                            const isSelected = highlightedRows.includes(row.index);
+                            const isCursor = keyNavigation === row.index && !isLoading;
                             return (
                                 <tr
                                     key={row.index}
                                     id={`row-${row.index}`}
-                                    className={`font-medium h-7  text-white odd:bg-[#24303f] h-7  even:bg-[#2d3d52]`}
+                                    className={[
+                                        "font-medium h-7 select-none",
+                                        isSelected ? "bg-[#e0cfb0] text-black" : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white",
+                                        isCursor && !isSelected ? "!bg-[#e0cfb0] !text-black outline outline-1 outline-[#e0cfb0]" : "", // cursor but not selected
+                                    ].join(" ")}
+                                    onClick={(e) => {
+                                        const isRemoving = e.ctrlKey && highlightedRows.includes(row.index);
+                                        handleRowClick(e, row.index);
+                                        if (isRemoving) {
+                                            const next = highlightedRows.filter((x) => x !== row.index).at(-1);
+                                            setActiveCursor(next ?? -1);
+                                        } else {
+                                            setActiveCursor(row.index);
+                                        }
+                                    }}
+
+                                    onContextMenu={(e) => {
+                                        displayMenu(e);
+                                        getSelectedRowData(e, table.getRowModel().rows, row.index);
+                                    }}
                                 >
                                     {row.getVisibleCells().map(cell => {
                                         return (
@@ -332,7 +429,14 @@ const Tabledata = () => {
                 </table>
             </div>
 
-            <Index table={table} data={data} initialDateRange={Filter.lastUpdateDate} totalPage={totalQuery?.data?.total} />
+            <Pagination table={table} data={data} initialDateRange={""} totalPage={totalQuery?.data?.total} parentRef={parentRef}
+                setActiveCursor={setActiveCursor} SetMultipleRowsSelection={SetMultipleRowsSelection} />
+
+            {highlightedRows.length <= 10 ?
+                <ContextRight MENU_ID={MENU_ID} Rescheduled={Rescheduled} refetch={refetch} setRescheduled={Rescheduled}
+                    setActiveCursor={setActiveCursor} SetMultipleRowsSelection={SetMultipleRowsSelection} displayMenu={displayMenu}
+                /> : null
+            }
         </>
     )
 }

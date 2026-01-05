@@ -157,6 +157,14 @@
         ]
     },
     "Uuid_column": [
+        { 
+            "id": "expander",
+            "header": null,
+            "accessorKey": "expander",
+            "size": "40", 
+            "enableColumnFilter": false,
+            "enableResizing":false
+        },
         {
             "accessorKey": "UUID",
             "header": "Tape Barcode",
@@ -169,7 +177,7 @@
             "accessorKey": "UUIDPath",
             "header": "UUID Path",
             "enableResizing": true,
-            "size": "200",
+            "size": "320",
             "minSize": "150",
             "textAlign": "text-left"
         },
@@ -230,60 +238,6 @@
             "enableColumnFilter": false
         },
         {
-            "accessorKey": "migrationSizeProgressPercent",
-            "header": "Migration Size Progress (%)",
-            "enableResizing": true,
-            "size": 160,
-            "minSize": 30,
-            "textAlign": "text-center",
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "migrationCountProgressPercent",
-            "header": "Migration Count Progress (%)",
-            "enableResizing": false,
-            "size": 160,
-            "minSize": 30,
-            "textAlign": "text-center",
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "failedObjectCount",
-            "header": "Failed Object(No)",
-            "size": 140,
-            "minSize": 30,
-            "textAlign": "text-right",
-            "enableResizing": true,
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "migratedObjectCount",
-            "header": "Migrated Object(No)",
-            "enableResizing": true,
-            "size": 140,
-            "minSize": 130,
-            "textAlign": "text-right",
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "Priority",
-            "header": "Priority",
-            "size": 90,
-            "minSize": 70,
-            "textAlign": "text-right",
-            "enableResizing": true,
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "migratedObjectSize",
-            "header": "Migrated Object Size",
-            "size": 220,
-            "minSize": 70,
-            "textAlign": "text-right",
-            "enableResizing": true,
-            "enableColumnFilter": false
-        },
-        {
             "accessorKey": "migrationState",
             "header": "Migration State",
             "size": 160,
@@ -315,30 +269,8 @@
                 ],
                 "isMulti": true
             }
-        },
-        {
-            "accessorKey": "invoiceID",
-            "header": "Invoice ID",
-            "size": 140,
-            "minSize": 30,
-            "textAlign": "text-center",
-            "enableResizing": true
-        },
-        {
-            "accessorKey": "invoiceDate",
-            "header": "Invoice Date",
-            "size": 140,
-            "minSize": 30,
-            "textAlign": "text-center",
-            "enableResizing": true,
-            "meta": {
-                "filterVariant": "calender",
-                "calendarMode": "range",
-                "numberOfMonths": 2,
-                "placeholder": "Pick date"
-            },
-            "enableSorting": false
         }
+       
     ],
     "ReportGenerate": [
         {
@@ -611,18 +543,9 @@
             "enableSorting": false
         },
         {
-            "accessorKey": "mediatorCheckSum",
-            "header": "mediator CheckSum",
-            "size": 190,
-            "minSize": 30,
-            "textAlign": "text-left",
-            "enableResizing": true,
-            "enableSorting": false
-        },
-        {
             "accessorKey": "status",
             "header": "Status",
-            "size": 220,
+            "size": 190,
             "minSize": 30,
             "textAlign": "text-left",
             "meta": {

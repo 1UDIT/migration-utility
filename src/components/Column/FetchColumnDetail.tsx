@@ -13,7 +13,7 @@ const FetchColumnDetail = () => {
     const [DownloadPannel, setReportsPannel] = useState<typeof import("xlsx") | any>(null);
     const Dispatch = useDispatch()
 
-    const getCelldetail = (props: any, header: any, alignText: string) => {
+    const getCelldetail = (props: any, header: any, alignText: string) => { 
 
         if (header === "migrationSizeProgressPercent") {
             return (<div className="py-1"><Progress value={props.getValue()} className="flex justify-center" /></div>)
@@ -27,6 +27,20 @@ const FetchColumnDetail = () => {
             return (<span title={props.getValue()} className='tableHeaderSize'>{props.getValue()}</span>)
         } else if (header === "SlugName") {
             return (<span title={props.getValue()} className={`tableHeaderSize ${alignText}`}>{props.getValue()}</span>)
+        } 
+        else if (header === "expander") {
+            return props.row.getCanExpand() ? (
+                <button
+                    {...{
+                        onClick: props.row.getToggleExpandedHandler(),
+                        style: { cursor: 'pointer' },
+                    }}
+                >
+                    {props.row.getIsExpanded() ? '👇' : '👉'}
+                </button>
+            ) : (
+                '🔵'
+            )
         }
         else {
             return (<span title={props.getValue()} className={`tableHeaderSize wrapword ${alignText}`}>{props.getValue()}</span>)
@@ -34,11 +48,11 @@ const FetchColumnDetail = () => {
     }
 
     useEffect(() => {
+        console.log("RUN configFile")
         axios({
             method: "Get",
             url: './config.json',
         }).then(response => {
-            // console.log(response.data.column, "column");
             const ColumnUUID = response?.data?.Uuid_column.map((value: any) => {
                 const alignClass = value.textAlign === 'text-left'
                     ? 'text-left'
@@ -46,6 +60,7 @@ const FetchColumnDetail = () => {
                         ? 'text-center'
                         : 'text-right'
                 return {
+                    id: value.id,
                     accessorKey: value.accessorKey,
                     header: () => { return (<span> {value.header}</span>) },
                     size: value.size,
@@ -99,8 +114,8 @@ const FetchColumnDetail = () => {
             SetColumnUUID(ColumnUUID);
             SetColumnObject(ColumnObject);
             SetColumnReport(ColumnReport);
-            setReportsbtn(response.data.ReportColumns); 
-            setReportsPannel(response.data.reportPanel); 
+            setReportsbtn(response.data.ReportColumns);
+            setReportsPannel(response.data.reportPanel);
             Dispatch(ipAddressStore(response.data.apiUrl));
         }).catch(error => {
             console.log(error, "error in Config File")
@@ -108,7 +123,7 @@ const FetchColumnDetail = () => {
 
     }, []);
 
-    return {ColumnUUID, ColumnObject, Downloadbtn, ColumnReport, DownloadPannel};
+    return { ColumnUUID, ColumnObject, Downloadbtn, ColumnReport, DownloadPannel };
 }
 
 export default FetchColumnDetail

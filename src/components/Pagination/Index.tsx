@@ -1,13 +1,13 @@
 import { format } from 'date-fns'
 import { Button } from '../ui/button'
 
-const Index = ({ table, data, initialDateRange, totalPage }: any) => { 
+const Pagination = ({ table, data, initialDateRange, totalPage, parentRef, setActiveCursor, SetMultipleRowsSelection }: any) => {
     return (
-        <div className="flex flex-row h-[6%] items-center">
+        <div className="flex flex-row h-[6%] items-center border-t-4 border-slate-600">
             <div className="2xl:w-[50%] 2xl:block lg:block lg:w-[50%] items-center flex justify-start 
              2xl:pl-2  lg:pl-0 pt-1 text-[#81b2f7] font-bold   min-[320px]:hidden max-[600px]:text-xs">
-                {initialDateRange?.from && initialDateRange?.to ? (
-                    <>Display Data Is From {format(initialDateRange.from, 'yyyy-MM-dd')} To {format(initialDateRange.to, 'yyyy-MM-dd')}</>
+                {initialDateRange?.startDate && initialDateRange?.endDate ? (
+                    <>Display Data Is From {format(initialDateRange?.startDate, 'yyyy-MM-dd')} To {format(initialDateRange?.endDate, 'yyyy-MM-dd')}</>
                 ) : (
                     <>No Date Filter Applied</>
                 )}
@@ -18,7 +18,7 @@ const Index = ({ table, data, initialDateRange, totalPage }: any) => {
                 <Button
                     variant={"ghost"}
                     className="border rounded p-1 text-white mr-2"
-                    onClick={() => table.firstPage()}
+                    onClick={() => { table.firstPage(), parentRef.current?.scrollTo({ top: 0 }); setActiveCursor(0); SetMultipleRowsSelection([0]); }}
                     disabled={!table.getCanPreviousPage()}
                 >
                     {'<<'}
@@ -26,7 +26,7 @@ const Index = ({ table, data, initialDateRange, totalPage }: any) => {
                 <Button
                     variant={"ghost"}
                     className="border rounded p-1 text-white mr-2"
-                    onClick={() => table.previousPage()}
+                    onClick={() => { table.previousPage(), parentRef.current?.scrollTo({ top: 0 }); setActiveCursor(0); SetMultipleRowsSelection([0]); }}
                     disabled={!table.getCanPreviousPage()}
                 >
                     {'<'}
@@ -34,7 +34,7 @@ const Index = ({ table, data, initialDateRange, totalPage }: any) => {
                 <Button
                     variant={"ghost"}
                     className="border rounded p-1 text-white mr-2"
-                    onClick={() => table.nextPage()}
+                    onClick={() => { table.nextPage(), parentRef.current?.scrollTo({ top: 0 }); setActiveCursor(0); SetMultipleRowsSelection([0]); }}
                     disabled={!table.getCanNextPage()}
                 >
                     {'>'}
@@ -42,7 +42,7 @@ const Index = ({ table, data, initialDateRange, totalPage }: any) => {
                 <Button
                     variant={"ghost"}
                     className="border rounded p-1 text-white mr-2"
-                    onClick={() => table.lastPage()}
+                    onClick={() => { table.lastPage(), parentRef.current?.scrollTo({ top: 0 }); setActiveCursor(0); SetMultipleRowsSelection([0]); }}
                     disabled={!table.getCanNextPage()}
                 >
                     {'>>'}
@@ -50,7 +50,7 @@ const Index = ({ table, data, initialDateRange, totalPage }: any) => {
                 <span className="flex items-center gap-1 text-white pr-2">
                     <div>Page</div>
                     <strong>
-                        {table.getState().pagination.pageIndex +1} of{' '}
+                        {table.getState().pagination.pageIndex + 1} of{' '}
                         {table.getPageCount().toLocaleString()}
                     </strong>
                 </span>
@@ -73,4 +73,4 @@ const Index = ({ table, data, initialDateRange, totalPage }: any) => {
     )
 }
 
-export default Index
+export default Pagination

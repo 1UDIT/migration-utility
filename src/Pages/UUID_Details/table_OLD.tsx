@@ -5,8 +5,8 @@ import {
     getPaginationRowModel,
     type PaginationState,
 } from '@tanstack/react-table';
-import React, { Fragment, lazy, Suspense, useMemo, useState } from 'react'; 
-import { Skeleton } from '@/components/ui/skeleton'; 
+import React, { Fragment, lazy, Suspense, useMemo, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchData } from '../Object_Details/HandleApiCall/Apicall';
 import useWindowSize from '@/hooks/usescreen';
@@ -18,8 +18,12 @@ import "react-contexify/dist/ReactContexify.css";
 import Index from '@/components/Pagination/Index';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPaginationStore } from '@/Redux/tableDropFilter';
-import { endOfYesterday, format } from 'date-fns'; 
+import { endOfYesterday, format } from 'date-fns';
 import FetchColumnDetail from '@/components/Column/FetchColumnDetail';
+import { Progress } from '@/components/ui/progress';
+
+
+
 
 interface DateInterface {
     from: Date; // Assuming the dates are in string format
@@ -43,9 +47,12 @@ const Tabledata = () => {
         pageSize: 50,
     });
     const dispatch = useDispatch();
-    const {ColumnUUID} = FetchColumnDetail();
+    const { ColumnUUID } = FetchColumnDetail();
     const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
     const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
+
+
+
 
     const body = {
         "filters": Filter
@@ -97,6 +104,110 @@ const Tabledata = () => {
         refetchOnWindowFocus: false, // optional, avoid spam
     });
 
+    // const renderSubComponent = ({ row }: { row: any }) => {
+    //     return (
+    //         // <pre className='text-white'>
+    //         //     <code>{JSON.stringify(row.original, null, 2)}</code>
+    //         // </pre>
+    //         <div className=' bg-[#24303f]'>
+    //             <div className='mx-2 bg-[#2d3d52]  border border-rounded-md border-slate-400'>
+    //                 <pre className='text-white'>
+    //                     <code>{JSON.stringify(row.original, null, 2)}</code>
+    //                 </pre>
+    //                 <table>
+    //                     <th>
+    //                         <td>totalObjectSize</td>
+    //                     </th>
+    //                     <th>
+    //                         <td>migratedObjectSize</td>
+    //                     </th>
+    //                     <tbody>
+    //                         <tr>
+    //                             <td>
+    //                                 {row.original.totalObjectSize}
+    //                             </td>
+    //                             <td>
+    //                                 {row.original.migratedObjectSize}
+    //                             </td>
+    //                         </tr>
+    //                     </tbody>
+    //                 </table>
+    //             </div>
+    //         </div>
+
+    //     )
+    // }
+
+    const renderSubComponent = ({ row }: { row: any }) => {
+        const data = row.original
+
+        const hiddenKeys = ['UUID', 'UUIDPath', 'migrationState', 'mediaType', 'startDate', 'endDate','totalObjectSize','totalObjectCount']
+
+        const displayValue = (key: string, value) => {
+            if (
+                key === 'migrationSizeProgressPercent' ||
+                key === 'migrationCountProgressPercent'
+            ) {
+                const numericValue = typeof value === 'number' ? value : Number(value)
+
+                return (
+                    <div className="py-1">
+                        <Progress value={numericValue} className="flex justify-center" />
+                    </div>
+                )
+            }
+
+            return (
+                <span title={String(value)} className="tableHeaderSize wrapword">
+                    {String(value)}
+                </span>
+            )
+        }
+
+
+        const formatKey = (key: string) =>
+            key
+                .replace(/([A-Z])/g, ' $1')   // add space before capital letters
+                .replace(/^./, str => str.toUpperCase()) // capitalize first letter
+
+
+        return (
+            <div className="p-3 border-b-2 border-slate-500">
+                <div className="mx-2 bg-[#2d3d52] border border-slate-500 rounded-md overflow-hidden">
+                    <table className="w-full text-sm text-slate-200 border-collapse">
+                        <thead className=" text-slate-200 font-bold">
+                            <tr>
+                                <th className="px-4 py-2 text-left border-b border-slate-500">
+                                    Field
+                                </th>
+                                <th className="px-4 py-2 text-left border-b border-slate-500">
+                                    Value
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {Object.entries(data)
+                                .filter(([key]) => !hiddenKeys.includes(key))
+                                .map(([key, value]) => (
+                                    <tr
+                                        key={key}
+                                        className="hover:bg-[#344861] transition-colors text-white odd:bg-[#24303f] h-7  even:bg-[#2d3d52]"
+                                    >
+                                        <td className="px-4 py-2 border-b border-slate-600 font-medium">
+                                            {formatKey(key)}
+                                        </td>
+                                        <td className="px-4 py-2 border-b border-slate-600">
+                                            {displayValue(key, value)}
+                                        </td>
+                                    </tr>
+                                ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )
+    }
 
 
     const table = useReactTable({
@@ -108,6 +219,7 @@ const Tabledata = () => {
         enableColumnResizing: true,
         columnResizeMode: 'onChange',
         onPaginationChange: setPagination,
+        getRowCanExpand: () => true,
         state: {
             pagination,
         },
@@ -178,6 +290,8 @@ const Tabledata = () => {
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
     };
 
+
+
     return (
         <>
             <div
@@ -202,7 +316,7 @@ const Tabledata = () => {
                                                         className={`flex items-center hover:border-r hover:border-[#414954] ${header.column.getCanFilter() ? 'w-[100%]' : 'w-[100%]'}`}
                                                         onClick={header.column.getToggleSortingHandler()}
                                                     >
-                                                        <span className='tableHeaderSize wrapword text-left  flex justify-between w-full'>
+                                                        <span className='flex justify-between w-full'>
                                                             {flexRender(header.column.columnDef.header, header.getContext())}
                                                             {/* {{
                                                                 asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
@@ -277,22 +391,35 @@ const Tabledata = () => {
                     <tbody>
                         {table.getRowModel().rows.map(row => {
                             return (
-                                <tr
-                                    key={row.index}
-                                    id={`row-${row.index}`}
-                                    className={`font-medium h-7  text-white odd:bg-[#24303f] even:bg-[#2d3d52]`} 
-                                >
-                                    {row.getVisibleCells().map(cell => {
-                                        return (
-                                            <td key={cell.id} style={{ width: cell.column.getSize() }} className='px-1'>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
-                                            </td>
+                                <Fragment key={row.index}>
+                                    <tr
+                                        id={`row-${row.index}`}
+                                        className={`font-medium h-7  text-white odd:bg-[#24303f] h-7  even:bg-[#2d3d52]`}
+
+                                    // onContextMenu={(e: any) => (row.original as any).migrationState === "PARTIAL" ? displayMenu(e) : null}
+                                    >
+                                        {row.getVisibleCells().map(cell => {
+                                            return (
+                                                <td key={cell.id} style={{ width: cell.column.getSize() }} className='px-1'>
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </td>
+                                            )
+                                        })}
+                                    </tr>
+                                    {
+                                        row.getIsExpanded() && (
+                                            <tr>
+                                                {/* 2nd row is a custom 1 cell row */}
+                                                <td colSpan={row.getVisibleCells().length}>
+                                                    {renderSubComponent({ row })}
+                                                </td>
+                                            </tr>
                                         )
-                                    })}
-                                </tr>
+                                    }
+                                </Fragment>
                             )
                         })}
                     </tbody>
