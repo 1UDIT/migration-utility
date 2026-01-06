@@ -1,6 +1,3 @@
-// divaChecksum
-// mediatorCheckSum
-
 import {
     flexRender,
     getCoreRowModel,
@@ -47,6 +44,7 @@ const initialDateRange: DateInterface = {
 };
 
 interface TDatas {
+    id:number;
     acs: number;
     status: string; // Correct the spelling if needed
     barcode: string;
@@ -75,6 +73,7 @@ const Tabledata = () => {
     // const [Rescheduled, setRescheduled] = useState<any>([]);
     const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
     const parentRef = useRef<HTMLDivElement>(null);
+    const reshedularSelection = useSelector((state:RootState)=>state.tableDownClick.reshedularSelection)
 
     const { show } = useContextMenu({
         id: MENU_ID
@@ -279,6 +278,7 @@ const Tabledata = () => {
         return highlightedRows.map((index: any) => {
             const row = table.getRowModel().rows[index]?.original as TDatas;
             return {
+                id:row?.id,
                 acs: row?.acs,
                 status: row?.status,
                 barcode: row?.barcode,
@@ -432,7 +432,7 @@ const Tabledata = () => {
             <Pagination table={table} data={data} initialDateRange={""} totalPage={totalQuery?.data?.total} parentRef={parentRef}
                 setActiveCursor={setActiveCursor} SetMultipleRowsSelection={SetMultipleRowsSelection} />
 
-            {highlightedRows.length <= 10 ?
+            {highlightedRows.length <= reshedularSelection ?
                 <ContextRight MENU_ID={MENU_ID} Rescheduled={Rescheduled} refetch={refetch} setRescheduled={Rescheduled}
                     setActiveCursor={setActiveCursor} SetMultipleRowsSelection={SetMultipleRowsSelection} displayMenu={displayMenu}
                 /> : null

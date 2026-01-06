@@ -18,9 +18,9 @@ const router = createBrowserRouter(
     <>
       {/* <Route index path='/' element={<SignIn />} /> */}
       <Route >
-        <Route path="/uuid" lazy={() => import("@/Pages/UUID_Details/page.tsx")} />
-        <Route path="/" lazy={() => import("@/Pages/Object_Details/page.tsx")} />
-        <Route path="/reportViewer" lazy={() => import("@/Pages/ReportViewer/page.tsx")} />
+        <Route path="/uuid" lazy={() => import("@/Pages/UUID_Details/page.tsx")}  hydrateFallbackElement />
+        <Route path="/" lazy={() => import("@/Pages/Object_Details/page.tsx")} hydrateFallbackElement/>
+        <Route path="/reportViewer" lazy={() => import("@/Pages/ReportViewer/page.tsx")} hydrateFallbackElement/>
       </Route>
       {/* <Route path="*" element={<SignIn />} /> */}
     </>

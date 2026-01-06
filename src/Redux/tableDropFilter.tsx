@@ -14,6 +14,7 @@ interface PaginationState {
 interface CounterState {
     paginationStore: any;
     ipAddressStore?: any;
+    reshedularSelection?:number
 }
 
 const initialState: CounterState = {
@@ -21,7 +22,8 @@ const initialState: CounterState = {
         "filters": { 
         }
     },
-    ipAddressStore: ""
+    ipAddressStore: "",
+    reshedularSelection:0
 };
 
 const tableDropDownSlice = createSlice({
@@ -33,9 +35,12 @@ const tableDropDownSlice = createSlice({
         },
         ipAddressStore: (state, action) => {
             state.ipAddressStore = action.payload; 
-        }
+        },
+        reshedularSelection: (state, action) => {
+            state.reshedularSelection = action.payload; 
+        },
     },
 });
 
-export const { setPaginationStore,ipAddressStore } = tableDropDownSlice.actions;
+export const { setPaginationStore,ipAddressStore, reshedularSelection } = tableDropDownSlice.actions;
 export default tableDropDownSlice.reducer;

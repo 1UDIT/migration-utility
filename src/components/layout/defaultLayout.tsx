@@ -1,3 +1,6 @@
+
+
+
 import {
     Sidebar,
     SidebarContent,
@@ -39,12 +42,10 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import type { DateRange } from "react-day-picker";
+import { Label } from "@/components/ui/label"; 
 
 import { fetchData } from "@/Pages/Object_Details/HandleApiCall/Apicall";
-import FetchColumnDetail from "../Column/FetchColumnDetail";
-import { Calendar } from "../ui/calendar";
+import FetchColumnDetail from "../Column/FetchColumnDetail"; 
 const basePath = import.meta.env.BASE_URL;
 
 const items = [
@@ -66,9 +67,6 @@ const items = [
 interface AppSidebarProps {
     children: ReactNode;
 }
-
-const calendarMode = 'range', numberOfMonths = 2, dateFormat = "LLL dd, y";
-
 
 export function DefaultLayout({ children }: AppSidebarProps) {
     const [name, setName] = useState<string>('Dashboard');
@@ -221,7 +219,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 const blob = await res.blob();
                 const filename = getFileNameFromDisposition(
                     res.headers.get("content-disposition"),
-                    `CheckSumDetial_${today}.xlsx`
+                    `CheckSumDetail_${today}.xlsx`
                 );
                 saveAs(blob, filename);
                 return filename;
