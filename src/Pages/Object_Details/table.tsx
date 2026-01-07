@@ -44,7 +44,7 @@ const initialDateRange: DateInterface = {
 };
 
 interface TDatas {
-    id:number;
+    id: number;
     acs: number;
     status: string; // Correct the spelling if needed
     barcode: string;
@@ -73,7 +73,10 @@ const Tabledata = () => {
     // const [Rescheduled, setRescheduled] = useState<any>([]);
     const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
     const parentRef = useRef<HTMLDivElement>(null);
-    const reshedularSelection = useSelector((state:RootState)=>state.tableDownClick.reshedularSelection)
+    const reshedularSelection = useSelector((state: RootState) => state.tableDownClick.reshedularSelection)
+    const cursorByPageRef = useRef<Record<number, number>>({ 0: 0 });
+    const currentCursor = cursorByPageRef.current[pagination.pageIndex] ?? 0;
+
 
     const { show } = useContextMenu({
         id: MENU_ID
@@ -146,6 +149,21 @@ const Tabledata = () => {
         (isLoading === true ? Array(10).fill({}) : data?.data),
         [isLoading, data]
     );
+
+    useEffect(() => {
+        if (!data) return;
+
+        const next = data.next_cursor; // whatever your API returns
+        if (next != null) {
+            cursorByPageRef.current[pagination.pageIndex + 1] = next;
+        }
+    }, [data, pagination.pageIndex]);
+
+
+    const items = data?.data;
+    const lastId = data?.data[tableData.length - 1]?.id;
+    console.log(tableData, "tableData", tableData.length, "cursorByPageRef", cursorByPageRef.current[pagination.pageIndex], );
+
 
     const tableColumns = useMemo(
         () =>
@@ -278,7 +296,7 @@ const Tabledata = () => {
         return highlightedRows.map((index: any) => {
             const row = table.getRowModel().rows[index]?.original as TDatas;
             return {
-                id:row?.id,
+                id: row?.id,
                 acs: row?.acs,
                 status: row?.status,
                 barcode: row?.barcode,

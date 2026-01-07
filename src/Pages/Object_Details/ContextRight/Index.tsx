@@ -50,12 +50,18 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
 
     const isRescheduleDisabled =
         !Rescheduled?.length ||
-        Rescheduled.some((row: any) => row.status !== "DECODED_FAILED");
+        Rescheduled.some((row: any) => row.status !== "DECODE_FAILED");
+
+    const ALLOWED_RETRY_STATUSES = [
+        "MIGRATION_FAILED",
+        "ARCHIVE_TRIGGER_FAILED",
+    ];
 
     const isretryDisabled =
         !Rescheduled?.length ||
-        Rescheduled.some((row: any) => row.status !== "MIGRATION_FAILED");
-
+        Rescheduled.some(
+            (row: any) => !ALLOWED_RETRY_STATUSES.includes(row.status)
+        );
 
 
     return (
