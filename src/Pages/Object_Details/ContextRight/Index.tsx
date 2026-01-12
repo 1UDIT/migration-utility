@@ -32,7 +32,7 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
         console.log(Rescheduled, "Schedualar")
         await axios({
             method: 'post',
-            url: `http://${ipAddress}:4004/objects/reshedulerulejobs`,
+            url: `http://${ipAddress}:4000/objects/reshedulerulejobs`,
             data: body,
         }).then(response => {
             toast(

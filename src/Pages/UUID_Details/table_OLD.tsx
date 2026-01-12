@@ -66,7 +66,7 @@ const Tabledata = () => {
                     filters: Filter,
                 })
             );
-            const endpoint = `http://${ipAddress}:4004/uuids?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+            const endpoint = `http://${ipAddress}:4000/uuids?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
@@ -98,7 +98,7 @@ const Tabledata = () => {
     const totalQuery = useQuery({
         queryKey: ["uuidTotal", body],
         queryFn: ({ signal }) =>
-            fetchData(`http://${ipAddress}:4004/uuids/total`, "POST", body, signal),
+            fetchData(`http://${ipAddress}:4000/uuids/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
         refetchOnWindowFocus: false, // optional, avoid spam
@@ -370,13 +370,14 @@ const Tabledata = () => {
                                                         return (
                                                             <Fragment key={val.value}>
                                                                 <Suspense fallback={""} >
-                                                                    <ColumnFilterDropdown
+                                                                    {/* <ColumnFilterDropdown
                                                                         header={header}
                                                                         handleInputChange={handleInputChange}
                                                                         Filter={Filter}
                                                                         isOpen={openSearch.includes(header.id)}
                                                                         onClear={clearFilter}
-                                                                    /> </Suspense>
+                                                                    />  */}
+                                                                    </Suspense>
                                                             </Fragment>
                                                         )
                                                 })}

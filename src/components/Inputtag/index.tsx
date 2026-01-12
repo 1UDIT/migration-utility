@@ -1,7 +1,7 @@
 import React from 'react'
 import { MdOutlineCancel } from "react-icons/md";
 
-export default function InputTag({column,handleInputChange, headerid, clearFilter}:any) {
+export default function InputTag({column,handleInputChange, headerid, clearFilter,}:any) {
     const columnFilterValue = column.getFilterValue();
   return (
     <div className="flex items-center w-full h-7 border  border-orange-500 rounded-md bg-[#2d3d52] text-white">

@@ -48,6 +48,8 @@ interface props {
   Requeststatus?: any;
   setRequestType?: React.Dispatch<React.SetStateAction<any>>;
   Requesttype?: any;
+  setIsCustomDateSelected: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsFirstLoad: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 
@@ -97,7 +99,7 @@ const customStyles = {
   option: (base: any, state: any) => ({
     ...base,
     backgroundColor: state.isSelected ? "rgba(189,197,209,.3)" : "black",
-    padding:"2px 8px"
+    padding: "2px 8px"
 
   }),
   valueContainer: (styles: any) => ({
@@ -167,7 +169,7 @@ const ValueContainer = ({ children, ...props }: ValueContainerProps) => {
 
 
 export const Filter = ({
-  column, headerid, handleInputChange, clearFilter, date
+  column, headerid, handleInputChange, clearFilter, date, setIsCustomDateSelected, setIsFirstLoad
 }: props) => {
   const columnFilterValue = column.getFilterValue();
   const meta = column.columnDef.meta ?? {};
@@ -206,7 +208,6 @@ export const Filter = ({
       return null;
     })();
 
-    console.log(options, "options")
 
     return (
       <Select
@@ -262,28 +263,31 @@ export const Filter = ({
     const clear = () => {
       column.setFilterValue(undefined);
       clearFilter(headerid);
+      // setIsCustomDateSelected(false); // ✅ back to "no custom date"
       setIsPopoverOpen(false);
-      // setStoreFilterId(headerid);
     };
 
-    const handleSelect = (date: DateRange | Date | undefined) => {
-      if (!date) return;
+    const handleSelect = (range: DateRange | undefined) => {
+      
+      if (!range?.from) return; // nothing selected
 
-      if (calendarMode === 'single' && date instanceof Date) {
-        column.setFilterValue(date);
-        handleInputChange(format(date, "yyyy-MM-dd"), headerid, column);
-      } else if (calendarMode === 'range' && typeof date === 'object' && 'from' in date) {
-        const range = date as DateRange;
-        column.setFilterValue(range);
-        handleInputChange(
-          {
-            from: range.from ? format(range.from, "yyyy-MM-dd") : "",
-            to: range.to ? format(range.to, "yyyy-MM-dd") : "",
-          },
-          headerid,
-          column
-        );
-      }
+      // user is picking date -> mark custom
+      setIsCustomDateSelected(true);
+
+      // Keep DateRange in column filter so UI (Pick a date) works nicely
+      column.setFilterValue(range);
+
+      // Build payload for API filter (strings)
+      const payload = {
+        from: format(range.from, "yyyy-MM-dd"),
+        to: range.to ? format(range.to, "yyyy-MM-dd") : "",
+      };
+
+      // IMPORTANT: pass payload to your existing handler properly
+      handleInputChange(payload, headerid, column);
+
+      // Close popover only when range is complete (optional)
+      // if (range.to) setIsPopoverOpen(false);
     };
 
 
@@ -315,26 +319,24 @@ export const Filter = ({
 
           <MdOutlineCancel
             className="mx-2 h-5 w-5 text-white cursor-pointer hover:text-orange-400"
-            onClick={clear}
+            onClick={() => { clear(); setIsFirstLoad(true) }}
           />
         </div>
 
         <PopoverContent
           align="center"
           className={`p-2 bg-[#020517] border border-orange-500 rounded-lg shadow-md ${contentWidthClass}`}
+          
         >
           <Calendar
             mode="range"
             numberOfMonths={numberOfMonths}
-            defaultMonth={
-              selectedRange?.from
-                ? selectedRange.from
-                : addMonths(new Date(), -1)
-            }
+            defaultMonth={addMonths(new Date(), -1)}
             selected={selectedRange}
             onSelect={handleSelect}
           />
         </PopoverContent>
+
       </Popover>
     );
   };
@@ -355,7 +357,7 @@ export const Filter = ({
             placeholder="Search..."
             value={(columnFilterValue ?? '') as string}
             onChange={(event) => {
-              handleInputChange(event.target.value, headerid, column);
+              handleInputChange(event.target.value, headerid, column);setIsFirstLoad(false);
             }}
             className="flex-grow bg-transparent py-1 px-1 text-sm w-full justify-end  text-white 
                    bg-transparent  shadow-sm transition-colors  placeholder:text-muted-foreground focus-visible:outline-none  disabled:cursor-not-allowed 

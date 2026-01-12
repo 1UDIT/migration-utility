@@ -14,8 +14,7 @@ import { fetchData } from '../Object_Details/HandleApiCall/Apicall';
 import useWindowSize from '@/hooks/usescreen';
 import { FiFilter } from "react-icons/fi";
 import { MdOutlineFilterAltOff } from "react-icons/md";
-import Index from '@/components/Pagination/Index';
-import { endOfYesterday, format } from 'date-fns';
+import { endOfYesterday, format, subDays } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPaginationStore } from '@/Redux/tableDropFilter';
 import FetchColumnDetail from '@/components/Column/FetchColumnDetail';
@@ -28,8 +27,9 @@ import "react-contexify/dist/ReactContexify.css";
 import {
     useContextMenu
 } from "react-contexify";
-
+import { toast } from "sonner"
 import Pagination from '@/components/Pagination/Index';
+import { useDebouncedValue } from '@/hooks/debounced';
 
 const MENU_ID = "menu-id";
 interface DateInterface {
@@ -37,7 +37,8 @@ interface DateInterface {
     to: Date;
 }
 
-const dateStart = endOfYesterday();
+const dateStart = subDays(new Date(), 7);
+// const dateStart = endOfYesterday();
 const initialDateRange: DateInterface = {
     from: dateStart,
     to: new Date(),
@@ -53,7 +54,6 @@ interface TDatas {
 
 
 const Tabledata = () => {
-    const [Filter, setFilter] = useState<any>({ lastUpdateDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') } });
     const [dropdownOpen, setDropdownOpen] = useState([]);
     const [openSearch, setSearchTag] = useState<any[]>([]);
     const { width } = useWindowSize();
@@ -64,59 +64,169 @@ const Tabledata = () => {
     const { ColumnObject } = FetchColumnDetail();
     const [sorting, setSorting] = useState<SortingState>([]);
     const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
-    const body = {
-        "filters": Filter,
-        "sorting": sorting
-    };
     const dispatch = useDispatch();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
     // const [Rescheduled, setRescheduled] = useState<any>([]);
     const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
     const parentRef = useRef<HTMLDivElement>(null);
     const reshedularSelection = useSelector((state: RootState) => state.tableDownClick.reshedularSelection)
-    const cursorByPageRef = useRef<Record<number, number>>({ 0: 0 });
-    const currentCursor = cursorByPageRef.current[pagination.pageIndex] ?? 0;
+    const [draftFilter, setDraftFilter] = useState<any>({
+        lastUpdateDate: {
+            from: format(initialDateRange.from, "yyyy-MM-dd"),
+            to: format(initialDateRange.to, "yyyy-MM-dd"),
+        },
+    });
+    const [Filter, setFilter] = useState<any>(draftFilter);
+    // const debouncedDraftFilter = useDebouncedValue(draftFilter, 2000);
+    const { debounced: debouncedDraftFilter, isPending } = useDebouncedValue(draftFilter, 2000);
 
+    const [isCustomDateSelected, setIsCustomDateSelected] = useState(false);
+    const [isFirstLoad, setIsFirstLoad] = useState(true); // ✅ new
+
+    useEffect(() => {
+        setFilter(debouncedDraftFilter);
+        // reset to first page when filter actually applies
+        setPagination((p) => ({ ...p, pageIndex: 0 }));
+    }, [debouncedDraftFilter]);
+
+    const toastIdRef = useRef<string | number | null>(null);
+
+    const prevPendingRef = useRef(false);
+
+    const datePayload = useMemo(() => {
+        // console.log(isFirstLoad, "Date", debouncedDraftFilter, "debouncedDraftFilter", Object.keys(debouncedDraftFilter).length)
+        // 1) User picked a date -> send it
+        if (
+            isCustomDateSelected &&
+            Filter?.lastUpdateDate?.from &&
+            Filter?.lastUpdateDate?.to
+        ) {
+            return {
+                lastUpdateDate: {
+                    from: Filter.lastUpdateDate.from,
+                    to: Filter.lastUpdateDate.to,
+                }
+            };
+        }
+        // 2) Not user-selected:
+        //    - On the VERY FIRST LOAD (no other filters) -> last 24h
+        if (isFirstLoad && Object.keys(debouncedDraftFilter).length === 1) {
+            return {
+                lastUpdateDate: {
+                    from: format(subDays(new Date(), 7), "yyyy-MM-dd"),
+                    to: format(new Date(), "yyyy-MM-dd"),
+                }
+            };
+        }
+
+        // 3) No custom date -> always last 24h
+        return {
+            lastUpdateDate: {
+                from: "",
+                to: "",
+            }
+        };
+    }, [isCustomDateSelected, Filter?.lastUpdateDate?.from, Filter?.lastUpdateDate?.to]);
+
+    // console.log(datePayload, "dataPLayload")
+    const body = useMemo(() => {
+        // take all filters except lastUpdateDate
+        const { lastUpdateDate, ...rest } = (Filter ?? {});
+        return {
+            filters: {
+                ...rest,
+                ...datePayload, // startDate/endDate injected here
+            },
+            sorting,
+        };
+    }, [Filter, sorting, datePayload]);
+
+
+    useEffect(() => {
+        console.log(isPending, "isPending from table", isFirstLoad);
+        // If still first load, make sure no toast is showing and do nothing
+        if (isFirstLoad) {
+            if (toastIdRef.current) {
+                toast.dismiss(toastIdRef.current);
+                toastIdRef.current = null;
+            }
+            prevPendingRef.current = isPending;
+            return;
+        }
+
+        // Show loading toast when pending starts
+        if (isPending) {
+            if (!toastIdRef.current) {
+                toastIdRef.current = toast.loading("Applying filter…");
+            }
+        } else {
+            // Only show success if we were pending just before
+            if (prevPendingRef.current) {
+                if (toastIdRef.current) {
+                    toast.dismiss(toastIdRef.current);
+                    toastIdRef.current = null;
+                }
+                toast.success("Filter applied");
+            } else {
+                // not coming from pending -> just cleanup if needed
+                if (toastIdRef.current) {
+                    toast.dismiss(toastIdRef.current);
+                    toastIdRef.current = null;
+                }
+            }
+        }
+        prevPendingRef.current = isPending;
+
+
+    }, [isPending, isFirstLoad]);
 
     const { show } = useContextMenu({
         id: MENU_ID
     });
+
     function displayMenu(e: React.MouseEvent<HTMLTableRowElement>) {
-        // put whatever custom logic you need
-        // you can even decide to not display the Menu
         show({
             event: e,
         });
-    }
+    };
 
-    // inside Tabledata component
     useEffect(() => {
         function updateDateAtMidnight() {
             const newFrom = endOfYesterday();
             const newTo = new Date();
-            setFilter(
-                { lastUpdateDate: { from: newFrom, to: newTo } });
 
-            // Schedule the next run for the following midnight
+            setDraftFilter((prev: any) => {
+                // only auto-update if user did NOT choose custom date (optional rule)
+                // if you want always update, remove this if-block
+                const isDefault24h =
+                    prev?.lastUpdateDate?.from === format(initialDateRange.from, "yyyy-MM-dd") &&
+                    prev?.lastUpdateDate?.to === format(initialDateRange.to, "yyyy-MM-dd");
+
+                if (!isDefault24h) return prev;
+
+                return {
+                    ...prev,
+                    lastUpdateDate: {
+                        from: format(newFrom, "yyyy-MM-dd"),
+                        to: format(newTo, "yyyy-MM-dd"),
+                    },
+                };
+            });
+
             const now = new Date();
             const tomorrow = new Date(now);
             tomorrow.setHours(24, 0, 0, 0);
-            const msUntilMidnight = tomorrow.getTime() - now.getTime();
-
-            setTimeout(updateDateAtMidnight, msUntilMidnight);
+            setTimeout(updateDateAtMidnight, tomorrow.getTime() - now.getTime());
         }
 
-        // Schedule first midnight update
         const now = new Date();
         const tomorrow = new Date(now);
         tomorrow.setHours(24, 0, 0, 0);
-        const msUntilMidnight = tomorrow.getTime() - now.getTime();
-        // console.log("Midnight update scheduled in", msUntilMidnight, "milliseconds");
-        // Schedule the first run
-        const timer = setTimeout(updateDateAtMidnight, msUntilMidnight);
+        const timer = setTimeout(updateDateAtMidnight, tomorrow.getTime() - now.getTime());
 
         return () => clearTimeout(timer);
     }, []);
+
 
     const { data, isLoading, error, refetch } = useQuery({
         queryKey: ['uuidData', pagination, body, sorting],
@@ -126,7 +236,7 @@ const Tabledata = () => {
                     filters: Filter,
                 })
             );
-            const endpoint = `http://${ipAddress}:4004/objects?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+            const endpoint = `http://${ipAddress}:4000/objects?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
@@ -134,12 +244,10 @@ const Tabledata = () => {
         refetchInterval: 10000
     });
 
-
-
     const totalQuery = useQuery({
         queryKey: ["uuidTotal", Filter],
         queryFn: ({ signal }) =>
-            fetchData(`http://${ipAddress}:4004/objects/total`, "POST", body, signal),
+            fetchData(`http://${ipAddress}:4000/objects/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
         refetchOnWindowFocus: false, // optional, avoid spam
@@ -150,19 +258,6 @@ const Tabledata = () => {
         [isLoading, data]
     );
 
-    useEffect(() => {
-        if (!data) return;
-
-        const next = data.next_cursor; // whatever your API returns
-        if (next != null) {
-            cursorByPageRef.current[pagination.pageIndex + 1] = next;
-        }
-    }, [data, pagination.pageIndex]);
-
-
-    const items = data?.data;
-    const lastId = data?.data[tableData.length - 1]?.id;
-    console.log(tableData, "tableData", tableData.length, "cursorByPageRef", cursorByPageRef.current[pagination.pageIndex], );
 
 
     const tableColumns = useMemo(
@@ -199,7 +294,6 @@ const Tabledata = () => {
     });
 
     const [previousSelection, setPreviousSelection] = useState<number | null>(null);
-    // const [keyNavigation, setActiveCursor] = useKeyNavigationx(tableData, setPreviousSelection, SetMultipleRowsSelection, (index, opts) => rowVirtualizer.scrollToIndex(index, opts));
     const [keyNavigation, setActiveCursor] = useKeyNavigationx(
         tableData,
         setPreviousSelection,
@@ -229,43 +323,116 @@ const Tabledata = () => {
         }
     };
 
+    // function clearFilter(idHeader: string) {
+    //     setPagination({
+    //         pageIndex: 0,
+    //         pageSize: pagination.pageSize,
+    //     });
+    //     setFilter( (prev: any) => {
+    //         if (!prev.hasOwnProperty(idHeader)) {
+    //             return { startDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') }}; // If the filter doesn't exist, return previous state
+    //         }
+    //         const updatedFilter = { ...prev };
+    //         delete updatedFilter[idHeader];
+    //         return updatedFilter;
+    //     });                                                    // Remove the filter from the Filter state
+    //     table.getColumn(idHeader)?.setFilterValue(undefined); // Clear the filter value in the table column
+    //     console.log(idHeader,"Filter", Filter)
+    //     setSearchTag((old) => old.filter((d: any) => d !== idHeader));
+    //     setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
+
+    // };
+
     function clearFilter(idHeader: string) {
-        setPagination({
-            pageIndex: 0,
-            pageSize: pagination.pageSize,
-        });
-        setFilter({
-            lastUpdateDate: {
-                from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd')
+        // setIsCustomDateSelected(false);
+        setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
+        setActiveCursor(0);
+        SetMultipleRowsSelection([]);
+
+        table.getColumn(idHeader)?.setFilterValue(undefined);
+
+        setDraftFilter((prev: any) => {
+            const updated = { ...prev };
+            delete updated[idHeader];
+
+            const hasAnyOtherFilter = Object.keys(updated).some(
+                (k) => k !== "lastUpdateDate"
+            );
+            console.log("isCustomDateSelected", isCustomDateSelected, "hasAnyOtherFilter", hasAnyOtherFilter)
+
+            // If nothing else is filtered, show default 24h (only if you want UI to show it)
+            if (!hasAnyOtherFilter && !isCustomDateSelected) {
+                updated.lastUpdateDate = {
+                    from: format(initialDateRange.from, "yyyy-MM-dd"),
+                    to: format(initialDateRange.to, "yyyy-MM-dd"),
+                };
             }
-        })
+
+            if (idHeader === "lastUpdateDate") {
+                updated.lastUpdateDate = { from: "", to: "" };
+            }
+
+            return updated;
+        });
+
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
         setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
+    }
 
-    };
 
+    // function handleInputChange(value: any, idHeader: string, column: any) {
+    //     setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
+    //     setActiveCursor(0);
+    //     SetMultipleRowsSelection([]);
+
+    //     column.setFilterValue(value);
+
+    //     // setDraftFilter((prev: any) => {
+    //     //     const next = { ...prev };
+
+    //     //     // set only the current filter
+    //     //     next[idHeader] = value;
+
+
+    //     //     // IMPORTANT: do NOT overwrite lastUpdateDate here
+    //     //     // keep user's chosen date as-is
+    //     //     return next;
+    //     // });
+    //     setDraftFilter((prev: any) => ({
+    //         ...prev,
+    //         lastUpdateDate: { from: "", to: "" },
+    //         [idHeader]: value,
+    //     }));
+
+    //     setStoreFilterId((prev) => (prev.includes(idHeader) ? prev : [...prev, idHeader]));
+    // }
 
     function handleInputChange(value: any, idHeader: string, column: any) {
-        setPagination({
-            pageIndex: 0,
-            pageSize: pagination.pageSize,
-        });
+        setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
+        setActiveCursor(0);
+        SetMultipleRowsSelection([]);
+
         column.setFilterValue(value);
-        setFilter((prev: any) => ({
-            ...prev,
-            lastUpdateDate: {
-                from: '',
-                to: ''
-            },
-            [idHeader]: value
-        }));
-        setStoreFilterId((prev) => {
-            if (prev.some((val) => (val === idHeader))) return prev;
-            else {
-                return [...prev, idHeader];
+
+        setDraftFilter((prev: any) => {
+            const next = { ...prev, [idHeader]: value };
+
+            // if user has not selected custom date, keep blank date
+            if (!isCustomDateSelected && idHeader !== "lastUpdateDate") {
+                next.lastUpdateDate = { from: "", to: "" };
             }
+
+            // if date filter itself is being changed, update it
+            if (idHeader === "lastUpdateDate") {
+                next.lastUpdateDate = value;
+            }
+
+            return next;
         });
+
+        setStoreFilterId((prev) => (prev.includes(idHeader) ? prev : [...prev, idHeader]));
     }
+
 
 
     const openSearchBtn = (Value: any, header: any) => {
@@ -389,6 +556,8 @@ const Tabledata = () => {
                                                                         Filter={Filter}
                                                                         isOpen={openSearch.includes(header.id)}
                                                                         onClear={clearFilter}
+                                                                        setIsCustomDateSelected={setIsCustomDateSelected}
+                                                                        setIsFirstLoad={setIsFirstLoad}
                                                                     /> </Suspense>
                                                             </Fragment>
                                                         )
@@ -447,7 +616,7 @@ const Tabledata = () => {
                 </table>
             </div>
 
-            <Pagination table={table} data={data} initialDateRange={""} totalPage={totalQuery?.data?.total} parentRef={parentRef}
+            <Pagination table={table} data={data} initialDateRange={Filter?.lastUpdateDate} totalPage={totalQuery?.data?.total} parentRef={parentRef}
                 setActiveCursor={setActiveCursor} SetMultipleRowsSelection={SetMultipleRowsSelection} />
 
             {highlightedRows.length <= reshedularSelection ?
@@ -455,6 +624,12 @@ const Tabledata = () => {
                     setActiveCursor={setActiveCursor} SetMultipleRowsSelection={SetMultipleRowsSelection} displayMenu={displayMenu}
                 /> : null
             }
+
+            {/* {isPending && (
+                toast.info("Applying filters...", {
+                    duration: 2000,
+                })
+            )} */}
         </>
     )
 }

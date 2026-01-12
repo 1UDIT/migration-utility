@@ -132,7 +132,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 const response = await queryClient.fetchQuery({
                     queryKey: ["uuidData", "all", Body],
                     queryFn: async ({ signal }) => {
-                        const endpoint = `http://${ipAddress}:4004/${nameUrl === 'Object List' ? "objects" : "uuids"}?page=0&limit=0`;
+                        const endpoint = `http://${ipAddress}:4000/${nameUrl === 'Object List' ? "objects" : "uuids"}?page=0&limit=0`;
                         return fetchData(endpoint, "POST", Body, signal);
                     },
                     staleTime: 0,
@@ -203,7 +203,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 return "Migration Data Report";
             }
             else if (downloadChoice === "CHECKSUM") {
-                const endpoint = `http://${ipAddress}:4004/objects/checkSumDownloader`;
+                const endpoint = `http://${ipAddress}:4000/objects/checkSumDownloader`;
                 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
                 const res = await fetch(endpoint, {
                     method: "POST",
@@ -227,9 +227,8 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             else {
                 const body: any = {
                     reportType: ["Last 1 Week", "Yesterday ACS Wise", "Yesterday_Transfer", "OBJECT_LIST", "Yesterday_Transfer_Rate_Details"]
-                };
-                // const endpoint = `http://${ipAddress}:4004/objects/checkSumDownloader`;
-                const endpoint = `http://${ipAddress}:4004/Report/DownloadReport`;
+                }; 
+                const endpoint = `http://${ipAddress}:4000/Report/DownloadReport`;
                 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
                 const res = await fetch(endpoint, {
                     method: "POST",

@@ -5,8 +5,8 @@ import {
     getPaginationRowModel,
     type PaginationState,
 } from '@tanstack/react-table';
-import React, { Fragment, lazy, Suspense, useMemo, useState } from 'react'; 
-import { Skeleton } from '@/components/ui/skeleton'; 
+import React, { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchData } from '../Object_Details/HandleApiCall/Apicall';
 import useWindowSize from '@/hooks/usescreen';
@@ -18,15 +18,18 @@ import "react-contexify/dist/ReactContexify.css";
 import Index from '@/components/Pagination/Index';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPaginationStore } from '@/Redux/tableDropFilter';
-import { endOfYesterday, format } from 'date-fns'; 
+import { endOfYesterday, format, subDays } from 'date-fns';
 import FetchColumnDetail from '@/components/Column/FetchColumnDetail';
+import { useDebouncedValue } from '@/hooks/debounced';
+import { toast } from "sonner"
 
 interface DateInterface {
     from: Date; // Assuming the dates are in string format
     to: Date;
 }
 
-const dateStart = endOfYesterday();
+// const dateStart = endOfYesterday();
+const dateStart = subDays(new Date(), 7);
 const initialDateRange: DateInterface = {
     from: dateStart,
     to: new Date(),
@@ -34,7 +37,6 @@ const initialDateRange: DateInterface = {
 
 
 const Tabledata = () => {
-    const [Filter, setFilter] = useState<any>({ startDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') } });
     const [dropdownOpen, setDropdownOpen] = useState([]);
     const [openSearch, setSearchTag] = useState<any[]>([]);
     const { width } = useWindowSize();
@@ -43,13 +45,152 @@ const Tabledata = () => {
         pageSize: 50,
     });
     const dispatch = useDispatch();
-    const {ColumnUUID} = FetchColumnDetail();
+    const { ColumnUUID } = FetchColumnDetail();
     const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
     const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
+    const [draftFilter, setDraftFilter] = useState<any>({
+        startDate: {
+            from: format(initialDateRange.from, "yyyy-MM-dd"),
+            to: format(initialDateRange.to, "yyyy-MM-dd"),
+        },
+    });
+    const [Filter, setFilter] = useState<any>(draftFilter);
+    const [isCustomDateSelected, setIsCustomDateSelected] = useState(false);
+    const { debounced: debouncedDraftFilter, isPending } = useDebouncedValue(draftFilter, 2000);
+    const [isFirstLoad, setIsFirstLoad] = useState(true); // ✅ new
+    const toastIdRef = useRef<string | number | null>(null);
+    const prevPendingRef = useRef(false);
 
-    const body = {
-        "filters": Filter
-    };
+    useEffect(() => {
+        setFilter(debouncedDraftFilter);
+        // reset to first page when filter actually applies
+        setPagination((p) => ({ ...p, pageIndex: 0 }));
+    }, [debouncedDraftFilter]);
+    // const body = useMemo(() => ({ filters: Filter }), [Filter]);
+
+    const datePayload = useMemo(() => {
+        // console.log(isFirstLoad, "Date", debouncedDraftFilter, "debouncedDraftFilter", Object.keys(debouncedDraftFilter).length)
+        // 1) User picked a date -> send it
+        if (
+            isCustomDateSelected &&
+            Filter?.lastUpdateDate?.from &&
+            Filter?.lastUpdateDate?.to
+        ) {
+            return {
+                startDate: {
+                    from: Filter.lastUpdateDate.from,
+                    to: Filter.lastUpdateDate.to,
+                }
+            };
+        }
+        // 2) Not user-selected:
+        //    - On the VERY FIRST LOAD (no other filters) -> last 24h
+        if (isFirstLoad && Object.keys(debouncedDraftFilter).length === 1) {
+            return {
+                startDate: {
+                    from: format(subDays(new Date(), 7), "yyyy-MM-dd"),
+                    to: format(new Date(), "yyyy-MM-dd"),
+                }
+            };
+        }
+
+        // 3) No custom date -> always last 24h
+        return {
+            startDate: {
+                from: "",
+                to: "",
+            }
+        };
+    }, [isCustomDateSelected, Filter?.lastUpdateDate?.from, Filter?.lastUpdateDate?.to]);
+
+    // console.log(datePayload, "dataPLayload")
+    const body = useMemo(() => {
+        // take all filters except lastUpdateDate
+        const { lastUpdateDate, ...rest } = (Filter ?? {});
+        return {
+            filters: {
+                ...rest,
+                ...datePayload, // startDate/endDate injected here
+            },
+
+        };
+    }, [Filter, datePayload]);
+
+    useEffect(() => {
+        function updateDateAtMidnight() {
+            const newFrom = endOfYesterday();
+            const newTo = new Date();
+
+            setDraftFilter((prev: any) => {
+                // only auto-update if user did NOT choose custom date (optional rule)
+                // if you want always update, remove this if-block
+                const isDefault24h =
+                    prev?.lastUpdateDate?.from === format(initialDateRange.from, "yyyy-MM-dd") &&
+                    prev?.lastUpdateDate?.to === format(initialDateRange.to, "yyyy-MM-dd");
+
+                if (!isDefault24h) return prev;
+
+                return {
+                    ...prev,
+                    lastUpdateDate: {
+                        from: format(newFrom, "yyyy-MM-dd"),
+                        to: format(newTo, "yyyy-MM-dd"),
+                    },
+                };
+            });
+
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setHours(24, 0, 0, 0);
+            setTimeout(updateDateAtMidnight, tomorrow.getTime() - now.getTime());
+        }
+
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setHours(24, 0, 0, 0);
+        const timer = setTimeout(updateDateAtMidnight, tomorrow.getTime() - now.getTime());
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        console.log(isPending, "isPending from table", isFirstLoad);
+        // If still first load, make sure no toast is showing and do nothing
+        if (isFirstLoad) {
+            if (toastIdRef.current) {
+                toast.dismiss(toastIdRef.current);
+                toastIdRef.current = null;
+            }
+            prevPendingRef.current = isPending;
+            return;
+        }
+
+        // Show loading toast when pending starts
+        if (isPending) {
+            if (!toastIdRef.current) {
+                toastIdRef.current = toast.loading("Applying filter…");
+            }
+        } else {
+            // Only show success if we were pending just before
+            if (prevPendingRef.current) {
+                if (toastIdRef.current) {
+                    toast.dismiss(toastIdRef.current);
+                    toastIdRef.current = null;
+                }
+                toast.success("Filter applied");
+            } else {
+                // not coming from pending -> just cleanup if needed
+                if (toastIdRef.current) {
+                    toast.dismiss(toastIdRef.current);
+                    toastIdRef.current = null;
+                }
+            }
+        }
+        prevPendingRef.current = isPending;
+
+
+    }, [isPending, isFirstLoad]);
+
 
     const { data, isLoading, refetch, error } = useQuery({
         queryKey: ['uuidData', pagination, body],
@@ -59,7 +200,7 @@ const Tabledata = () => {
                     filters: Filter,
                 })
             );
-            const endpoint = `http://${ipAddress}:4004/uuids?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+            const endpoint = `http://${ipAddress}:4000/uuids?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
@@ -91,7 +232,7 @@ const Tabledata = () => {
     const totalQuery = useQuery({
         queryKey: ["uuidTotal", body],
         queryFn: ({ signal }) =>
-            fetchData(`http://${ipAddress}:4004/uuids/total`, "POST", body, signal),
+            fetchData(`http://${ipAddress}:4000/uuids/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
         refetchOnWindowFocus: false, // optional, avoid spam
@@ -115,42 +256,97 @@ const Tabledata = () => {
         manualSorting: false,
     });
 
+    // function clearFilter(idHeader: string) {
+    //     setPagination({
+    //         pageIndex: 0,
+    //         pageSize: pagination.pageSize,
+    //     });
+    //     setDraftFilter((prev: any) => {
+    //         const updated = { ...prev };
+    //         delete updated[idHeader];
+
+    //         // if nothing meaningful left, restore default date
+    //         if (Object.keys(updated).length === 1) {
+    //             return {
+    //                 startDate: {
+    //                     from: format(initialDateRange.from, "yyyy-MM-dd"),
+    //                     to: format(initialDateRange.to, "yyyy-MM-dd"),
+    //                 },
+    //             };
+    //         }
+    //         return updated;
+    //     });
+    //     setSearchTag((old) => old.filter((d: any) => d !== idHeader));
+    //     setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
+    // };
+
     function clearFilter(idHeader: string) {
-        setPagination({
-            pageIndex: 0,
-            pageSize: pagination.pageSize,
+        setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
+
+        table.getColumn(idHeader)?.setFilterValue(undefined);
+
+        setDraftFilter((prev: any) => {
+            const updated = { ...prev };
+            delete updated[idHeader];
+
+            // If user cleared ALL non-date filters, keep existing startDate (user chosen)
+            // If startDate is missing for some reason, restore default
+            if (!updated.startDate) {
+                updated.startDate = {
+                    from: format(initialDateRange.from, "yyyy-MM-dd"),
+                    to: format(initialDateRange.to, "yyyy-MM-dd"),
+                };
+            }
+
+            return updated;
         });
-        setFilter({ startDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') } })
+
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
         setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
-    };
+    }
 
+
+    // function handleInputChange(value: any, idHeader: string, column: any) {
+    //     setPagination({
+    //         pageIndex: 0,
+    //         pageSize: pagination.pageSize,
+    //     });
+    //     column.setFilterValue(value);
+    //     setDraftFilter((prev: any) => ({
+    //         ...prev,
+    //         startDate: { from: "", to: "" },
+    //         [idHeader]: value,
+    //     }));
+    //     if (value.trim()) {
+    //         // Only update if text has a value
+    //         setStoreFilterId((prev) => {
+    //             if (prev.some((val) => (val === idHeader))) return prev;
+    //             else {
+    //                 return [...prev, idHeader];
+    //             }
+    //         });
+    //     } else {
+    //         console.log("Text is empty; no action taken.");
+    //     }
+    // }
 
     function handleInputChange(value: any, idHeader: string, column: any) {
-        setPagination({
-            pageIndex: 0,
-            pageSize: pagination.pageSize,
-        });
+        setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
+
         column.setFilterValue(value);
-        setFilter((prev: any) => ({
-            ...prev,
-            startDate: {
-                from: '',
-                to: ''
-            },
-            [idHeader]: value
-        }));
-        if (value.trim()) {
-            // Only update if text has a value
-            setStoreFilterId((prev) => {
-                if (prev.some((val) => (val === idHeader))) return prev;
-                else {
-                    return [...prev, idHeader];
-                }
-            });
-        } else {
-            console.log("Text is empty; no action taken.");
-        }
+
+        setDraftFilter((prev: any) => {
+            const next = { ...prev };
+
+            // set only the current filter
+            next[idHeader] = value;
+
+            // IMPORTANT: do NOT overwrite lastUpdateDate here
+            // keep user's chosen date as-is
+            return next;
+        });
+
+        setStoreFilterId((prev) => (prev.includes(idHeader) ? prev : [...prev, idHeader]));
     }
 
 
@@ -262,6 +458,8 @@ const Tabledata = () => {
                                                                         Filter={Filter}
                                                                         isOpen={openSearch.includes(header.id)}
                                                                         onClear={clearFilter}
+                                                                        setIsCustomDateSelected={setIsCustomDateSelected}
+                                                                        setIsFirstLoad={setIsFirstLoad}
                                                                     /> </Suspense>
                                                             </Fragment>
                                                         )
@@ -280,7 +478,7 @@ const Tabledata = () => {
                                 <tr
                                     key={row.index}
                                     id={`row-${row.index}`}
-                                    className={`font-medium h-7  text-white odd:bg-[#24303f] even:bg-[#2d3d52]`} 
+                                    className={`font-medium h-7  text-white odd:bg-[#24303f] even:bg-[#2d3d52]`}
                                 >
                                     {row.getVisibleCells().map(cell => {
                                         return (
@@ -298,7 +496,7 @@ const Tabledata = () => {
                     </tbody>
                 </table>
             </div>
-            <Index table={table} data={data} initialDateRange={Filter.startDate} totalPage={totalQuery?.data?.total} />
+            <Index table={table} data={data} initialDateRange={draftFilter?.startDate} totalPage={totalQuery?.data?.total} />
         </>
     )
 }

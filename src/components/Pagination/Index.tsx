@@ -1,18 +1,16 @@
 import { format } from 'date-fns'
 import { Button } from '../ui/button'
 
-const Pagination = ({ table, data, initialDateRange, totalPage, parentRef, setActiveCursor, SetMultipleRowsSelection }: any) => {
+const Pagination = ({ table, data, initialDateRange, totalPage, parentRef, setActiveCursor, SetMultipleRowsSelection }: any) => { 
     return (
-        <div className="flex flex-row h-[6%] items-center border-t-4 border-slate-600">
+        <div className="flex flex-row h-[6%] items-center border-t-4 border-slate-600 text-white">
             <div className="2xl:w-[50%] 2xl:block lg:block lg:w-[50%] items-center flex justify-start 
-             2xl:pl-2  lg:pl-0 pt-1 text-[#81b2f7] font-bold   min-[320px]:hidden max-[600px]:text-xs">
-                {initialDateRange?.startDate && initialDateRange?.endDate ? (
-                    <>Display Data Is From {format(initialDateRange?.startDate, 'yyyy-MM-dd')} To {format(initialDateRange?.endDate, 'yyyy-MM-dd')}</>
+             2xl:pl-2  lg:pl-0 pt-1  font-bold   min-[320px]:hidden max-[600px]:text-xs">
+                {initialDateRange?.from && initialDateRange?.to ? (
+                    <>Display Data Is From <span className='text-[#81b2f7]'>{format(initialDateRange?.from, 'yyyy-MM-dd')} To {format(initialDateRange?.to, 'yyyy-MM-dd')}</span></>
                 ) : (
-                    <>No Date Filter Applied</>
+                    <span className='text-[#81b2f7]'>No Date Filter Applied</span>
                 )}
-
-
             </div>
             <div className="2xl:w-[50%] lg:w-[70%] flex items-center px-2 min-[320px]:w-[100%] max-[600px]:text-xs  justify-end pr-5">
                 <Button
