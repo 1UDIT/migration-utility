@@ -66,20 +66,20 @@ const Tabledata = () => {
         // reset to first page when filter actually applies
         setPagination((p) => ({ ...p, pageIndex: 0 }));
     }, [debouncedDraftFilter]);
-    // const body = useMemo(() => ({ filters: Filter }), [Filter]);
+
 
     const datePayload = useMemo(() => {
-        // console.log(isFirstLoad, "Date", debouncedDraftFilter, "debouncedDraftFilter", Object.keys(debouncedDraftFilter).length)
+        console.log(isFirstLoad, "Date", debouncedDraftFilter, "debouncedDraftFilter", Object.keys(debouncedDraftFilter).length)
         // 1) User picked a date -> send it
         if (
             isCustomDateSelected &&
-            Filter?.lastUpdateDate?.from &&
-            Filter?.lastUpdateDate?.to
+            Filter?.startDate?.from &&
+            Filter?.startDate?.to
         ) {
             return {
                 startDate: {
-                    from: Filter.lastUpdateDate.from,
-                    to: Filter.lastUpdateDate.to,
+                    from: Filter.startDate.from,
+                    to: Filter.startDate.to,
                 }
             };
         }
@@ -101,12 +101,12 @@ const Tabledata = () => {
                 to: "",
             }
         };
-    }, [isCustomDateSelected, Filter?.lastUpdateDate?.from, Filter?.lastUpdateDate?.to]);
+    }, [isCustomDateSelected, Filter?.startDate?.from, Filter?.startDate?.to, isFirstLoad]);
 
     // console.log(datePayload, "dataPLayload")
     const body = useMemo(() => {
         // take all filters except lastUpdateDate
-        const { lastUpdateDate, ...rest } = (Filter ?? {});
+        const { startDate, ...rest } = (Filter ?? {});
         return {
             filters: {
                 ...rest,
@@ -114,7 +114,7 @@ const Tabledata = () => {
             },
 
         };
-    }, [Filter, datePayload]);
+    }, [Filter, datePayload, isFirstLoad]);
 
     useEffect(() => {
         function updateDateAtMidnight() {
@@ -125,14 +125,14 @@ const Tabledata = () => {
                 // only auto-update if user did NOT choose custom date (optional rule)
                 // if you want always update, remove this if-block
                 const isDefault24h =
-                    prev?.lastUpdateDate?.from === format(initialDateRange.from, "yyyy-MM-dd") &&
-                    prev?.lastUpdateDate?.to === format(initialDateRange.to, "yyyy-MM-dd");
+                    prev?.startDate?.from === format(initialDateRange.from, "yyyy-MM-dd") &&
+                    prev?.startDate?.to === format(initialDateRange.to, "yyyy-MM-dd");
 
                 if (!isDefault24h) return prev;
 
                 return {
                     ...prev,
-                    lastUpdateDate: {
+                    startDate: {
                         from: format(newFrom, "yyyy-MM-dd"),
                         to: format(newTo, "yyyy-MM-dd"),
                     },
@@ -154,8 +154,6 @@ const Tabledata = () => {
     }, []);
 
     useEffect(() => {
-        console.log(isPending, "isPending from table", isFirstLoad);
-        // If still first load, make sure no toast is showing and do nothing
         if (isFirstLoad) {
             if (toastIdRef.current) {
                 toast.dismiss(toastIdRef.current);
@@ -256,46 +254,30 @@ const Tabledata = () => {
         manualSorting: false,
     });
 
-    // function clearFilter(idHeader: string) {
-    //     setPagination({
-    //         pageIndex: 0,
-    //         pageSize: pagination.pageSize,
-    //     });
-    //     setDraftFilter((prev: any) => {
-    //         const updated = { ...prev };
-    //         delete updated[idHeader];
-
-    //         // if nothing meaningful left, restore default date
-    //         if (Object.keys(updated).length === 1) {
-    //             return {
-    //                 startDate: {
-    //                     from: format(initialDateRange.from, "yyyy-MM-dd"),
-    //                     to: format(initialDateRange.to, "yyyy-MM-dd"),
-    //                 },
-    //             };
-    //         }
-    //         return updated;
-    //     });
-    //     setSearchTag((old) => old.filter((d: any) => d !== idHeader));
-    //     setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
-    // };
 
     function clearFilter(idHeader: string) {
         setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
-
+        setIsFirstLoad(true);
         table.getColumn(idHeader)?.setFilterValue(undefined);
 
         setDraftFilter((prev: any) => {
             const updated = { ...prev };
             delete updated[idHeader];
 
-            // If user cleared ALL non-date filters, keep existing startDate (user chosen)
-            // If startDate is missing for some reason, restore default
-            if (!updated.startDate) {
+            const hasAnyOtherFilter = Object.keys(updated).some(
+                (k) => k !== "startDate"
+            );
+
+            // If nothing else is filtered, show default 24h (only if you want UI to show it)
+            if (!hasAnyOtherFilter && !isCustomDateSelected) {
                 updated.startDate = {
                     from: format(initialDateRange.from, "yyyy-MM-dd"),
                     to: format(initialDateRange.to, "yyyy-MM-dd"),
                 };
+            }
+
+            if (idHeader === "startDate") {
+                updated.startDate = { from: "", to: "" };
             }
 
             return updated;
@@ -305,46 +287,40 @@ const Tabledata = () => {
         setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
     }
 
-
-    // function handleInputChange(value: any, idHeader: string, column: any) {
-    //     setPagination({
-    //         pageIndex: 0,
-    //         pageSize: pagination.pageSize,
-    //     });
-    //     column.setFilterValue(value);
-    //     setDraftFilter((prev: any) => ({
-    //         ...prev,
-    //         startDate: { from: "", to: "" },
-    //         [idHeader]: value,
-    //     }));
-    //     if (value.trim()) {
-    //         // Only update if text has a value
-    //         setStoreFilterId((prev) => {
-    //             if (prev.some((val) => (val === idHeader))) return prev;
-    //             else {
-    //                 return [...prev, idHeader];
-    //             }
-    //         });
-    //     } else {
-    //         console.log("Text is empty; no action taken.");
-    //     }
-    // }
-
     function handleInputChange(value: any, idHeader: string, column: any) {
+
+        column.setFilterValue(value);
+        setIsFirstLoad(false);
         setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
 
         column.setFilterValue(value);
 
         setDraftFilter((prev: any) => {
-            const next = { ...prev };
+            const next = { ...prev, [idHeader]: value };
 
-            // set only the current filter
-            next[idHeader] = value;
+            // if user has not selected custom date, keep blank date
+            if (!isCustomDateSelected && idHeader !== "startDate") {
+                next.startDate = { from: "", to: "" };
+            }
 
-            // IMPORTANT: do NOT overwrite lastUpdateDate here
-            // keep user's chosen date as-is
+            // if date filter itself is being changed, update it
+            if (idHeader === "startDate") {
+                next.startDate = value;
+            }
+
             return next;
         });
+
+        // setDraftFilter((prev: any) => {
+        //     const next = { ...prev };
+
+        //     // set only the current filter
+        //     next[idHeader] = value;
+
+        //     // IMPORTANT: do NOT overwrite lastUpdateDate here
+        //     // keep user's chosen date as-is
+        //     return next;
+        // });
 
         setStoreFilterId((prev) => (prev.includes(idHeader) ? prev : [...prev, idHeader]));
     }
@@ -496,7 +472,7 @@ const Tabledata = () => {
                     </tbody>
                 </table>
             </div>
-            <Index table={table} data={data} initialDateRange={draftFilter?.startDate} totalPage={totalQuery?.data?.total} />
+            <Index table={table} data={data} initialDateRange={datePayload?.startDate} totalPage={totalQuery?.data?.total} />
         </>
     )
 }

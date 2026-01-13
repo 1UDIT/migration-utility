@@ -158,6 +158,37 @@
     },
     "Uuid_column": [
         {
+            "accessorKey": "isOnline",
+            "header": "Online",
+            "size": 115,
+            "minSize": 70,
+            "textAlign": "text-right",
+            "enableResizing": true,
+            "enableColumnFilter": true,
+            "meta": {
+                "filterVariant": "select",
+                "selectOptions": [
+                    {
+                        "label": "Online",
+                        "value": "1"
+                    },
+                    {
+                        "label": "Offline",
+                        "value": "0"
+                    }
+                ]
+            }
+        },
+        {
+            "accessorKey": "acs",
+            "header": "ACS",
+            "size": "130",
+            "minSize": "90",
+            "enableResizing": "true",
+            "textAlign": "text-left",
+            "enableColumnFilter": true
+        },
+        {
             "accessorKey": "UUID",
             "header": "Tape Barcode",
             "size": "260",
@@ -169,7 +200,7 @@
             "accessorKey": "UUIDPath",
             "header": "UUID Path",
             "enableResizing": true,
-            "size": "200",
+            "size": "210",
             "minSize": "150",
             "textAlign": "text-left"
         },
@@ -199,7 +230,7 @@
         {
             "accessorKey": "endDate",
             "header": "End Date & Time",
-            "size": 160,
+            "size": 180,
             "minSize": 130,
             "textAlign": "text-center",
             "meta": {
@@ -215,17 +246,35 @@
             "accessorKey": "totalObjectSize",
             "header": "Object Size",
             "enableResizing": false,
-            "size": 100,
+            "size": 150,
             "minSize": 30,
             "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "migratedObjectSize",
+            "header": "Migrated Object Size",
+            "size": 220,
+            "minSize": 70,
+            "textAlign": "text-right",
+            "enableResizing": true,
             "enableColumnFilter": false
         },
         {
             "accessorKey": "totalObjectCount",
             "header": "Object Count",
             "enableResizing": false,
-            "size": 120,
+            "size": 150,
             "minSize": 30,
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "migratedObjectCount",
+            "header": "Migrated Object Count",
+            "enableResizing": true,
+            "size": 190,
+            "minSize": 130,
             "textAlign": "text-right",
             "enableColumnFilter": false
         },
@@ -233,7 +282,7 @@
             "accessorKey": "migrationSizeProgressPercent",
             "header": "Migration Size Progress (%)",
             "enableResizing": true,
-            "size": 160,
+            "size": 220,
             "minSize": 30,
             "textAlign": "text-center",
             "enableColumnFilter": false
@@ -242,42 +291,24 @@
             "accessorKey": "migrationCountProgressPercent",
             "header": "Migration Count Progress (%)",
             "enableResizing": false,
-            "size": 160,
+            "size": 220,
             "minSize": 30,
             "textAlign": "text-center",
             "enableColumnFilter": false
         },
         {
             "accessorKey": "failedObjectCount",
-            "header": "Failed Object(No)",
-            "size": 140,
+            "header": "Failed Object Count",
+            "size": 190,
             "minSize": 30,
             "textAlign": "text-right",
             "enableResizing": true,
             "enableColumnFilter": false
         },
         {
-            "accessorKey": "migratedObjectCount",
-            "header": "Migrated Object(No)",
-            "enableResizing": true,
-            "size": 140,
-            "minSize": 130,
-            "textAlign": "text-right",
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "Priority",
+            "accessorKey": "priority",
             "header": "Priority",
-            "size": 90,
-            "minSize": 70,
-            "textAlign": "text-right",
-            "enableResizing": true,
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "migratedObjectSize",
-            "header": "Migrated Object Size",
-            "size": 140,
+            "size": 220,
             "minSize": 70,
             "textAlign": "text-right",
             "enableResizing": true,
@@ -294,23 +325,23 @@
                 "selectOptions": [
                     {
                         "label": "Completed",
-                        "value": "COMPLTED"
+                        "value": "COMPLETED"
                     },
                     {
-                        "label": "Failed",
-                        "value": "FAILED"
+                        "label": "Started",
+                        "value": "STARTED"
                     },
                     {
                         "label": "Pending",
                         "value": "PENDING"
                     },
                     {
-                        "label": "Partial",
+                        "label": "PARTIAL",
                         "value": "PARTIAL"
                     },
                     {
-                        "label": "Started",
-                        "value": "STARTED"
+                        "label": "Failed",
+                        "value": "FAILED"
                     }
                 ],
                 "isMulti": true
@@ -337,6 +368,201 @@
                 "numberOfMonths": 2,
                 "placeholder": "Pick date"
             },
+            "enableSorting": false
+        }
+    ],
+    "Object_column": [
+        {
+            "accessorKey": "objectName",
+            "textAlign": "text-left",
+            "header": "Object Name",
+            "size": 600,
+            "minSize": 60,
+            "enableResizing": true
+        },
+        {
+            "accessorKey": "category",
+            "textAlign": "text-left",
+            "header": "Category",
+            "size": 160,
+            "minSize": 60,
+            "enableResizing": true
+        },
+        {
+            "accessorKey": "mediaType",
+            "header": "Media Type",
+            "enableResizing": false,
+            "size": 150,
+            "minSize": 30,
+            "textAlign": "text-left"
+        },
+        {
+            "accessorKey": "mediaName",
+            "header": "Media Name",
+            "enableResizing": false,
+            "size": 230,
+            "minSize": 30,
+            "textAlign": "text-left"
+        },
+        {
+            "accessorKey": "barcode",
+            "textAlign": "text-right",
+            "header": "Barcode",
+            "size": 220,
+            "minSize": 60,
+            "enableResizing": true
+        },
+        {
+            "accessorKey": "divaInstanceNB",
+            "header": "Instance Id",
+            "enableResizing": true,
+            "size": 100,
+            "minSize": 70,
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "sizeKB",
+            "header": "Size(KB)",
+            "enableResizing": true,
+            "size": "90",
+            "minSize": "50",
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "lastUpdateDate",
+            "header": "Date",
+            "size": "160",
+            "minSize": "125",
+            "enableResizing": "true",
+            "textAlign": "text-center",
+            "meta": {
+                "filterVariant": "calender",
+                "calendarMode": "range",
+                "numberOfMonths": 2,
+                "placeholder": "Pick date"
+            }
+        },
+        {
+            "accessorKey": "fileName",
+            "header": "File Name",
+            "enableResizing": true,
+            "size": 250,
+            "minSize": 130,
+            "textAlign": "text-left",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "axfFileName",
+            "header": "Axf File Name",
+            "enableResizing": true,
+            "size": 250,
+            "minSize": 130,
+            "textAlign": "text-left",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "status",
+            "header": "Status",
+            "size": 190,
+            "minSize": 30,
+            "textAlign": "text-left",
+            "meta": {
+                "filterVariant": "select",
+                "selectOptions": [
+                    {
+                        "label": "MIGRATION_COMPLETED",
+                        "value": "MIGRATION_COMPLETED"
+                    },
+                    {
+                        "label": "MIGRATION_SUBMITTED",
+                        "value": "MIGRATION_SUBMITTED"
+                    },
+                    {
+                        "label": "Pending",
+                        "value": "PENDING"
+                    },
+                    {
+                        "label": "MIGRATION_FAILED",
+                        "value": "MIGRATION_FAILED"
+                    },
+                    {
+                        "label": "DECODE_STARTED",
+                        "value": "DECODE_STARTED"
+                    },
+                    {
+                        "label": "DECODE_COMPLETED",
+                        "value": "DECODE_COMPLETED"
+                    },
+                    {
+                        "label": "DECODE_FAILED",
+                        "value": "DECODE_FAILED"
+                    }
+                ],
+                "isMulti": true
+            },
+            "enableSorting": false
+        },
+        {
+            "accessorKey": "barcodeLastArchiveDate",
+            "header": "Barcode Last Archive Date",
+            "size": "180",
+            "minSize": "125",
+            "enableResizing": "true",
+            "textAlign": "text-center",
+            "enableColumnFilter": false,
+            "enableSorting": false
+        },
+        {
+            "accessorKey": "instanceMigrated",
+            "header": "Instance Migrated",
+            "enableResizing": false,
+            "size": 260,
+            "minSize": 30,
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "watchFolderName",
+            "header": "Watch Folder Name",
+            "size": 190,
+            "minSize": 30,
+            "textAlign": "text-Left",
+            "enableResizing": true,
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "isMatched",
+            "header": "Already Migrated",
+            "enableResizing": false,
+            "size": 260,
+            "minSize": 30,
+            "textAlign": "text-center"
+        },
+        {
+            "accessorKey": "appInstanceName",
+            "header": "App Instance Name",
+            "size": 190,
+            "minSize": 30,
+            "textAlign": "text-left",
+            "enableResizing": true
+        },
+        {
+            "accessorKey": "objectUUID",
+            "header": "Object UUID",
+            "enableResizing": true,
+            "size": 330,
+            "minSize": 30,
+            "textAlign": "text-left"
+        },
+        {
+            "accessorKey": "remarks",
+            "header": "Remarks",
+            "size": 190,
+            "minSize": 30,
+            "textAlign": "text-left",
+            "enableResizing": true,
             "enableSorting": false
         }
     ],
@@ -450,217 +676,15 @@
             "enableColumnFilter": false
         }
     ],
-    "Object_column": [
-        {
-            "accessorKey": "acs",
-            "textAlign": "text-left",
-            "header": "Alto Id",
-            "size": 90,
-            "minSize": 60,
-            "enableResizing": true
-        },
-        {
-            "accessorKey": "objectName",
-            "textAlign": "text-left",
-            "header": "Object Name",
-            "size": 600,
-            "minSize": 60,
-            "enableResizing": true
-        },
-        {
-            "accessorKey": "category",
-            "textAlign": "text-left",
-            "header": "Category",
-            "size": 160,
-            "minSize": 60,
-            "enableResizing": true
-        },
-        {
-            "accessorKey": "barcode",
-            "textAlign": "text-right",
-            "header": "Barcode",
-            "size": 180,
-            "minSize": 60,
-            "enableResizing": true
-        },
-        {
-            "accessorKey": "objectUUID",
-            "header": "Object UUID",
-            "enableResizing": true,
-            "size": 330,
-            "minSize": 30,
-            "textAlign": "text-left"
-        },
-        {
-            "accessorKey": "sizeKB",
-            "header": "Size(KB)",
-            "enableResizing": true,
-            "size": "110",
-            "minSize": "50",
-            "textAlign": "text-right",
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "lastUpdateDate",
-            "header": "Date",
-            "size": "160",
-            "minSize": "125",
-            "enableResizing": "true",
-            "textAlign": "text-center",
-            "meta": {
-                "filterVariant": "calender",
-                "calendarMode": "range",
-                "numberOfMonths": 2,
-                "placeholder": "Pick date"
-            }
-        },
-        {
-            "accessorKey": "barcodeLastArchiveDate",
-            "header": "Barcode Last Archive Date",
-            "size": "180",
-            "minSize": "125",
-            "enableResizing": "true",
-            "textAlign": "text-center",
-            "enableColumnFilter": false,
-            "enableSorting": false
-        },
-        {
-            "accessorKey": "divaInstanceNB",
-            "header": "Instance Id",
-            "enableResizing": true,
-            "size": 100,
-            "minSize": 70,
-            "textAlign": "text-right",
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "mediaType",
-            "header": "Media Type",
-            "enableResizing": false,
-            "size": 150,
-            "minSize": 30,
-            "textAlign": "text-left"
-        },
-        {
-            "accessorKey": "mediaName",
-            "header": "Media Name",
-            "enableResizing": false,
-            "size": 250,
-            "minSize": 30,
-            "textAlign": "text-left"
-        },
-        {
-            "accessorKey": "fileName",
-            "header": "File Name",
-            "enableResizing": true,
-            "size": 180,
-            "minSize": 130,
-            "textAlign": "text-left",
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "axfFileName",
-            "header": "Axf File Name",
-            "enableResizing": true,
-            "size": 230,
-            "minSize": 130,
-            "textAlign": "text-left",
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "instanceMigrated",
-            "header": "Instance Migrated",
-            "enableResizing": false,
-            "size": 160,
-            "minSize": 30,
-            "textAlign": "text-right",
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "watchFolderName",
-            "header": "Watch Folder Name",
-            "size": 190,
-            "minSize": 30,
-            "textAlign": "text-Left",
-            "enableResizing": true,
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "isMatched",
-            "header": "Already Migrated",
-            "enableResizing": false,
-            "size": 160,
-            "minSize": 30,
-            "textAlign": "text-center"
-        },
-        {
-            "accessorKey": "appInstanceName",
-            "header": "App Instance Name",
-            "size": 190,
-            "minSize": 30,
-            "textAlign": "text-left",
-            "enableResizing": true
-        },
-        {
-            "accessorKey": "remarks",
-            "header": "Remarks",
-            "size": 190,
-            "minSize": 30,
-            "textAlign": "text-left",
-            "enableResizing": true,
-            "enableSorting": false
-        },
-        {
-            "accessorKey": "mediatorCheckSum",
-            "header": "mediator CheckSum",
-            "size": 190,
-            "minSize": 30,
-            "textAlign": "text-left",
-            "enableResizing": true,
-            "enableSorting": false
-        },
-        {
-            "accessorKey": "status",
-            "header": "Status",
-            "size": 220,
-            "minSize": 30,
-            "textAlign": "text-left",
-            "meta": {
-                "filterVariant": "select",
-                "selectOptions": [
-                    {
-                        "label": "MIGRATION_COMPLETED",
-                        "value": "MIGRATION_COMPLETED"
-                    },
-                    {
-                        "label": "MIGRATION_SUBMITTED",
-                        "value": "MIGRATION_SUBMITTED"
-                    },
-                    {
-                        "label": "Pending",
-                        "value": "PENDING"
-                    },
-                    {
-                        "label": "MIGRATION_FAILED",
-                        "value": "MIGRATION_FAILED"
-                    },
-                    {
-                        "label": "DECODE_STARTED",
-                        "value": "DECODE_STARTED"
-                    },
-                    {
-                        "label": "DECODE_COMPLETED",
-                        "value": "DECODE_COMPLETED"
-                    },
-                    {
-                        "label": "DECODE_FAILED",
-                        "value": "DECODE_FAILED"
-                    }
-                ],
-                "isMulti": true
-            },
-            "enableSorting": false
-        }
-    ], 
-    "reshedularSelection":20
+    "reshedularSelection": 20,
+    "reportType": [
+        "Last 1 Week",
+        "Yesterday ACS Wise",
+        "Yesterday_Transfer",
+        "OBJECT_LIST",
+        "Yesterday_Transfer_Rate_Details",
+        "Masstech_Tape_completed",
+        "MassTech_Object_Completed",
+        "Tape_details"
+    ]
 }

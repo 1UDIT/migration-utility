@@ -1,9 +1,10 @@
 
 import { Progress } from '@/components/ui/progress';
-import { ipAddressStore, reshedularSelection } from '@/Redux/tableDropFilter';
+import { ipAddressStore, reportType, reshedularSelection } from '@/Redux/tableDropFilter';
 import axios from 'axios';
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
+import { FaCircle } from "react-icons/fa";
 
 const FetchColumnDetail = () => {
     const [ColumnUUID, SetColumnUUID] = useState([]);
@@ -13,7 +14,7 @@ const FetchColumnDetail = () => {
     const [DownloadPannel, setReportsPannel] = useState<typeof import("xlsx") | any>(null);
     const Dispatch = useDispatch()
 
-    const getCelldetail = (props: any, header: any, alignText: string) => { 
+    const getCelldetail = (props: any, header: any, alignText: string) => {
 
         if (header === "migrationSizeProgressPercent") {
             return (<div className="py-1"><Progress value={props.getValue()} className="flex justify-center" /></div>)
@@ -27,7 +28,7 @@ const FetchColumnDetail = () => {
             return (<span title={props.getValue()} className='tableHeaderSize'>{props.getValue()}</span>)
         } else if (header === "SlugName") {
             return (<span title={props.getValue()} className={`tableHeaderSize ${alignText}`}>{props.getValue()}</span>)
-        } 
+        }
         else if (header === "expander") {
             return props.row.getCanExpand() ? (
                 <button
@@ -41,6 +42,21 @@ const FetchColumnDetail = () => {
             ) : (
                 '🔵'
             )
+        }
+        else if (header === "isOnline") {
+            const isOnline = props.getValue() === 1;
+
+            return (
+                <div className="flex items-center justify-center w-full h-full">
+                    <FaCircle
+                        className={
+                            isOnline
+                                ? "text-sm animate-[greenPulse_2s_ease-in-out_infinite]"
+                                : "text-sm animate-[redPulse_2s_ease-in-out_infinite]"
+                        }
+                    />
+                </div>
+            );
         }
         else {
             return (<span title={props.getValue()} className={`tableHeaderSize wrapword ${alignText}`}>{props.getValue()}</span>)
@@ -118,6 +134,7 @@ const FetchColumnDetail = () => {
             setReportsPannel(response.data.reportPanel);
             Dispatch(ipAddressStore(response.data.apiUrl));
             Dispatch(reshedularSelection(response.data.reshedularSelection));
+            Dispatch(reportType(response.data.reportType));
         }).catch(error => {
             console.log(error, "error in Config File")
         });

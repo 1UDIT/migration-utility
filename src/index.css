@@ -230,3 +230,21 @@ table tbody tr td {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+@keyframes greenPulse {
+  0%, 100% {
+    color: #22c55e; /* green-500 */
+  }
+  50% {
+    color: #15803d; /* green-700 */
+  }
+}
+
+@keyframes redPulse {
+  0%, 100% {
+    color: #ef4444; /* red-500 */
+  }
+  50% {
+    color: #991b1b; /* red-800 */
+  }
+}

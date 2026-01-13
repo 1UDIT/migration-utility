@@ -76,6 +76,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
     const [XLSX, setXLSX] = useState<typeof import("xlsx") | null>(null);
     const { Downloadbtn } = FetchColumnDetail();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
+    const reportType = useSelector((state: RootState) => state.tableDownClick.reportType);
     const [open, setOpen] = useState<boolean>(false);
     const [downloadChoice, setDownloadChoice] = useState<"OBJECT_LIST" | "CHECKSUM" | "Report">("OBJECT_LIST");
 
@@ -110,8 +111,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
         return m?.[1] ? decodeURIComponent(m[1]) : fallback;
     };
 
-    const DownloadReport = useCallback(async (nameUrl: string) => {
-        console.log(downloadChoice, "download", Body)
+    const DownloadReport = useCallback(async (nameUrl: string) => { 
         try {
             if (downloadChoice === "OBJECT_LIST") {
 
@@ -226,7 +226,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             }
             else {
                 const body: any = {
-                    reportType: ["Last 1 Week", "Yesterday ACS Wise", "Yesterday_Transfer", "OBJECT_LIST", "Yesterday_Transfer_Rate_Details"]
+                    reportType: reportType
                 }; 
                 const endpoint = `http://${ipAddress}:4000/Report/DownloadReport`;
                 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
