@@ -126,7 +126,7 @@ const Tabledata = () => {
                 to: "",
             }
         };
-    }, [isCustomDateSelected, Filter?.lastUpdateDate?.from, Filter?.lastUpdateDate?.to]);
+    }, [isCustomDateSelected, Filter?.lastUpdateDate?.from, Filter?.lastUpdateDate?.to, isFirstLoad]);
 
     // console.log(datePayload, "dataPLayload")
     const body = useMemo(() => {
@@ -139,11 +139,11 @@ const Tabledata = () => {
             },
             sorting,
         };
-    }, [Filter, sorting, datePayload]);
+    }, [Filter, sorting, datePayload, isFirstLoad]);
 
 
     useEffect(() => {
-        console.log(isPending, "isPending from table", isFirstLoad);
+        // console.log(isPending, "isPending from table", isFirstLoad);
         // If still first load, make sure no toast is showing and do nothing
         if (isFirstLoad) {
             if (toastIdRef.current) {
@@ -348,6 +348,7 @@ const Tabledata = () => {
         setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
         setActiveCursor(0);
         SetMultipleRowsSelection([]);
+        setIsFirstLoad(true);
 
         table.getColumn(idHeader)?.setFilterValue(undefined);
 
@@ -413,6 +414,7 @@ const Tabledata = () => {
         SetMultipleRowsSelection([]);
 
         column.setFilterValue(value);
+        setIsFirstLoad(false);
 
         setDraftFilter((prev: any) => {
             const next = { ...prev, [idHeader]: value };
@@ -616,7 +618,7 @@ const Tabledata = () => {
                 </table>
             </div>
 
-            <Pagination table={table} data={data} initialDateRange={Filter?.lastUpdateDate} totalPage={totalQuery?.data?.total} parentRef={parentRef}
+            <Pagination table={table} data={data} initialDateRange={datePayload?.lastUpdateDate} totalPage={totalQuery?.data?.total} parentRef={parentRef}
                 setActiveCursor={setActiveCursor} SetMultipleRowsSelection={SetMultipleRowsSelection} />
 
             {highlightedRows.length <= reshedularSelection ?

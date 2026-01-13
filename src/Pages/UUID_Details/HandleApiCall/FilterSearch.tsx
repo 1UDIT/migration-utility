@@ -273,7 +273,7 @@ export const Filter = ({
 
       // user is picking date -> mark custom
       setIsCustomDateSelected(true);
-
+      setIsFirstLoad(false);
       // Keep DateRange in column filter so UI (Pick a date) works nicely
       column.setFilterValue(range);
 
@@ -357,7 +357,7 @@ export const Filter = ({
             placeholder="Search..."
             value={(columnFilterValue ?? '') as string}
             onChange={(event) => {
-              handleInputChange(event.target.value, headerid, column);setIsFirstLoad(false);
+              handleInputChange(event.target.value, headerid, column);
             }}
             className="flex-grow bg-transparent py-1 px-1 text-sm w-full justify-end  text-white 
                    bg-transparent  shadow-sm transition-colors  placeholder:text-muted-foreground focus-visible:outline-none  disabled:cursor-not-allowed 
