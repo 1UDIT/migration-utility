@@ -226,7 +226,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             }
             else {
                 const body: any = {
-                    reportType: ["Last 1 Week", "Yesterday ACS Wise", "Yesterday_Transfer", "OBJECT_LIST", "Yesterday_Transfer_Rate_Details"]
+                    reportType: ["Last 1 Week", "Yesterday ACS Wise", "Yesterday_Transfer", "OBJECT_LIST", "Yesterday_Transfer_Rate_Details", "Total Category Wise Migration"]
                 }; 
                 const endpoint = `http://${ipAddress}:4000/Report/DownloadReport`;
                 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
