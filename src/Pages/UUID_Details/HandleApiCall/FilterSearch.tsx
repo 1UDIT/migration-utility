@@ -168,6 +168,7 @@ const ValueContainer = ({ children, ...props }: ValueContainerProps) => {
 
 
 
+
 export const Filter = ({
   column, headerid, handleInputChange, clearFilter, date, setIsCustomDateSelected, setIsFirstLoad
 }: props) => {
@@ -175,6 +176,9 @@ export const Filter = ({
   const meta = column.columnDef.meta ?? {};
   const { filterVariant } = meta;
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
+
+
 
 
   // NEW: generic select content (no switch on headerid / accessorKey)
@@ -268,7 +272,7 @@ export const Filter = ({
     };
 
     const handleSelect = (range: DateRange | undefined) => {
-      
+
       if (!range?.from) return; // nothing selected
 
       // user is picking date -> mark custom
@@ -326,7 +330,7 @@ export const Filter = ({
         <PopoverContent
           align="center"
           className={`p-2 bg-[#020517] border border-orange-500 rounded-lg shadow-md ${contentWidthClass}`}
-          
+
         >
           <Calendar
             mode="range"
@@ -353,17 +357,49 @@ export const Filter = ({
       <Suspense fallback="">
         {/* <InputTag column={column} handleInputChange={handleInputChange} headerid={headerid} clearFilter={clearFilter} /> */}
         <div className="flex  w-full h-7 border  border-orange-500 rounded-md bg-[#2d3d52] text-white">
-          <input autoFocus
-            placeholder="Search..."
+          {/*<input autoFocus
+            placeholder="Search… (use comma for multiple values)"
             value={(columnFilterValue ?? '') as string}
             onChange={(event) => {
-              handleInputChange(event.target.value, headerid, column);
+              const rawValue = event.target.value;
+              const value =
+                rawValue.includes(",")
+                  ? rawValue.split(",").map(v => v.trim()).filter(Boolean)
+                  : rawValue;
+
+              console.log(value, "headerid", headerid);
+
+              handleInputChange(value, headerid, column);
             }}
+
             className="flex-grow bg-transparent py-1 px-1 text-sm w-full justify-end  text-white 
                    bg-transparent  shadow-sm transition-colors  placeholder:text-muted-foreground focus-visible:outline-none  disabled:cursor-not-allowed 
                     flex whitespace-nowrap text-ellipsis overflow-hidden"
             style={{ minWidth: '0' }} // Ensures the input shrinks properly within flexbox
+          />*/}
+          <input
+            autoFocus
+            placeholder="Search"
+            value={columnFilterValue as string}
+            onChange={(event) => {
+              const rawValue = event.target.value;
+
+              const parsed = rawValue.includes(",")
+                ? rawValue.split(",").map(v => v.trim()).filter(Boolean)
+                : rawValue;
+
+              // ✅ pass rawValue separately so commas stay visible
+              handleInputChange(parsed, headerid, column, rawValue);
+            }}
+
+
+            className="flex-grow bg-transparent py-1 px-1 text-sm w-full justify-end  text-white 
+                   bg-transparent  shadow-sm transition-colors  placeholder:text-muted-foreground focus-visible:outline-none  disabled:cursor-not-allowed 
+                    flex whitespace-nowrap text-ellipsis overflow-hidden"
+            style={{ minWidth: '0' }}
           />
+
+
           <button className="flex items-center justify-end h-full  border-orange-500"
             onClick={() => {
               clearFilter(headerid);

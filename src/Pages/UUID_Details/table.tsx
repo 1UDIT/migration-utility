@@ -287,40 +287,68 @@ const Tabledata = () => {
         setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
     }
 
-    function handleInputChange(value: any, idHeader: string, column: any) {
+    // function handleInputChange(value: any, idHeader: string, column: any) {
 
-        column.setFilterValue(value);
-        setIsFirstLoad(false);
+    //     setPagination({ pageIndex: 0, pageSize: pagination.pageSize }); 
+    //     column.setFilterValue(value);
+    //     setIsFirstLoad(false);
+
+    //     setDraftFilter((prev: any) => {
+    //         const next = { ...prev, [idHeader]: value };
+
+    //         // if user has not selected custom date, keep blank date
+    //         if (!isCustomDateSelected && idHeader !== "startDate") {
+    //             next.startDate = { from: "", to: "" };
+    //         }
+
+    //         // if date filter itself is being changed, update it
+    //         if (idHeader === "startDate") {
+    //             next.startDate = value;
+    //         }
+
+    //         return next;
+    //     });
+
+    //     // setDraftFilter((prev: any) => {
+    //     //     const next = { ...prev };
+
+    //     //     // set only the current filter
+    //     //     next[idHeader] = value;
+
+    //     //     // IMPORTANT: do NOT overwrite lastUpdateDate here
+    //     //     // keep user's chosen date as-is
+    //     //     return next;
+    //     // });
+
+    //     setStoreFilterId((prev) => (prev.includes(idHeader) ? prev : [...prev, idHeader]));
+    // }
+
+    function handleInputChange(value: any, idHeader: string, column: any, rawValue?: string) {
+
         setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
 
-        column.setFilterValue(value);
+        // ✅ IMPORTANT: keep column filter as STRING for text input
+        if (typeof rawValue === "string") {
+            column.setFilterValue(rawValue);
+        } else {
+            column.setFilterValue(value);
+        }
+
+        setIsFirstLoad(false);
 
         setDraftFilter((prev: any) => {
             const next = { ...prev, [idHeader]: value };
 
-            // if user has not selected custom date, keep blank date
             if (!isCustomDateSelected && idHeader !== "startDate") {
                 next.startDate = { from: "", to: "" };
             }
 
-            // if date filter itself is being changed, update it
             if (idHeader === "startDate") {
                 next.startDate = value;
             }
 
             return next;
         });
-
-        // setDraftFilter((prev: any) => {
-        //     const next = { ...prev };
-
-        //     // set only the current filter
-        //     next[idHeader] = value;
-
-        //     // IMPORTANT: do NOT overwrite lastUpdateDate here
-        //     // keep user's chosen date as-is
-        //     return next;
-        // });
 
         setStoreFilterId((prev) => (prev.includes(idHeader) ? prev : [...prev, idHeader]));
     }
