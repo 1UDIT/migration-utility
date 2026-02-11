@@ -9,6 +9,7 @@ import { FaCircle } from "react-icons/fa";
 const FetchColumnDetail = () => {
     const [ColumnUUID, SetColumnUUID] = useState([]);
     const [ColumnObject, SetColumnObject] = useState([]);
+    const [ColumnMasstech_column, SetColumnMasstech_column] = useState([]);
     const [ColumnReport, SetColumnReport] = useState([]);
     const [Downloadbtn, setReportsbtn] = useState<typeof import("xlsx") | any>(null);
     const [DownloadPannel, setReportsPannel] = useState<typeof import("xlsx") | any>(null);
@@ -108,6 +109,25 @@ const FetchColumnDetail = () => {
                     enableSorting: value.enableSorting,
                 }
             })
+            const ColumnMasstech_column = response?.data?.Masstech_column.map((value: any) => {
+                const alignClass = value.textAlign === 'text-left'
+                    ? 'text-left'
+                    : value.textAlign === 'text-center'
+                        ? 'text-center'
+                        : 'text-right';
+                return {
+                    accessorKey: value.accessorKey,
+                    header: () => { return (<span> {value.header}</span>) },
+                    size: value.size,
+                    minSize: value.minSize,
+                    // Add a small mapping in your component
+                    cell: (props: any) => getCelldetail(props, value.accessorKey, alignClass),
+                    enableResizing: value.enableResizing,
+                    meta: value.meta,
+                    enableColumnFilter: value.enableColumnFilter,
+                    enableSorting: value.enableSorting,
+                }
+            })
             const ColumnReport = response?.data?.ReportGenerate.map((value: any) => {
                 const alignClass = value.textAlign === 'text-left'
                     ? 'text-left'
@@ -129,6 +149,7 @@ const FetchColumnDetail = () => {
             })
             SetColumnUUID(ColumnUUID);
             SetColumnObject(ColumnObject);
+            SetColumnMasstech_column(ColumnMasstech_column);
             SetColumnReport(ColumnReport);
             setReportsbtn(response.data.ReportColumns);
             setReportsPannel(response.data.reportPanel);
@@ -141,7 +162,7 @@ const FetchColumnDetail = () => {
 
     }, []);
 
-    return { ColumnUUID, ColumnObject, Downloadbtn, ColumnReport, DownloadPannel };
+    return { ColumnUUID, ColumnObject, ColumnMasstech_column, Downloadbtn, ColumnReport, DownloadPannel };
 }
 
 export default FetchColumnDetail

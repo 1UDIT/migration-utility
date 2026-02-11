@@ -566,6 +566,201 @@
             "enableSorting": false
         }
     ],
+    "Masstech_column": [
+        {
+            "accessorKey": "id",
+            "textAlign": "text-left",
+            "header": "Id",
+            "size": 50,
+            "minSize": 60,
+            "enableResizing": true
+        },
+        {
+            "accessorKey": "fileInstanceNum",
+            "textAlign": "text-left",
+            "header": "fileInstanceNum",
+            "size": 160,
+            "minSize": 60,
+            "enableResizing": true
+        },
+        {
+            "accessorKey": "programInstanceNum",
+            "header": "programInstanceNum",
+            "enableResizing": false,
+            "size": 150,
+            "minSize": 30,
+            "textAlign": "text-left"
+        },
+        {
+            "accessorKey": "programID",
+            "header": "program ID",
+            "enableResizing": false,
+            "size": 230,
+            "minSize": 30,
+            "textAlign": "text-left"
+        },
+        {
+            "accessorKey": "barcode",
+            "textAlign": "text-right",
+            "header": "Barcode",
+            "size": 220,
+            "minSize": 60,
+            "enableResizing": true
+        },
+        {
+            "accessorKey": "divaInstanceNB",
+            "header": "Instance Id",
+            "enableResizing": true,
+            "size": 100,
+            "minSize": 70,
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "sizeKB",
+            "header": "Size(KB)",
+            "enableResizing": true,
+            "size": "90",
+            "minSize": "50",
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "lastUpdateDate",
+            "header": "Date",
+            "size": "160",
+            "minSize": "125",
+            "enableResizing": "true",
+            "textAlign": "text-center",
+            "meta": {
+                "filterVariant": "calender",
+                "calendarMode": "range",
+                "numberOfMonths": 2,
+                "placeholder": "Pick date"
+            }
+        },
+        {
+            "accessorKey": "fileName",
+            "header": "File Name",
+            "enableResizing": true,
+            "size": 250,
+            "minSize": 130,
+            "textAlign": "text-left",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "axfFileName",
+            "header": "Axf File Name",
+            "enableResizing": true,
+            "size": 250,
+            "minSize": 130,
+            "textAlign": "text-left",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "status",
+            "header": "Status",
+            "size": 190,
+            "minSize": 30,
+            "textAlign": "text-left",
+            "meta": {
+                "filterVariant": "select",
+                "selectOptions": [
+                    {
+                        "label": "MIGRATION_COMPLETED",
+                        "value": "MIGRATION_COMPLETED"
+                    },
+                    {
+                        "label": "MIGRATION_SUBMITTED",
+                        "value": "MIGRATION_SUBMITTED"
+                    },
+                    {
+                        "label": "Pending",
+                        "value": "PENDING"
+                    },
+                    {
+                        "label": "MIGRATION_FAILED",
+                        "value": "MIGRATION_FAILED"
+                    },
+                    {
+                        "label": "DECODE_STARTED",
+                        "value": "DECODE_STARTED"
+                    },
+                    {
+                        "label": "DECODE_COMPLETED",
+                        "value": "DECODE_COMPLETED"
+                    },
+                    {
+                        "label": "DECODE_FAILED",
+                        "value": "DECODE_FAILED"
+                    }
+                ],
+                "isMulti": true
+            },
+            "enableSorting": false
+        },
+        {
+            "accessorKey": "barcodeLastArchiveDate",
+            "header": "Barcode Last Archive Date",
+            "size": "180",
+            "minSize": "125",
+            "enableResizing": "true",
+            "textAlign": "text-center",
+            "enableColumnFilter": false,
+            "enableSorting": false
+        },
+        {
+            "accessorKey": "instanceMigrated",
+            "header": "Instance Migrated",
+            "enableResizing": false,
+            "size": 260,
+            "minSize": 30,
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "watchFolderName",
+            "header": "Watch Folder Name",
+            "size": 190,
+            "minSize": 30,
+            "textAlign": "text-Left",
+            "enableResizing": true,
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "isMatched",
+            "header": "Already Migrated",
+            "enableResizing": false,
+            "size": 260,
+            "minSize": 30,
+            "textAlign": "text-center"
+        },
+        {
+            "accessorKey": "appInstanceName",
+            "header": "App Instance Name",
+            "size": 190,
+            "minSize": 30,
+            "textAlign": "text-left",
+            "enableResizing": true
+        },
+        {
+            "accessorKey": "objectUUID",
+            "header": "Object UUID",
+            "enableResizing": true,
+            "size": 330,
+            "minSize": 30,
+            "textAlign": "text-left"
+        },
+        {
+            "accessorKey": "remarks",
+            "header": "Remarks",
+            "size": 190,
+            "minSize": 30,
+            "textAlign": "text-left",
+            "enableResizing": true,
+            "enableSorting": false
+        }
+    ],
     "ReportGenerate": [
         {
             "accessorKey": "barcode",

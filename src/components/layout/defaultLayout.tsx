@@ -42,10 +42,10 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label"; 
+import { Label } from "@/components/ui/label";
 
 import { fetchData } from "@/Pages/Object_Details/HandleApiCall/Apicall";
-import FetchColumnDetail from "../Column/FetchColumnDetail"; 
+import FetchColumnDetail from "../Column/FetchColumnDetail";
 const basePath = import.meta.env.BASE_URL;
 
 const items = [
@@ -57,6 +57,10 @@ const items = [
     {
         title: "Uuid Detail",
         url: "/uuid",
+    },
+    {
+        title: "Masstech-Object Detail",
+        url: "/masstech",
     },
     {
         title: "Report",
@@ -90,6 +94,8 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 return setName('Object List')
             case `/uuid`:
                 return setName('Uuid List')
+            case `/masstech`:
+                return setName('Masstech List')
             case `/reportViewer`:
                 setDownloadChoice("Report")
                 return setName('Report')
@@ -111,7 +117,8 @@ export function DefaultLayout({ children }: AppSidebarProps) {
         return m?.[1] ? decodeURIComponent(m[1]) : fallback;
     };
 
-    const DownloadReport = useCallback(async (nameUrl: string) => { 
+    const DownloadReport = useCallback(async (nameUrl: string) => {
+        console.log("downloadChoice", downloadChoice)
         try {
             if (downloadChoice === "OBJECT_LIST") {
 
@@ -227,7 +234,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             else {
                 const body: any = {
                     reportType: reportType
-                }; 
+                };
                 const endpoint = `http://${ipAddress}:4000/Report/DownloadReport`;
                 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
                 const res = await fetch(endpoint, {
@@ -339,11 +346,9 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                                 </BreadcrumbList>
                             </Breadcrumb>
                             <Button
-                                // onClick={() =>  
-                                //     DownloadReport(name) 
-                                // }
+                                disabled={name === 'Masstech List'}
                                 onClick={() => {
-                                    name === "Report" || name === 'Uuid List'  ? toast.promise(
+                                    name === "Report" || name === 'Uuid List' ? toast.promise(
                                         DownloadReport(name),
                                         {
                                             loading: "Generating XLSX report...",
@@ -351,8 +356,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                                             error: (err) => err.message || "❌ Report download failed",
                                         }
                                     ) : setOpen(true)
-                                }
-                                }
+                                }}
                                 className="
                                     hidden md:block
                                     text-white font-semibold shadow-lg
