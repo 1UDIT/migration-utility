@@ -180,7 +180,7 @@
             }
         },
         {
-            "accessorKey": "acs",
+            "accessorKey": "acs_name",
             "header": "ACS",
             "size": "130",
             "minSize": "90",
@@ -626,7 +626,7 @@
             "enableColumnFilter": false
         },
         {
-            "accessorKey": "lastUpdateDate",
+            "accessorKey": "lastUpdatedDate",
             "header": "Date",
             "size": "160",
             "minSize": "125",

@@ -28,7 +28,7 @@ interface DateInterface {
     to: Date;
 }
 
-const dateStart = endOfYesterday(); 
+const dateStart = endOfYesterday();
 const initialDateRange: DateInterface = {
     from: dateStart,
     to: new Date(),
@@ -58,16 +58,24 @@ const Tabledata = () => {
     const { debounced: debouncedDraftFilter, isPending } = useDebouncedValue(draftFilter, 2000);
     const [isFirstLoad, setIsFirstLoad] = useState(true); // ✅ new
     const toastIdRef = useRef<string | number | null>(null);
-    const prevPendingRef = useRef(false); 
+    const prevPendingRef = useRef(false);
+    const [pageCursors, setPageCursors] = useState<(number | null)[]>([null]);
+    const currentCursor = pageCursors[pagination.pageIndex] ?? null;
 
     useEffect(() => {
         setFilter(debouncedDraftFilter);
-        // reset to first page when filter actually applies
         setPagination((p) => ({ ...p, pageIndex: 0 }));
+        setPageCursors([null]); // ✅ reset cursor chain
     }, [debouncedDraftFilter]);
 
+    useEffect(() => {
+        setPageCursors([null]);
+        setPagination((p) => ({ ...p, pageIndex: 0 }));
+    }, [pagination.pageSize]);
 
-    const datePayload = useMemo(() => { 
+
+
+    const datePayload = useMemo(() => {
         // 1) User picked a date -> send it
         if (
             isCustomDateSelected &&
@@ -103,7 +111,7 @@ const Tabledata = () => {
 
     // console.log(datePayload, "dataPLayload")
     const body = useMemo(() => {
-        // take all filters except lastUpdateDate
+        // take all filters except lastUpdatedDate
         const { lastUpdatedDate, ...rest } = (Filter ?? {});
         return {
             filters: {
@@ -188,19 +196,40 @@ const Tabledata = () => {
     }, [isPending, isFirstLoad]);
 
 
-    const { data, isLoading, refetch, error } = useQuery({
-        queryKey: ['uuidData', pagination, body],
+    // const { data, isLoading, refetch, error } = useQuery({
+    //     queryKey: ['uuidData', pagination, body],
+    //     queryFn: async ({ signal }) => {
+    //         dispatch(
+    //             setPaginationStore({
+    //                 filters: Filter,
+    //             })
+    //         );
+    //         const endpoint = `http://${ipAddress}:4000/Masstech?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+    //         return fetchData(endpoint, "POST", body, signal);
+    //     },
+    //     networkMode: 'always',
+    //     refetchInterval: 20000,
+    //     retry: false,
+    // });
+
+    const { data, isLoading } = useQuery({
+        queryKey: ["uuidData", pagination.pageIndex, pagination.pageSize, body, currentCursor],
         queryFn: async ({ signal }) => {
-            dispatch(
-                setPaginationStore({
-                    filters: Filter,
-                })
-            );
-            const endpoint = `http://${ipAddress}:4000/Masstech?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
-            return fetchData(endpoint, "POST", body, signal);
+            const endpoint =
+                `http://${ipAddress}:4000/Masstech?limit=${pagination.pageSize}` +
+                (currentCursor ? `&cursor=${currentCursor}` : "");
+
+            const resp = await fetchData(endpoint, "POST", body, signal);
+
+            // ✅ store nextCursor for NEXT page (but do not change currentCursor)
+            setPageCursors((prev) => {
+                const copy = [...prev];
+                copy[pagination.pageIndex + 1] = resp?.nextCursor ?? null;
+                return copy;
+            });
+
+            return resp; // { data, nextCursor, hasMore }
         },
-        networkMode: 'always',
-        refetchInterval: 20000,
         retry: false,
     });
 
@@ -231,6 +260,7 @@ const Tabledata = () => {
             fetchData(`http://${ipAddress}:4000/Masstech/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
+        enabled: !!data,   // 👈 only after list loads
         refetchOnWindowFocus: false, // optional, avoid spam
     });
 
@@ -285,41 +315,7 @@ const Tabledata = () => {
         setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
     }
 
-    // function handleInputChange(value: any, idHeader: string, column: any) {
 
-    //     setPagination({ pageIndex: 0, pageSize: pagination.pageSize }); 
-    //     column.setFilterValue(value);
-    //     setIsFirstLoad(false);
-
-    //     setDraftFilter((prev: any) => {
-    //         const next = { ...prev, [idHeader]: value };
-
-    //         // if user has not selected custom date, keep blank date
-    //         if (!isCustomDateSelected && idHeader !== "lastUpdatedDate") {
-    //             next.lastUpdatedDate = { from: "", to: "" };
-    //         }
-
-    //         // if date filter itself is being changed, update it
-    //         if (idHeader === "lastUpdatedDate") {
-    //             next.lastUpdatedDate = value;
-    //         }
-
-    //         return next;
-    //     });
-
-    //     // setDraftFilter((prev: any) => {
-    //     //     const next = { ...prev };
-
-    //     //     // set only the current filter
-    //     //     next[idHeader] = value;
-
-    //     //     // IMPORTANT: do NOT overwrite lastUpdateDate here
-    //     //     // keep user's chosen date as-is
-    //     //     return next;
-    //     // });
-
-    //     setStoreFilterId((prev) => (prev.includes(idHeader) ? prev : [...prev, idHeader]));
-    // }
 
     function handleInputChange(value: any, idHeader: string, column: any, rawValue?: string) {
 
