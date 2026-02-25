@@ -334,7 +334,7 @@ const Tabledata = () => {
             column.setFilterValue(value);
         }
 
-        setIsFirstLoad(false);
+        // setIsFirstLoad(false);
 
         setDraftFilter((prev: any) => {
             const next = { ...prev, [idHeader]: value };

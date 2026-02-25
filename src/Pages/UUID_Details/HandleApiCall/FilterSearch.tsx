@@ -357,30 +357,10 @@ export const Filter = ({
       <Suspense fallback="">
         {/* <InputTag column={column} handleInputChange={handleInputChange} headerid={headerid} clearFilter={clearFilter} /> */}
         <div className="flex  w-full h-7 border  border-orange-500 rounded-md bg-[#2d3d52] text-white">
-          {/*<input autoFocus
-            placeholder="Search… (use comma for multiple values)"
-            value={(columnFilterValue ?? '') as string}
-            onChange={(event) => {
-              const rawValue = event.target.value;
-              const value =
-                rawValue.includes(",")
-                  ? rawValue.split(",").map(v => v.trim()).filter(Boolean)
-                  : rawValue;
-
-              console.log(value, "headerid", headerid);
-
-              handleInputChange(value, headerid, column);
-            }}
-
-            className="flex-grow bg-transparent py-1 px-1 text-sm w-full justify-end  text-white 
-                   bg-transparent  shadow-sm transition-colors  placeholder:text-muted-foreground focus-visible:outline-none  disabled:cursor-not-allowed 
-                    flex whitespace-nowrap text-ellipsis overflow-hidden"
-            style={{ minWidth: '0' }} // Ensures the input shrinks properly within flexbox
-          />*/}
           <input
             autoFocus
             placeholder="Search"
-            value={columnFilterValue as string}
+            value={(columnFilterValue ?? '') as string}
             onChange={(event) => {
               const rawValue = event.target.value;
 

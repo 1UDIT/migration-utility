@@ -600,7 +600,7 @@
             "textAlign": "text-left"
         },
         {
-            "accessorKey": "barcode",
+            "accessorKey": "tapeBarcode",
             "textAlign": "text-right",
             "header": "Barcode",
             "size": 220,

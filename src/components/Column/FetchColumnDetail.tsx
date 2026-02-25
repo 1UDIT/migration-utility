@@ -52,8 +52,8 @@ const FetchColumnDetail = () => {
                     <FaCircle
                         className={
                             isOnline
-                                ? "text-sm animate-[greenPulse_2s_ease-in-out_infinite]"
-                                : "text-sm animate-[redPulse_2s_ease-in-out_infinite]"
+                                ? "text-sm text-green-500"
+                                : "text-sm text-red-500"
                         }
                     />
                 </div>

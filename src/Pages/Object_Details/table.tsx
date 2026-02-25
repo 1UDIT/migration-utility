@@ -20,7 +20,7 @@ import { setPaginationStore } from '@/Redux/tableDropFilter';
 import FetchColumnDetail from '@/components/Column/FetchColumnDetail';
 import type { RootState } from '@/Redux/Store';
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
-import ContextRight from './ContextRight/Index';
+import ContextRight from './ContextRight/Index'; 
 import useKeyNavigationx from '@/hooks/useKeyNavigation';
 import { useSelectionRow } from '@/hooks/useSelectionRow.tsx';
 import "react-contexify/dist/ReactContexify.css";
@@ -142,9 +142,7 @@ const Tabledata = () => {
     }, [Filter, sorting, datePayload, isFirstLoad]);
 
 
-    useEffect(() => {
-        // console.log(isPending, "isPending from table", isFirstLoad);
-        // If still first load, make sure no toast is showing and do nothing
+    useEffect(() => { 
         if (isFirstLoad) {
             if (toastIdRef.current) {
                 toast.dismiss(toastIdRef.current);
@@ -323,25 +321,6 @@ const Tabledata = () => {
         }
     };
 
-    // function clearFilter(idHeader: string) {
-    //     setPagination({
-    //         pageIndex: 0,
-    //         pageSize: pagination.pageSize,
-    //     });
-    //     setFilter( (prev: any) => {
-    //         if (!prev.hasOwnProperty(idHeader)) {
-    //             return { startDate: { from: format(initialDateRange.from, 'yyyy-MM-dd'), to: format(initialDateRange.to, 'yyyy-MM-dd') }}; // If the filter doesn't exist, return previous state
-    //         }
-    //         const updatedFilter = { ...prev };
-    //         delete updatedFilter[idHeader];
-    //         return updatedFilter;
-    //     });                                                    // Remove the filter from the Filter state
-    //     table.getColumn(idHeader)?.setFilterValue(undefined); // Clear the filter value in the table column
-    //     console.log(idHeader,"Filter", Filter)
-    //     setSearchTag((old) => old.filter((d: any) => d !== idHeader));
-    //     setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
-
-    // };
 
     function clearFilter(idHeader: string) {
         // setIsCustomDateSelected(false);
@@ -381,40 +360,13 @@ const Tabledata = () => {
     }
 
 
-    // function handleInputChange(value: any, idHeader: string, column: any) {
-    //     setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
-    //     setActiveCursor(0);
-    //     SetMultipleRowsSelection([]);
-
-    //     column.setFilterValue(value);
-
-    //     // setDraftFilter((prev: any) => {
-    //     //     const next = { ...prev };
-
-    //     //     // set only the current filter
-    //     //     next[idHeader] = value;
-
-
-    //     //     // IMPORTANT: do NOT overwrite lastUpdateDate here
-    //     //     // keep user's chosen date as-is
-    //     //     return next;
-    //     // });
-    //     setDraftFilter((prev: any) => ({
-    //         ...prev,
-    //         lastUpdateDate: { from: "", to: "" },
-    //         [idHeader]: value,
-    //     }));
-
-    //     setStoreFilterId((prev) => (prev.includes(idHeader) ? prev : [...prev, idHeader]));
-    // }
-
     function handleInputChange(value: any, idHeader: string, column: any) {
         setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
         setActiveCursor(0);
         SetMultipleRowsSelection([]);
 
         column.setFilterValue(value);
-        setIsFirstLoad(false);
+        // setIsFirstLoad(false);
 
         setDraftFilter((prev: any) => {
             const next = { ...prev, [idHeader]: value };
