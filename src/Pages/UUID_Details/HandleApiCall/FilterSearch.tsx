@@ -147,20 +147,40 @@ const customStyles = {
   }),
 };
 
-const ValueContainer = ({ children, ...props }: ValueContainerProps) => {
-  const { getValue } = props;
-  const selectedValues: any = getValue();
+const ValueContainer = (props: ValueContainerProps<any, boolean>) => {
+  const selected = props.getValue?.() ?? [];
+  const labels = selected
+    .map((v: any) => String(v?.label ?? v?.value ?? ""))
+    .filter(Boolean);
+
+  const tooltip = labels.join(", ");
 
   return (
     <components.ValueContainer {...props}>
-      {selectedValues.length > 0 ? (
-        <>
-          <span>{selectedValues[0].label}
-            {selectedValues.length > 1 && <span> ...</span>}
+      {labels.length > 0 ? (
+        <div
+          title={tooltip}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            maxWidth: "100%",
+            overflow: "hidden",
+          }}
+        >
+          <span
+            style={{
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "100%",
+            }}
+          >
+            {labels[0]}
+            {labels.length > 1 ? " ..." : ""}
           </span>
-        </>
+        </div>
       ) : (
-        children
+        props.children
       )}
     </components.ValueContainer>
   );
@@ -218,24 +238,32 @@ export const Filter = ({
         options={options}
         isMulti={isMulti}
         value={current}
-        isSearchable={false}
+        isSearchable={false} 
         onChange={(val: any, actionMeta: any) => {
-          console.log({ val, actionMeta }, val.value);
-          // ⬇️ user clicked clear
-          if (actionMeta?.action === "clear") {
+          const action = actionMeta?.action;
+
+          // clear-like actions for both single & multi
+          if (action === "clear" || action === "remove-value" || action === "pop-value") {
             column.setFilterValue(undefined);
             clearFilter(headerid);
             return;
           }
 
-          // normal behaviour
           if (isMulti) {
-            const next = Array.isArray(val) ? val.map((o) => o.value) : [];
+            const next = Array.isArray(val) ? val.map((o: any) => o.value) : [];
             column.setFilterValue(next.length ? next : undefined);
             handleInputChange(next, headerid, column);
           } else {
-            column.setFilterValue(val?.value ?? undefined);
-            handleInputChange(val?.value ?? '', headerid, column);
+            // react-select uses null for "no selection"
+            const next = val?.value ?? undefined;
+            column.setFilterValue(next);
+
+            // IMPORTANT: don't send '' on clear; only send when next exists
+            if (next === undefined) {
+              clearFilter(headerid);
+              return;
+            }
+            handleInputChange(next, headerid, column);
           }
         }}
         isClearable
@@ -244,7 +272,7 @@ export const Filter = ({
         menuPortalTarget={document.body}
         placeholder={placeholder}
         styles={customStyles}
-        className="text-sm"
+        className="text-sm" 
         components={{ ValueContainer }}
       />
     );

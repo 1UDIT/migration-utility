@@ -176,7 +176,8 @@
                         "label": "Offline",
                         "value": "0"
                     }
-                ]
+                ],
+                "isMulti": false
             }
         },
         {
