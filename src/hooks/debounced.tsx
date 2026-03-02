@@ -18,10 +18,8 @@ export function useDebouncedValue<T>(value: T, delay = 400) {
   const [isPending, setIsPending] = useState(false);
   const timerRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    setIsPending(true);
-
-    if (timerRef.current) {
+  useEffect(() => { 
+    if (timerRef.current) { 
       clearTimeout(timerRef.current);
     }
 
@@ -37,5 +35,5 @@ export function useDebouncedValue<T>(value: T, delay = 400) {
     };
   }, [value, delay]);
 
-  return { debounced, isPending };
+  return { debounced, isPending, setIsPending };
 }

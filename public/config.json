@@ -881,6 +881,7 @@
         "Yesterday_Transfer_Rate_Details",
         "Masstech_Tape_completed",
         "MassTech_Object_Completed",
-        "Tape_details"
+        "Tape_details",
+        "Diva_Tape_completed"
     ]
 }
