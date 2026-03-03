@@ -4,6 +4,7 @@ import {
     useReactTable,
     getPaginationRowModel,
     type PaginationState,
+    type SortingState,
 } from '@tanstack/react-table';
 import React, { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,6 +31,8 @@ import {
     useContextMenu
 } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
+import axios from 'axios';
+import { FaSortDown, FaSortUp } from 'react-icons/fa';
 const MENU_ID = "menu-id";
 
 interface DateInterface {
@@ -49,6 +52,7 @@ interface TDatas {
     acs: number;
     migrationState: string; // Correct the spelling if needed
     UUID: string;
+    priority: number
 }
 
 const Tabledata = () => {
@@ -77,6 +81,40 @@ const Tabledata = () => {
     const prevPendingRef = useRef(false);
     const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
     const reshedularSelection = useSelector((state: RootState) => state.tableDownClick.reshedularSelection)
+    const [editingUuid, setEditingUuid] = useState<string | null>(null);
+    const [priorityDraft, setPriorityDraft] = useState<number>(0);
+    const [savingPriority, setSavingPriority] = useState(false);
+    const [sorting, setSorting] = useState<SortingState>([]);
+
+
+    const updatePriority = async (uuid: string, priority: number) => {
+        if (Number.isNaN(priority) || priority < 0 || priority > 100) {
+            toast.error("Priority must be between 0 and 100");
+            return;
+        }
+
+        try {
+            setSavingPriority(true);
+
+            await axios.put(`http://${ipAddress}:4000/uuids/setPriority`, {
+                UUID: uuid,
+                priority: priority,
+            });
+
+            // simplest: refresh list
+            await refetch();
+
+            // OR better (optional): invalidate instead of refetch
+            // await queryClient.invalidateQueries({ queryKey: ["uuidData"] });
+
+            toast.success("Priority updated");
+            setEditingUuid(null);
+        } catch (e: any) {
+            toast.error(e?.response?.data?.message || "Failed to update priority");
+        } finally {
+            setSavingPriority(false);
+        }
+    };
 
     useEffect(() => {
         setFilter(debouncedDraftFilter);
@@ -139,9 +177,9 @@ const Tabledata = () => {
                 ...rest,
                 ...datePayload, // startDate/endDate injected here
             },
-
+            sorting,
         };
-    }, [Filter, datePayload, isFirstLoad]);
+    }, [Filter, sorting, datePayload, isFirstLoad]);
 
     useEffect(() => {
         function updateDateAtMidnight() {
@@ -210,7 +248,7 @@ const Tabledata = () => {
 
 
     const { data, isLoading, refetch, error } = useQuery({
-        queryKey: ['uuidData', pagination, body],
+        queryKey: ['uuidData', pagination, body, sorting],
         queryFn: async ({ signal }) => {
             dispatch(
                 setPaginationStore({
@@ -273,8 +311,24 @@ const Tabledata = () => {
     );
 
     const handleRowClick = (event: React.MouseEvent, id: number) => {
-        useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection);
+        useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection, isLoading);
     };
+
+    // const table = useReactTable({
+    //     data: tableData,
+    //     columns: tableColumns,
+    //     getCoreRowModel: getCoreRowModel(),
+    //     getPaginationRowModel: getPaginationRowModel(),
+    //     manualPagination: true,
+    //     enableColumnResizing: true,
+    //     columnResizeMode: 'onChange',
+    //     onPaginationChange: setPagination,
+    //     state: {
+    //         pagination,
+    //     },
+    //     pageCount: Math.ceil(totalQuery?.data?.total / pagination.pageSize),
+    //     manualSorting: false,
+    // });
 
     const table = useReactTable({
         data: tableData || [],
@@ -284,14 +338,24 @@ const Tabledata = () => {
         manualPagination: true,
         enableColumnResizing: true,
         columnResizeMode: 'onChange',
+        manualSorting: true,
         onPaginationChange: setPagination,
+        onSortingChange: setSorting,
         state: {
+            sorting,
             pagination,
         },
         pageCount: Math.ceil(totalQuery?.data?.total / pagination.pageSize),
-        manualSorting: false,
-    });
 
+        meta: {
+            editingUuid,
+            setEditingUuid,
+            priorityDraft,
+            setPriorityDraft,
+            savingPriority,
+            updatePriority,
+        },
+    });
 
     function clearFilter(idHeader: string) {
         setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
@@ -323,43 +387,7 @@ const Tabledata = () => {
 
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
         setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
-    }
-
-    // function handleInputChange(value: any, idHeader: string, column: any) {
-
-    //     setPagination({ pageIndex: 0, pageSize: pagination.pageSize }); 
-    //     column.setFilterValue(value);
-    //     setIsFirstLoad(false);
-
-    //     setDraftFilter((prev: any) => {
-    //         const next = { ...prev, [idHeader]: value };
-
-    //         // if user has not selected custom date, keep blank date
-    //         if (!isCustomDateSelected && idHeader !== "startDate") {
-    //             next.startDate = { from: "", to: "" };
-    //         }
-
-    //         // if date filter itself is being changed, update it
-    //         if (idHeader === "startDate") {
-    //             next.startDate = value;
-    //         }
-
-    //         return next;
-    //     });
-
-    //     // setDraftFilter((prev: any) => {
-    //     //     const next = { ...prev };
-
-    //     //     // set only the current filter
-    //     //     next[idHeader] = value;
-
-    //     //     // IMPORTANT: do NOT overwrite lastUpdateDate here
-    //     //     // keep user's chosen date as-is
-    //     //     return next;
-    //     // });
-
-    //     setStoreFilterId((prev) => (prev.includes(idHeader) ? prev : [...prev, idHeader]));
-    // }
+    } 
 
     function handleInputChange(value: any, idHeader: string, column: any, rawValue?: string) {
 
@@ -428,10 +456,11 @@ const Tabledata = () => {
     const Rescheduled = useMemo(() => {
         return highlightedRows.map((index: any) => {
             const row = table.getRowModel().rows[index]?.original as TDatas;
-            return { 
+            return {
                 acs: row?.acs,
                 status: row?.migrationState,
                 UUID: row?.UUID,
+                priority: row?.priority
             };
         });
     }, [highlightedRows, table]);
@@ -460,12 +489,12 @@ const Tabledata = () => {
                                                         className={`flex items-center hover:border-r hover:border-[#414954] ${header.column.getCanFilter() ? 'w-[100%]' : 'w-[100%]'}`}
                                                         onClick={header.column.getToggleSortingHandler()}
                                                     >
-                                                        <span className='tableHeaderSize wrapword text-left  flex justify-between w-full'>
-                                                            {flexRender(header.column.columnDef.header, header.getContext())}
-                                                            {/* {{
+                                                        <span className='w-[70%]'>     {flexRender(header.column.columnDef.header, header.getContext())}</span>
+                                                        <span className="pt-1 w-[30%] flex justify-end ">
+                                                            {{
                                                                 asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
                                                                 desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
-                                                            }[header.column.getIsSorted() as string] ?? null} */}
+                                                            }[header.column.getIsSorted() as string] ?? null}
                                                         </span>
                                                     </span>
                                                     <div className="flex justify-end items-center">
@@ -558,10 +587,10 @@ const Tabledata = () => {
                                         }
                                     }}
 
-                                onContextMenu={(e) => {
-                                    displayMenu(e);
-                                    getSelectedRowData(e, table.getRowModel().rows, row.index);
-                                }}
+                                    onContextMenu={(e) => {
+                                        displayMenu(e);
+                                        getSelectedRowData(e, table.getRowModel().rows, row.index);
+                                    }}
                                 >
                                     {row.getVisibleCells().map(cell => {
                                         return (

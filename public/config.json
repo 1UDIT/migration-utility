@@ -179,6 +179,15 @@
                 ],
                 "isMulti": false
             }
+        },        
+        {
+            "accessorKey": "priority",
+            "header": "Priority",
+            "size": 140,
+            "minSize": 70,
+            "textAlign": "text-right",
+            "enableResizing": true,
+            "enableColumnFilter": false
         },
         {
             "accessorKey": "acs_name",
@@ -188,6 +197,39 @@
             "enableResizing": "true",
             "textAlign": "text-left",
             "enableColumnFilter": true
+        },
+        {
+            "accessorKey": "migrationState",
+            "header": "Migration State",
+            "size": 160,
+            "minSize": 30,
+            "textAlign": "text-left",
+            "meta": {
+                "filterVariant": "select",
+                "selectOptions": [
+                    {
+                        "label": "Completed",
+                        "value": "COMPLETED"
+                    },
+                    {
+                        "label": "Started",
+                        "value": "STARTED"
+                    },
+                    {
+                        "label": "Pending",
+                        "value": "PENDING"
+                    },
+                    {
+                        "label": "PARTIAL",
+                        "value": "PARTIAL"
+                    },
+                    {
+                        "label": "Failed",
+                        "value": "FAILED"
+                    }
+                ],
+                "isMulti": true
+            }
         },
         {
             "accessorKey": "UUID",
@@ -305,48 +347,6 @@
             "textAlign": "text-right",
             "enableResizing": true,
             "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "priority",
-            "header": "Priority",
-            "size": 220,
-            "minSize": 70,
-            "textAlign": "text-right",
-            "enableResizing": true,
-            "enableColumnFilter": false
-        },
-        {
-            "accessorKey": "migrationState",
-            "header": "Migration State",
-            "size": 160,
-            "minSize": 30,
-            "textAlign": "text-left",
-            "meta": {
-                "filterVariant": "select",
-                "selectOptions": [
-                    {
-                        "label": "Completed",
-                        "value": "COMPLETED"
-                    },
-                    {
-                        "label": "Started",
-                        "value": "STARTED"
-                    },
-                    {
-                        "label": "Pending",
-                        "value": "PENDING"
-                    },
-                    {
-                        "label": "PARTIAL",
-                        "value": "PARTIAL"
-                    },
-                    {
-                        "label": "Failed",
-                        "value": "FAILED"
-                    }
-                ],
-                "isMulti": true
-            }
         },
         {
             "accessorKey": "invoiceID",

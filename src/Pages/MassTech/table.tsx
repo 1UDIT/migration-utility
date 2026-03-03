@@ -79,6 +79,7 @@ const Tabledata = () => {
     const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
 
 
+
     const { show } = useContextMenu({
         id: MENU_ID
     });
@@ -222,7 +223,7 @@ const Tabledata = () => {
 
     }, [isPending, isFirstLoad]);
 
- 
+
     const { data, isLoading, refetch } = useQuery({
         queryKey: ["uuidData", pagination.pageIndex, pagination.pageSize, body, currentCursor],
         queryFn: async ({ signal }) => {
@@ -243,6 +244,12 @@ const Tabledata = () => {
         },
         retry: false,
     });
+
+    useEffect(() => {
+        if (!isLoading) { 
+            SetMultipleRowsSelection([0])
+        }
+    }, [isLoading]);
 
 
     const tableData = useMemo(() =>
@@ -290,7 +297,7 @@ const Tabledata = () => {
     });
 
     const handleRowClick = (event: React.MouseEvent, id: number) => {
-        useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection);
+        useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection, isLoading);
     };
 
     const table = useReactTable({
@@ -417,7 +424,7 @@ const Tabledata = () => {
                 barcode: row?.tapeBarcode,
             };
         });
-    }, [highlightedRows, table]);
+    }, [highlightedRows, table]); 
 
 
     return (
@@ -522,12 +529,13 @@ const Tabledata = () => {
                         {table.getRowModel().rows.map(row => {
                             const isSelected = highlightedRows.includes(row.index);
                             const isCursor = keyNavigation === row.index && !isLoading;
+                            // console.log(highlightedRows ,"highlightedRows.includes(row.index)",row.index,"isSelected",isSelected)
                             return (
                                 <tr
                                     key={row.index}
                                     id={`row-${row.index}`}
                                     className={[
-                                        "font-medium h-7",
+                                        "font-medium h-7 select-none",
                                         isSelected ? "bg-[#e0cfb0] text-black" : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white",
                                         isCursor && !isSelected ? "!bg-[#e0cfb0] !text-black outline outline-1 outline-[#e0cfb0]" : "", // cursor but not selected
                                     ].join(" ")}

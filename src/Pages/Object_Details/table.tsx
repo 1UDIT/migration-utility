@@ -20,7 +20,7 @@ import { setPaginationStore } from '@/Redux/tableDropFilter';
 import FetchColumnDetail from '@/components/Column/FetchColumnDetail';
 import type { RootState } from '@/Redux/Store';
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
-import ContextRight from './ContextRight/Index'; 
+import ContextRight from './ContextRight/Index';
 import useKeyNavigationx from '@/hooks/useKeyNavigation';
 import { useSelectionRow } from '@/hooks/useSelectionRow.tsx';
 import "react-contexify/dist/ReactContexify.css";
@@ -142,7 +142,7 @@ const Tabledata = () => {
     }, [Filter, sorting, datePayload, isFirstLoad]);
 
 
-    useEffect(() => { 
+    useEffect(() => {
         if (isFirstLoad) {
             if (toastIdRef.current) {
                 toast.dismiss(toastIdRef.current);
@@ -309,7 +309,7 @@ const Tabledata = () => {
 
 
     const handleRowClick = (event: React.MouseEvent, id: number) => {
-        useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection);
+        useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection,  isLoading);
     };
 
     const getSelectedRowData = (e: React.MouseEvent, rows: any, activeRow: any) => {
@@ -450,12 +450,11 @@ const Tabledata = () => {
                                                         className={`flex items-center hover:border-r hover:border-[#414954] ${header.column.getCanFilter() ? 'w-[100%]' : 'w-[100%]'}`}
                                                         onClick={header.column.getToggleSortingHandler()}
                                                     >
-                                                        <span className='tableHeaderSize wrapword text-left flex justify-between w-full'>
-                                                            {flexRender(header.column.columnDef.header, header.getContext())}
-                                                            {{
-                                                                asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
-                                                                desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
-                                                            }[header.column.getIsSorted() as string] ?? null}
+                                                        <span className='w-[70%]'>    {flexRender(header.column.columnDef.header, header.getContext())}</span>
+                                                        <span className="pt-1 w-[30%] flex justify-end "> {{
+                                                            asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
+                                                            desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
+                                                        }[header.column.getIsSorted() as string] ?? null}
                                                         </span>
                                                     </span>
                                                     <div className="flex justify-end items-center">

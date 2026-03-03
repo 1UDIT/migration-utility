@@ -4,7 +4,9 @@ import { ipAddressStore, reportType, reshedularSelection } from '@/Redux/tableDr
 import axios from 'axios';
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
-import { FaCircle } from "react-icons/fa";
+import { FaCircle, FaEdit } from "react-icons/fa";
+import CopyCell from '../ui/CopyCell';
+
 
 const FetchColumnDetail = () => {
     const [ColumnUUID, SetColumnUUID] = useState([]);
@@ -23,12 +25,83 @@ const FetchColumnDetail = () => {
         } else if (header === "migrationCountProgressPercent") {
             return (<div className="py-1"><Progress value={props.getValue()} className="flex justify-center" /></div>)
         } else if (header === "SlugName") {
-            return (<span title={props.getValue()} className={`tableHeaderSize ${alignText}`}>{props.getValue()}</span>)
+            return (
+                <CopyCell
+                    value={props.getValue()}
+                    className={`tableHeaderSize ${alignText}`}
+                />
+            )
         }
         else if (header === "ClipName") {
-            return (<span title={props.getValue()} className='tableHeaderSize'>{props.getValue()}</span>)
-        } else if (header === "SlugName") {
-            return (<span title={props.getValue()} className={`tableHeaderSize ${alignText}`}>{props.getValue()}</span>)
+            return (<CopyCell
+                value={props.getValue()}
+                className={`tableHeaderSize ${alignText}`}
+            />
+            )
+        }
+        else if (header === "priority") {
+            const uuid = props.row.original?.UUID; // your data uses UUID in table.tsx interface
+            const value = Number(props.getValue() ?? 0);
+
+            const meta: any = props.table.options.meta;
+            const isEditing = meta?.editingUuid === uuid;
+
+            // loading rows safety
+            if (!uuid) return <span className={`tableHeaderSize ${alignText}`}>-</span>;
+
+            if (!isEditing) {
+                return (
+                    <div className={`flex items-center gap-2 ${alignText}`}>
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                // if another row is currently being edited -> save it first
+                                const prevUuid = meta?.editingUuid;
+                                if (prevUuid && prevUuid !== uuid) {
+                                    try {
+                                        await meta.updatePriority(prevUuid, meta.priorityDraft);
+                                    } catch (e) {
+                                        // if save fails, don't switch row (optional)
+                                        return;
+                                    }
+                                }
+
+                                // now start editing this row
+                                meta.setEditingUuid(uuid);
+                                meta.setPriorityDraft(value);
+                            }}
+                            className="text-xs px-2 py-1 border rounded odd:border-[#171f29] even:border-[#2d3d52]"
+                            title="Edit Priority"
+                        >
+                            <FaEdit color="#9298fb" size={15} />
+                        </button>
+                        <span className="tableHeaderSize">{value}</span>
+                    </div>
+                );
+            }
+
+            return (
+                <div className={`flex items-center gap-2 ${alignText}`}>
+                    <input
+                        type="number"
+                        className="w-22 h-8 px-2 py-1 border rounded bg-transparent"
+                        value={meta.priorityDraft}
+                        autoFocus
+                        min={0}
+                        max={100}
+                        onChange={(e) => meta.setPriorityDraft(Number(e.target.value))}
+                        onBlur={() => {
+                            if (meta?.editingUuid === uuid) meta.updatePriority(uuid, meta.priorityDraft);
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") meta.updatePriority(uuid, meta.priorityDraft);
+                            if (e.key === "Escape") meta.setEditingUuid(null);
+                        }}
+                        disabled={meta.savingPriority}
+                    />
+
+                </div>
+            );
         }
         else if (header === "expander") {
             return props.row.getCanExpand() ? (
@@ -60,7 +133,13 @@ const FetchColumnDetail = () => {
             );
         }
         else {
-            return (<span title={props.getValue()} className={`tableHeaderSize wrapword ${alignText}`}>{props.getValue()}</span>)
+            // return (<span title={props.getValue()} className={`tableHeaderSize wrapword ${alignText}`}>{props.getValue()}</span>)
+            return (
+                <CopyCell
+                    value={props.getValue()}
+                    className={`tableHeaderSize wrapword ${alignText}`}
+                />
+            )
         }
     }
 
@@ -69,6 +148,9 @@ const FetchColumnDetail = () => {
         axios({
             method: "Get",
             url: './config.json',
+            headers: {
+                "Cache-Control": "no-cache"
+            }
         }).then(response => {
             const ColumnUUID = response?.data?.Uuid_column.map((value: any) => {
                 const alignClass = value.textAlign === 'text-left'

@@ -234,15 +234,60 @@ export const Filter = ({
 
 
     return (
+      // <Select
+      //   options={options}
+      //   isMulti={isMulti}
+      //   value={current}
+      //   isSearchable={false} 
+      //   onChange={(val: any, actionMeta: any) => {
+      //     const action = actionMeta?.action;
+
+      //     // clear-like actions for both single & multi
+      //     if (action === "clear" || action === "remove-value" || action === "pop-value") {
+      //       column.setFilterValue(undefined);
+      //       clearFilter(headerid);
+      //       return;
+      //     }
+
+      //     if (isMulti) {
+      //       const next = Array.isArray(val) ? val.map((o: any) => o.value) : [];
+      //       column.setFilterValue(next.length ? next : undefined);
+      //       handleInputChange(next, headerid, column);
+      //     } else {
+      //       // react-select uses null for "no selection"
+      //       const next = val?.value ?? undefined;
+      //       column.setFilterValue(next);
+
+      //       // IMPORTANT: don't send '' on clear; only send when next exists
+      //       if (next === undefined) {
+      //         clearFilter(headerid);
+      //         return;
+      //       }
+      //       handleInputChange(next, headerid, column);
+      //     }
+      //   }}
+      //   isClearable
+      //   menuPosition="absolute"
+      //   menuPlacement="bottom"
+      //   menuPortalTarget={document.body}
+      //   placeholder={placeholder}
+      //   styles={customStyles}
+      //   className="text-sm" 
+      //   components={{ ValueContainer }}
+      // />
       <Select
         options={options}
         isMulti={isMulti}
         value={current}
-        isSearchable={false} 
+        isSearchable={false}
+        isClearable
+        closeMenuOnSelect={false}     // ✅ keep menu open
+        hideSelectedOptions={false}   // ✅ DO NOT hide selected options in menu
+
         onChange={(val: any, actionMeta: any) => {
           const action = actionMeta?.action;
 
-          // clear-like actions for both single & multi
+          // clear-like actions
           if (action === "clear" || action === "remove-value" || action === "pop-value") {
             column.setFilterValue(undefined);
             clearFilter(headerid);
@@ -250,29 +295,46 @@ export const Filter = ({
           }
 
           if (isMulti) {
+            // ✅ TOGGLE: click selected option again -> remove it
+            if (action === "select-option") {
+              const clicked = String(actionMeta?.option?.value ?? "");
+              const prev = Array.isArray(column.getFilterValue())
+                ? (column.getFilterValue() as any[]).map(String)
+                : [];
+
+              const nextArr = prev.includes(clicked)
+                ? prev.filter((v) => v !== clicked)  // remove
+                : [...prev, clicked];                // add
+
+              column.setFilterValue(nextArr.length ? nextArr : undefined);
+              handleInputChange(nextArr, headerid, column);
+              return;
+            }
+
+            // fallback (if any other action)
             const next = Array.isArray(val) ? val.map((o: any) => o.value) : [];
             column.setFilterValue(next.length ? next : undefined);
             handleInputChange(next, headerid, column);
-          } else {
-            // react-select uses null for "no selection"
-            const next = val?.value ?? undefined;
-            column.setFilterValue(next);
-
-            // IMPORTANT: don't send '' on clear; only send when next exists
-            if (next === undefined) {
-              clearFilter(headerid);
-              return;
-            }
-            handleInputChange(next, headerid, column);
+            return;
           }
+
+          // single select
+          const next = val?.value ?? undefined;
+          column.setFilterValue(next);
+
+          if (next === undefined) {
+            clearFilter(headerid);
+            return;
+          }
+          handleInputChange(next, headerid, column);
         }}
-        isClearable
+
         menuPosition="absolute"
         menuPlacement="bottom"
         menuPortalTarget={document.body}
         placeholder={placeholder}
         styles={customStyles}
-        className="text-sm" 
+        className="text-sm"
         components={{ ValueContainer }}
       />
     );
