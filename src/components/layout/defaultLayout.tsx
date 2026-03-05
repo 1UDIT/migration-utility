@@ -66,6 +66,10 @@ const items = [
         title: "Report",
         url: "/reportViewer",
     },
+    {
+        title: "Instance View",
+        url: "/InstanceView",
+    },
 ]
 
 interface AppSidebarProps {
@@ -99,6 +103,8 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             case `/reportViewer`:
                 setDownloadChoice("Report")
                 return setName('Report')
+            case `/InstanceView`: 
+                return setName('Running Instances')
             default:
                 break;
         }
@@ -346,7 +352,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                                 </BreadcrumbList>
                             </Breadcrumb>
                             <Button
-                                disabled={name === 'Masstech List'}
+                                disabled={name === 'Masstech List' ||name ===  'Running Instances'}
                                 onClick={() => {
                                     name === "Report" || name === 'Uuid List' ? toast.promise(
                                         DownloadReport(name),

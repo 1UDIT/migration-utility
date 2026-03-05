@@ -45,6 +45,16 @@
   }
 }
 
+@layer utilities {
+  .shadow-lg {
+    --tw-shadow: -3px -1px 6px 0px #202020;
+    --tw-shadow-colored: -3px -1px 6px 0px var(--tw-shadow-color);
+    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
+                var(--tw-ring-shadow, 0 0 #0000),
+                var(--tw-shadow);
+  }
+}
+
 .rmsc {
   --rmsc-radius: calc(var(--radius) - 2px) !important;
   /* Radius  */
@@ -246,5 +256,14 @@ table tbody tr td {
   }
   50% {
     color: #991b1b; /* red-800 */
+  }
+}
+
+@keyframes grayPulse {
+  0%, 100% {
+    color: #585858; /* red-500 */
+  }
+  50% {
+    color: #2c2c2c; /* red-800 */
   }
 }

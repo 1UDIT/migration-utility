@@ -8,7 +8,7 @@ import {
 } from '@tanstack/react-table';
 import React, { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { fetchData } from '../Object_Details/HandleApiCall/Apicall';
 import useWindowSize from '@/hooks/usescreen';
 import { FiFilter } from "react-icons/fi";
@@ -313,23 +313,7 @@ const Tabledata = () => {
     const handleRowClick = (event: React.MouseEvent, id: number) => {
         useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection, isLoading);
     };
-
-    // const table = useReactTable({
-    //     data: tableData,
-    //     columns: tableColumns,
-    //     getCoreRowModel: getCoreRowModel(),
-    //     getPaginationRowModel: getPaginationRowModel(),
-    //     manualPagination: true,
-    //     enableColumnResizing: true,
-    //     columnResizeMode: 'onChange',
-    //     onPaginationChange: setPagination,
-    //     state: {
-    //         pagination,
-    //     },
-    //     pageCount: Math.ceil(totalQuery?.data?.total / pagination.pageSize),
-    //     manualSorting: false,
-    // });
-
+ 
     const table = useReactTable({
         data: tableData || [],
         columns: tableColumns,
