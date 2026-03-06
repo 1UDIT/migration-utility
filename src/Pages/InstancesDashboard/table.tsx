@@ -37,14 +37,7 @@ function msToHuman(ms?: number | null) {
   if (h > 0) return `${h}h ${m}m`;
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
-}
-function ageBucket(lastUpdatedISO: string) {
-  const t = new Date(lastUpdatedISO).getTime();
-  const ageSec = Math.floor((Date.now() - t) / 1000);
-  if (ageSec <= 30) return { label: "Fresh", dot: "bg-emerald-500", status: "Running" as const };
-  if (ageSec <= 120) return { label: "Aging", dot: "bg-amber-500", status: "Running" as const };
-  return { label: "Stale", dot: "bg-rose-500", status: "Stale" as const };
-}
+} 
 function safe(s: any) {
   return s === null || s === undefined || s === "" ? "-" : String(s);
 }
@@ -70,22 +63,16 @@ export default function RunningInstancesDashboard() {
 
   const [selected, setSelected] = useState<RunningInstance | null>(null);
   const [sorting, setSorting] = useState<SortingState>([
-    { id: "lastupdatedDate", desc: true },
+    { id: "ip", desc: false },
   ]);
   const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 50,
-  });
-  const [openSearch, setSearchTag] = useState<any[]>([]);
-  const [draftFilter, setDraftFilter] = useState<any>({
-    startDate: {
-      from: format(initialDateRange.from, "yyyy-MM-dd"),
-      to: format(initialDateRange.to, "yyyy-MM-dd"),
-    },
-  });
+  }); 
   const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
-  const [Filter, setFilter] = useState<any>(draftFilter);
+  const [Filter, setFilter] = useState<any>();
+  const nonActiveInstance = useSelector((state: RootState) => state.tableDownClick.nonActiveInstance)
 
   const body = useMemo(() => {
     const { startDate, ...rest } = (Filter ?? {});
@@ -107,18 +94,19 @@ export default function RunningInstancesDashboard() {
     return {
       filters,
       sorting,
+      nonActiveInstance
     };
-  }, [Filter, sorting, status, q]);
+  }, [Filter, sorting, status, q, nonActiveInstance]);
 
 
   const { data, isLoading, refetch, isError, isFetched } = useQuery({
-    queryKey: ['running_instances', pagination, body, sorting],
+    queryKey: ['running_instances', pagination, body, sorting, nonActiveInstance],
     queryFn: async ({ signal }) => {
       const endpoint = `http://${ipAddress}:4000/Instance?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
       return fetchData(endpoint, "POST", body, signal);
     },
     networkMode: 'always',
-    refetchInterval: 20000,
+    refetchInterval: 15000,
     retry: false,
   });
 
@@ -126,26 +114,17 @@ export default function RunningInstancesDashboard() {
     (isLoading === true ? Array(10).fill({}) : data?.data),
     [isLoading, data]
   );
-
+ 
   // KPI calculations
   const kpi = useMemo(() => {
-    const active = tableData?.filter(
-      r => (Date.now() - new Date(r.lastupdatedDate).getTime()) < 2 * 60 * 60 * 1000
-    ).length;
-    const NotActive = tableData?.filter(
-      r => (Date.now() - new Date(r.lastupdatedDate).getTime()) > 2 * 60 * 60 * 1000
-    ).length;
-
-
-    const last = tableData?.map((r) => new Date(r.lastupdatedDate).getTime())
-      .sort((a, b) => b - a)[0];
+    const active = data?.activeInstance || 0;
+    const NotActive = data?.notActiveInstance || 0; 
 
     return {
       active,
-      NotActive,
-      lastUpdated: last ? new Date(last).toLocaleString() : "-",
+      NotActive
     };
-  }, [tableData]);
+  }, [data]);
 
   const columns = useMemo<ColumnDef<RunningInstance>[]>(() => {
     return [
@@ -161,7 +140,7 @@ export default function RunningInstancesDashboard() {
           let color = "";
           let label = "";
 
-          if (diffHours <= 2) {
+          if (diffHours <= nonActiveInstance) {
             color = "text-green-400 animate-[greenPulse_2s_ease-in-out_infinite]";
             label = "Healthy";
           } else if (diffHours <= 24) {
@@ -243,8 +222,6 @@ export default function RunningInstancesDashboard() {
     ];
   }, []);
 
-
-
   const tableColumns = useMemo(
     () =>
       isLoading === true
@@ -267,22 +244,21 @@ export default function RunningInstancesDashboard() {
       (Date.now() - new Date(selected.lastupdatedDate).getTime()) /
       (1000 * 60 * 60);
 
-    if (diffHours <= 2) return "border-green-500";
+    if (diffHours <= nonActiveInstance) return "border-green-500";
     if (diffHours <= 24) return "border-red-500";
     return "border-red-500";
-  }, [selected]);
+  }, [selected, nonActiveInstance]);
 
   const statusColor = useMemo(() => {
-    if (!selected?.lastupdatedDate) return "text-gray-400 border-gray-500";
+    if (!selected?.lastupdatedDate) return "text-white border-gray-500";
 
     const diffHours =
       (Date.now() - new Date(selected.lastupdatedDate).getTime()) /
       (1000 * 60 * 60);
 
-    if (diffHours <= 2) return "text-white ";
     if (diffHours <= 24) return "text-white";
     return "text-red-400 border-red-500";
-  }, [selected]);
+  }, [selected, nonActiveInstance]);
 
   const [previousSelection, setPreviousSelection] = useState<number | null>(null);
   const [keyNavigation, setActiveCursor] = useKeyNavigationx(
@@ -299,6 +275,7 @@ export default function RunningInstancesDashboard() {
     }
 
   );
+
   useEffect(() => {
     if (!isLoading && tableData?.length) {
       setSelected(tableData[keyNavigation]);
@@ -359,7 +336,8 @@ export default function RunningInstancesDashboard() {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as any)}
-            className="rounded-xl border bg-white px-3 py-2"
+            autoFocus={false}
+            className="rounded-xl border bg-white px-3 py-2 font-semibold"
           >
             <option value="ALL">Status: All</option>
             <option value="Running">Running (&lt; 2h)</option>
@@ -380,8 +358,8 @@ export default function RunningInstancesDashboard() {
 
       {/* KPI row */}
       <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
-        <KpiCard title="Active Instances" value={String(kpi.active)} />
-        <KpiCard title="Not Active (<2h) Instances" value={`${kpi.NotActive}`} />
+        <KpiCard title="Active Instances" value={`${kpi.active}`} />
+        <KpiCard title={`Not Active (<${nonActiveInstance}h) Instances`} value={`${kpi.NotActive}`} />
       </div>
 
       {/* Content */}
@@ -400,7 +378,7 @@ export default function RunningInstancesDashboard() {
 
               <div className="flex items-center gap-1">
                 <span className="h-3 w-3 rounded-full bg-red-500 inline-block"></span>
-                <span> &lt; 2h</span>
+                <span> &lt; {nonActiveInstance}h</span>
               </div>
 
               <div className="flex items-center gap-1">
@@ -410,7 +388,7 @@ export default function RunningInstancesDashboard() {
 
             </div>
             <div className="text-sm text-white">
-              {!isFetched ? "Updating..." : `${tableData?.length} rows`}
+              {!isFetched ? "Updating..." : `${data?.data?.length} rows`}
             </div>
           </div>
           <div className="overflow-auto">
@@ -472,7 +450,7 @@ export default function RunningInstancesDashboard() {
                         !isSelected && !isCursor
                           ? ageHours(row.original.lastupdatedDate) > 24
                             ? "bg-gray-500 text-white"              // 24h+ grey
-                            : ageHours(row.original.lastupdatedDate) > 2
+                            : ageHours(row.original.lastupdatedDate) > nonActiveInstance
                               ? "bg-[#f7545485] text-white"               // 2h+ red
                               : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white" // normal
                           : "",

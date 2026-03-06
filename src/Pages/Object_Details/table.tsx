@@ -78,7 +78,7 @@ const Tabledata = () => {
     });
     const [Filter, setFilter] = useState<any>(draftFilter);
     // const debouncedDraftFilter = useDebouncedValue(draftFilter, 2000);
-    const { debounced: debouncedDraftFilter, isPending } = useDebouncedValue(draftFilter, 2000);
+    const { debounced: debouncedDraftFilter, isPending, setIsPending } = useDebouncedValue(draftFilter, 2000);
 
     const [isCustomDateSelected, setIsCustomDateSelected] = useState(false);
     const [isFirstLoad, setIsFirstLoad] = useState(true); // ✅ new
@@ -143,17 +143,8 @@ const Tabledata = () => {
 
 
     useEffect(() => {
-        if (isFirstLoad) {
-            if (toastIdRef.current) {
-                toast.dismiss(toastIdRef.current);
-                toastIdRef.current = null;
-            }
-            prevPendingRef.current = isPending;
-            return;
-        }
-
         // Show loading toast when pending starts
-        if (isPending) {
+        if (isPending === true) {
             if (!toastIdRef.current) {
                 toastIdRef.current = toast.loading("Applying filter…");
             }
@@ -176,7 +167,7 @@ const Tabledata = () => {
         prevPendingRef.current = isPending;
 
 
-    }, [isPending, isFirstLoad]);
+    }, [isPending]);
 
     const { show } = useContextMenu({
         id: MENU_ID
@@ -256,8 +247,6 @@ const Tabledata = () => {
         [isLoading, data]
     );
 
-
-
     const tableColumns = useMemo(
         () =>
             isLoading === true
@@ -309,7 +298,7 @@ const Tabledata = () => {
 
 
     const handleRowClick = (event: React.MouseEvent, id: number) => {
-        useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection,  isLoading);
+        useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection, isLoading);
     };
 
     const getSelectedRowData = (e: React.MouseEvent, rows: any, activeRow: any) => {
@@ -364,6 +353,7 @@ const Tabledata = () => {
         setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
         setActiveCursor(0);
         SetMultipleRowsSelection([]);
+        setIsPending(true);
 
         column.setFilterValue(value);
         // setIsFirstLoad(false);

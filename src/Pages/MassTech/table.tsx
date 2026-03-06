@@ -4,6 +4,7 @@ import {
     useReactTable,
     getPaginationRowModel,
     type PaginationState,
+    type SortingState,
 } from '@tanstack/react-table';
 import React, { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,7 +19,7 @@ import "react-contexify/dist/ReactContexify.css";
 import Index from '@/components/Pagination/Index';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPaginationStore } from '@/Redux/tableDropFilter';
-import { endOfYesterday, format, subDays } from 'date-fns';
+import { endOfToday, endOfYesterday, format, subDays } from 'date-fns';
 import FetchColumnDetail from '@/components/Column/FetchColumnDetail';
 import { useDebouncedValue } from '@/hooks/debounced';
 import { toast } from "sonner"
@@ -29,13 +30,14 @@ import {
 import "react-contexify/dist/ReactContexify.css";
 import { useSelectionRow } from '@/hooks/useSelectionRow.tsx';
 import useKeyNavigationx from '@/hooks/useKeyNavigation';
+import { FaSortDown, FaSortUp, FaCircle } from 'react-icons/fa';
 
 interface DateInterface {
     from: Date; // Assuming the dates are in string format
     to: Date;
 }
 
-const dateStart = endOfYesterday();
+const dateStart = new Date(Date.now() - 1 * 60 * 60 * 1000);
 const initialDateRange: DateInterface = {
     from: dateStart,
     to: new Date(),
@@ -70,14 +72,16 @@ const Tabledata = () => {
     });
     const [Filter, setFilter] = useState<any>(draftFilter);
     const [isCustomDateSelected, setIsCustomDateSelected] = useState(false);
-    const { debounced: debouncedDraftFilter, isPending } = useDebouncedValue(draftFilter, 2000);
+    const { debounced: debouncedDraftFilter, isPending, setIsPending } = useDebouncedValue(draftFilter, 2000);
     const [isFirstLoad, setIsFirstLoad] = useState(true); // ✅ new
     const toastIdRef = useRef<string | number | null>(null);
     const prevPendingRef = useRef(false);
     const [pageCursors, setPageCursors] = useState<(number | null)[]>([null]);
     const currentCursor = pageCursors[pagination.pageIndex] ?? null;
     const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
-
+    const [sorting, setSorting] = useState<SortingState>([
+        { id: "id", desc: true },
+    ]);
 
 
     const { show } = useContextMenu({
@@ -122,7 +126,7 @@ const Tabledata = () => {
         if (isFirstLoad && Object.keys(debouncedDraftFilter).length === 1) {
             return {
                 lastUpdatedDate: {
-                    from: format(endOfYesterday(), "yyyy-MM-dd"),
+                    from: dateStart,
                     to: format(new Date(), "yyyy-MM-dd"),
                 }
             };
@@ -146,13 +150,13 @@ const Tabledata = () => {
                 ...rest,
                 ...datePayload, // lastUpdatedDate/endDate injected here
             },
-
+            sorting,
         };
-    }, [Filter, datePayload, isFirstLoad]);
+    }, [Filter, datePayload, isFirstLoad, sorting]);
 
     useEffect(() => {
         function updateDateAtMidnight() {
-            const newFrom = endOfYesterday();
+            const newFrom = new Date(Date.now() - 1 * 60 * 60 * 1000);
             const newTo = new Date();
 
             setDraftFilter((prev: any) => {
@@ -188,17 +192,8 @@ const Tabledata = () => {
     }, []);
 
     useEffect(() => {
-        if (isFirstLoad) {
-            if (toastIdRef.current) {
-                toast.dismiss(toastIdRef.current);
-                toastIdRef.current = null;
-            }
-            prevPendingRef.current = isPending;
-            return;
-        }
-
         // Show loading toast when pending starts
-        if (isPending) {
+        if (isPending === true) {
             if (!toastIdRef.current) {
                 toastIdRef.current = toast.loading("Applying filter…");
             }
@@ -221,7 +216,7 @@ const Tabledata = () => {
         prevPendingRef.current = isPending;
 
 
-    }, [isPending, isFirstLoad]);
+    }, [isPending]);
 
 
     const { data, isLoading, refetch } = useQuery({
@@ -246,7 +241,7 @@ const Tabledata = () => {
     });
 
     useEffect(() => {
-        if (!isLoading) { 
+        if (!isLoading) {
             SetMultipleRowsSelection([0])
         }
     }, [isLoading]);
@@ -308,12 +303,14 @@ const Tabledata = () => {
         manualPagination: true,
         enableColumnResizing: true,
         columnResizeMode: 'onChange',
+        manualSorting: true,
         onPaginationChange: setPagination,
+        onSortingChange: setSorting,
         state: {
             pagination,
+            sorting
         },
         pageCount: Math.ceil(totalQuery?.data?.total / pagination.pageSize),
-        manualSorting: false,
     });
 
 
@@ -362,6 +359,7 @@ const Tabledata = () => {
     function handleInputChange(value: any, idHeader: string, column: any, rawValue?: string) {
 
         setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
+        setIsPending(true);
 
         // ✅ IMPORTANT: keep column filter as STRING for text input
         if (typeof rawValue === "string") {
@@ -424,7 +422,7 @@ const Tabledata = () => {
                 barcode: row?.tapeBarcode,
             };
         });
-    }, [highlightedRows, table]); 
+    }, [highlightedRows, table]);
 
 
     return (
@@ -451,12 +449,11 @@ const Tabledata = () => {
                                                         className={`flex items-center hover:border-r hover:border-[#414954] ${header.column.getCanFilter() ? 'w-[100%]' : 'w-[100%]'}`}
                                                         onClick={header.column.getToggleSortingHandler()}
                                                     >
-                                                        <span className='tableHeaderSize wrapword text-left  flex justify-between w-full'>
-                                                            {flexRender(header.column.columnDef.header, header.getContext())}
-                                                            {/* {{
-                                                                asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
-                                                                desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
-                                                            }[header.column.getIsSorted() as string] ?? null} */}
+                                                        <span className='w-[70%] text-left'>    {flexRender(header.column.columnDef.header, header.getContext())}</span>
+                                                        <span className="pt-1 w-[30%] flex justify-end "> {{
+                                                            asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
+                                                            desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
+                                                        }[header.column.getIsSorted() as string] ?? null}
                                                         </span>
                                                     </span>
                                                     <div className="flex justify-end items-center">

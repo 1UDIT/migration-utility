@@ -1,6 +1,6 @@
 
 import { Progress } from '@/components/ui/progress';
-import { ipAddressStore, reportType, reshedularSelection } from '@/Redux/tableDropFilter';
+import { ipAddressStore, nonActiveInstance, reportType, reshedularSelection } from '@/Redux/tableDropFilter';
 import axios from 'axios';
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
@@ -238,6 +238,7 @@ const FetchColumnDetail = () => {
             Dispatch(ipAddressStore(response.data.apiUrl));
             Dispatch(reshedularSelection(response.data.reshedularSelection));
             Dispatch(reportType(response.data.reportType));
+            Dispatch(nonActiveInstance(response.data.nonActiveInstance));
         }).catch(error => {
             console.log(error, "error in Config File")
         });

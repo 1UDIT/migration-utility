@@ -16,6 +16,7 @@ interface CounterState {
     ipAddressStore?: any;
     reshedularSelection?:number
     reportType?:any
+    nonActiveInstance:number
 }
 
 const initialState: CounterState = {
@@ -25,7 +26,8 @@ const initialState: CounterState = {
     },
     ipAddressStore: "",
     reshedularSelection:0,
-    reportType:{}
+    reportType:{}, 
+    nonActiveInstance:2
 };
 
 const tableDropDownSlice = createSlice({
@@ -44,8 +46,11 @@ const tableDropDownSlice = createSlice({
         reportType: (state, action) => {
             state.reportType = action.payload; 
         },
+        nonActiveInstance: (state, action) => {
+            state.nonActiveInstance = action.payload; 
+        },
     },
 });
 
-export const { setPaginationStore,ipAddressStore, reshedularSelection, reportType } = tableDropDownSlice.actions;
+export const { setPaginationStore,ipAddressStore, reshedularSelection, reportType, nonActiveInstance } = tableDropDownSlice.actions;
 export default tableDropDownSlice.reducer;
