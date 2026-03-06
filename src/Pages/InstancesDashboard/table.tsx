@@ -26,8 +26,9 @@ import { MdOutlineFilterAltOff } from "react-icons/md";
 // ---------- helpers ----------
 function bytesToGB(bytes?: number | null) {
   if (!bytes || bytes <= 0) return "0 GB";
-  return (bytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
+  return (bytes / 1024 / 1024 / 1024).toFixed(0);
 }
+
 function msToHuman(ms?: number | null) {
   if (!ms || ms <= 0) return "-";
   const sec = Math.floor(ms / 1000);
@@ -38,22 +39,10 @@ function msToHuman(ms?: number | null) {
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
 } 
+
 function safe(s: any) {
   return s === null || s === undefined || s === "" ? "-" : String(s);
-}
-
-
-
-interface DateInterface {
-  from: Date; // Assuming the dates are in string format
-  to: Date;
-}
-const dateStart = endOfYesterday();
-const initialDateRange: DateInterface = {
-  from: dateStart,
-  to: new Date(),
-};
-
+} 
 
 
 // ---------- component ----------
@@ -177,6 +166,7 @@ export default function RunningInstancesDashboard() {
         accessorKey: "ip",
         header: "IP",
         cell: ({ getValue }) => <span >{safe(getValue())}</span>,
+        size: 100
       },
       {
         id: "drive_tid",
@@ -190,20 +180,22 @@ export default function RunningInstancesDashboard() {
       {
         accessorKey: "currentTape",
         header: "Current Tape",
-        cell: ({ getValue }) => <span className="font-medium">{safe(getValue())}</span>,
+        cell: ({ getValue }) => <span className="font-medium">{safe(getValue())}</span>, 
+        size: 100
       },
       {
         accessorKey: "currentTapeThroughput",
-        header: "Throughput",
+        header: "Throughput (MB/s)",
         cell: ({ getValue }) => (
-          <span className="tabular-nums">{safe(getValue())} MB/s</span>
+          <span className="tabular-nums">{(Number(getValue() ?? 0).toFixed(0))} </span>
         ),
+        size: 125
       },
       {
         accessorKey: "sizeTransferCurrentTape",
-        header: "Transferred",
+        header: "Transferred (GB)",
         cell: ({ getValue }) => <span className="tabular-nums">{bytesToGB(Number(getValue() ?? 0))}</span>,
-        size: 100
+        size: 110
       },
       {
         accessorKey: "durationCurrentTapeMS",
@@ -335,8 +327,8 @@ export default function RunningInstancesDashboard() {
           </div>
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
-            autoFocus={false}
+            onChange={(e) => setStatus(e.target.value as any)} 
+            onFocus={(e) => e.target.blur()}
             className="rounded-xl border bg-white px-3 py-2 font-semibold"
           >
             <option value="ALL">Status: All</option>
@@ -527,14 +519,14 @@ export default function RunningInstancesDashboard() {
 
               <Section title="File Info" color={statusColor}>
                 <InfoRow k="File Name" v={safe(selected.startedDumpingObjectName)} />
-                <InfoRow k="File Size" v={selected.startedDumpingObjectSize ? bytesToGB(selected.startedDumpingObjectSize) : "-"} />
+                <InfoRow k="File Size" v={selected.startedDumpingObjectSize ? bytesToGB(selected.startedDumpingObjectSize)+" GB" : "-"} />
                 <InfoRow k="Prev Obj Throughput" v={safe(selected.previousObjectThroughput)} />
               </Section>
 
               <Section title="Current Tape" color={statusColor}>
                 <InfoRow k="Tape" v={safe(selected.currentTape)} />
                 <InfoRow k="Started" v={safe(selected.startTimeCurrentTape)} />
-                <InfoRow k="Transferred" v={bytesToGB(selected.sizeTransferCurrentTape)} />
+                <InfoRow k="Transferred" v={bytesToGB(selected.sizeTransferCurrentTape)+" GB"} />
                 <InfoRow k="Duration" v={msToHuman(selected.durationCurrentTapeMS)} />
                 <InfoRow k="Throughput" v={`${safe(selected.currentTapeThroughput)} MB/s`} />
               </Section>
@@ -542,7 +534,7 @@ export default function RunningInstancesDashboard() {
               <Section title="Previous Tape" color={statusColor}>
                 <InfoRow k="Tape" v={safe(selected.previousTape)} />
                 <InfoRow k="Started" v={safe(selected.startTimePreviousTape)} />
-                <InfoRow k="Transferred" v={bytesToGB(selected.sizeTransferPreviousTape)} />
+                <InfoRow k="Transferred" v={bytesToGB(selected.sizeTransferPreviousTape)+" GB"} />
                 <InfoRow k="Duration" v={msToHuman(selected.durationPreviousTapeMS)} />
                 <InfoRow k="Throughput" v={`${safe(selected.previousTapeThroughput)} MB/s`} />
               </Section>

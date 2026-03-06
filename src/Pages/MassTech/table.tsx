@@ -237,7 +237,9 @@ const Tabledata = () => {
 
             return resp; // { data, nextCursor, hasMore }
         },
-        retry: false,
+        networkMode: 'always',
+        refetchInterval: 20000,
+        refetchOnWindowFocus: false,
     });
 
     useEffect(() => {
@@ -285,10 +287,11 @@ const Tabledata = () => {
         queryKey: ["uuidTotal", body],
         queryFn: ({ signal }) =>
             fetchData(`http://${ipAddress}:4000/Masstech/total`, "POST", body, signal),
-        networkMode: "always",
+        networkMode: 'always',
+        refetchInterval: 20000,
         retry: false,
         enabled: !!data,   // 👈 only after list loads
-        refetchOnWindowFocus: false, // optional, avoid spam
+        refetchOnWindowFocus: false,  
     });
 
     const handleRowClick = (event: React.MouseEvent, id: number) => {
