@@ -1,11 +1,8 @@
-import React, { Fragment, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
+  getCoreRowModel, 
   useReactTable,
-  type ColumnDef,
   type PaginationState,
   type SortingState,
 } from "@tanstack/react-table";
@@ -14,32 +11,14 @@ import type { RunningInstance } from "./types.ts";
 import { fetchData } from "../Object_Details/HandleApiCall/Apicall.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/Redux/Store.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import { endOfYesterday, format } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton.tsx"; 
 import useKeyNavigationx from "@/hooks/useKeyNavigation.tsx";
 import { useSelectionRow } from "@/hooks/useSelectionRow.tsx.tsx";
-import { IoMdCloseCircleOutline } from "react-icons/io";
-import { FiFilter } from "react-icons/fi";
-import { FaSortDown, FaSortUp, FaCircle } from 'react-icons/fa';
-import { MdOutlineFilterAltOff } from "react-icons/md";
+import { IoMdCloseCircleOutline } from "react-icons/io"; 
+import { FaSortDown, FaSortUp } from 'react-icons/fa'; 
+import FetchColumnDetail, { bytesToGB, msToHuman } from "@/components/Column/FetchColumnDetail.tsx";
 
-// ---------- helpers ----------
-function bytesToGB(bytes?: number | null) {
-  if (!bytes || bytes <= 0) return "0 GB";
-  return (bytes / 1024 / 1024 / 1024).toFixed(0);
-}
-
-function msToHuman(ms?: number | null) {
-  if (!ms || ms <= 0) return "-";
-  const sec = Math.floor(ms / 1000);
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
-} 
-
+ 
 function safe(s: any) {
   return s === null || s === undefined || s === "" ? "-" : String(s);
 } 
@@ -61,6 +40,7 @@ export default function RunningInstancesDashboard() {
   }); 
   const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
   const [Filter, setFilter] = useState<any>();
+  const { ColumnInstance } = FetchColumnDetail();
   const nonActiveInstance = useSelector((state: RootState) => state.tableDownClick.nonActiveInstance)
 
   const body = useMemo(() => {
@@ -88,7 +68,7 @@ export default function RunningInstancesDashboard() {
   }, [Filter, sorting, status, q, nonActiveInstance]);
 
 
-  const { data, isLoading, refetch, isError, isFetched } = useQuery({
+  const { data, isLoading, refetch,  isFetched } = useQuery({
     queryKey: ['running_instances', pagination, body, sorting, nonActiveInstance],
     queryFn: async ({ signal }) => {
       const endpoint = `http://${ipAddress}:4000/Instance?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
@@ -115,109 +95,109 @@ export default function RunningInstancesDashboard() {
     };
   }, [data]);
 
-  const columns = useMemo<ColumnDef<RunningInstance>[]>(() => {
-    return [
-      {
-        id: "health",
-        header: "",
-        cell: ({ row }) => {
-          const lastUpdate = new Date(row.original.lastupdatedDate).getTime();
-          const now = Date.now();
+  // const columns = useMemo<ColumnDef<RunningInstance>[]>(() => {
+  //   return [
+  //     {
+  //       id: "health",
+  //       header: "",
+  //       cell: ({ row }) => {
+  //         const lastUpdate = new Date(row.original.lastupdatedDate).getTime();
+  //         const now = Date.now();
 
-          const diffHours = (now - lastUpdate) / (1000 * 60 * 60);
+  //         const diffHours = (now - lastUpdate) / (1000 * 60 * 60);
 
-          let color = "";
-          let label = "";
+  //         let color = "";
+  //         let label = "";
 
-          if (diffHours <= nonActiveInstance) {
-            color = "text-green-400 animate-[greenPulse_2s_ease-in-out_infinite]";
-            label = "Healthy";
-          } else if (diffHours <= 24) {
-            color = "text-red-500 animate-[redPulse_2s_ease-in-out_infinite]";
-            label = "Not Active";
-          } else {
-            color = "text-gray-400 animate-[grayPulse_2s_ease-in-out_infinite]";
-            label = "Offline (>24h)";
-          }
+  //         if (diffHours <= nonActiveInstance) {
+  //           color = "text-green-400 animate-[greenPulse_2s_ease-in-out_infinite]";
+  //           label = "Healthy";
+  //         } else if (diffHours <= 24) {
+  //           color = "text-red-500 animate-[redPulse_2s_ease-in-out_infinite]";
+  //           label = "Not Active";
+  //         } else {
+  //           color = "text-gray-400 animate-[grayPulse_2s_ease-in-out_infinite]";
+  //           label = "Offline (>24h)";
+  //         }
 
-          return (
-            <FaCircle
-              className={`inline-block h-3 w-3 ${color}`}
-              title={label}
-            />
-          );
-        },
-        size: 20,
-      },
-      {
-        accessorKey: "instanceName",
-        header: "Instance",
-        cell: ({ row, getValue }) => (
-          <button
-            className="text-left font-semibold"
-            onClick={() => setSelected(row.original)}
-            title="Open details"
-          >
-            {safe(getValue())}
-          </button>
-        ),
-      },
-      {
-        accessorKey: "ip",
-        header: "IP",
-        cell: ({ getValue }) => <span >{safe(getValue())}</span>,
-        size: 100
-      },
-      {
-        id: "drive_tid",
-        header: "Drive / TID",
-        cell: ({ row }) => (
-          <span  >
-            {safe(row.original.driveNB)} / {safe(row.original.tlID)}
-          </span>
-        ),
-      },
-      {
-        accessorKey: "currentTape",
-        header: "Current Tape",
-        cell: ({ getValue }) => <span className="font-medium">{safe(getValue())}</span>, 
-        size: 100
-      },
-      {
-        accessorKey: "currentTapeThroughput",
-        header: "Throughput (MB/s)",
-        cell: ({ getValue }) => (
-          <span className="tabular-nums">{(Number(getValue() ?? 0).toFixed(0))} </span>
-        ),
-        size: 125
-      },
-      {
-        accessorKey: "sizeTransferCurrentTape",
-        header: "Transferred (GB)",
-        cell: ({ getValue }) => <span className="tabular-nums">{bytesToGB(Number(getValue() ?? 0))}</span>,
-        size: 110
-      },
-      {
-        accessorKey: "durationCurrentTapeMS",
-        header: "Duration",
-        cell: ({ getValue }) => <span className="tabular-nums">{msToHuman(Number(getValue() ?? 0))}</span>,
-        size: 90
-      },
-      {
-        accessorKey: "lastupdatedDate",
-        header: "Last Updated",
-        cell: ({ getValue }) => {
-          const d = new Date(String(getValue()));
-          return <span >{isNaN(d.getTime()) ? "-" : d.toLocaleString()}</span>;
-        },
-      },
-    ];
-  }, []);
+  //         return (
+  //           <FaCircle
+  //             className={`inline-block h-3 w-3 ${color}`}
+  //             title={label}
+  //           />
+  //         );
+  //       },
+  //       size: 20,
+  //     },
+  //     {
+  //       accessorKey: "instanceName",
+  //       header: "Instance",
+  //       cell: ({ row, getValue }) => (
+  //         <button
+  //           className="text-left font-semibold"
+  //           onClick={() => setSelected(row.original)}
+  //           title="Open details"
+  //         >
+  //           {safe(getValue())}
+  //         </button>
+  //       ),
+  //     },
+  //     {
+  //       accessorKey: "ip",
+  //       header: "IP",
+  //       cell: ({ getValue }) => <span >{safe(getValue())}</span>,
+  //       size: 100
+  //     },
+  //     {
+  //       id: "drive_tid",
+  //       header: "Drive / TID",
+  //       cell: ({ row }) => (
+  //         <span  >
+  //           {safe(row.original.driveNB)} / {safe(row.original.tlID)}
+  //         </span>
+  //       ),
+  //     },
+  //     {
+  //       accessorKey: "currentTape",
+  //       header: "Current Tape",
+  //       cell: ({ getValue }) => <span className="font-medium">{safe(getValue())}</span>, 
+  //       size: 100
+  //     },
+  //     {
+  //       accessorKey: "currentTapeThroughput",
+  //       header: "Throughput (MB/s)",
+  //       cell: ({ getValue }) => (
+  //         <span className="tabular-nums">{(Number(getValue() ?? 0).toFixed(0))} </span>
+  //       ),
+  //       size: 125
+  //     },
+  //     {
+  //       accessorKey: "sizeTransferCurrentTape",
+  //       header: "Transferred (GB)",
+  //       cell: ({ getValue }) => <span className="tabular-nums">{bytesToGB(Number(getValue() ?? 0))}</span>,
+  //       size: 110
+  //     },
+  //     {
+  //       accessorKey: "durationCurrentTapeMS",
+  //       header: "Duration",
+  //       cell: ({ getValue }) => <span className="tabular-nums">{msToHuman(Number(getValue() ?? 0))}</span>,
+  //       size: 90
+  //     },
+  //     {
+  //       accessorKey: "lastupdatedDate",
+  //       header: "Last Updated",
+  //       cell: ({ getValue }) => {
+  //         const d = new Date(String(getValue()));
+  //         return <span >{isNaN(d.getTime()) ? "-" : d.toLocaleString()}</span>;
+  //       },
+  //     },
+  //   ];
+  // }, []);
 
   const tableColumns = useMemo(
     () =>
       isLoading === true
-        ? columns.map((column) => ({
+        ? ColumnInstance.map((column) => ({
           ...column,
           cell: () => (
             <div className="flex flex-col space-y-3">
@@ -225,8 +205,8 @@ export default function RunningInstancesDashboard() {
             </div>
           )
         }))
-        : columns,
-    [isLoading, columns]
+        : ColumnInstance,
+    [isLoading, ColumnInstance]
   );
 
   const borderColor = useMemo(() => {
@@ -333,7 +313,7 @@ export default function RunningInstancesDashboard() {
           >
             <option value="ALL">Status: All</option>
             <option value="Running">Running (&lt; 2h)</option>
-            <option value="NotActive">Not Active (2–24h)</option>
+            <option value="NotActive">Not Active (2-24h)</option>
             <option value="Stale">Stale (&gt; 24h)</option>
           </select>
 
@@ -440,9 +420,9 @@ export default function RunningInstancesDashboard() {
                         "font-medium h-7",
                         // ✅ age-based row background (only if not selected/cursor)
                         !isSelected && !isCursor
-                          ? ageHours(row.original.lastupdatedDate) > 24
+                          ? ageHours((row.original as any).lastupdatedDate) > 24
                             ? "bg-gray-500 text-white"              // 24h+ grey
-                            : ageHours(row.original.lastupdatedDate) > nonActiveInstance
+                            : ageHours((row.original as any).lastupdatedDate) > nonActiveInstance
                               ? "bg-[#f7545485] text-white"               // 2h+ red
                               : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white" // normal
                           : "",
@@ -457,7 +437,7 @@ export default function RunningInstancesDashboard() {
                       ].join(" ")}
                       onClick={(e) => {
                         const isRemoving = e.ctrlKey && highlightedRows.includes(row.index);
-                        handleRowClick(e, row.index); setSelected(row.original)
+                        handleRowClick(e, row.index); setSelected(row.original as any)
                         if (isRemoving) {
                           const next = highlightedRows.filter((x) => x !== row.index).at(-1);
                           setActiveCursor(next ?? -1);
@@ -482,7 +462,7 @@ export default function RunningInstancesDashboard() {
 
                 {tableData?.length === 0 && !isFetched && (
                   <tr>
-                    <td colSpan={columns.length} className="px-4 py-10 text-center text-slate-500">
+                    <td colSpan={ColumnInstance.length} className="px-4 py-10 text-center text-slate-500">
                       No data
                     </td>
                   </tr>

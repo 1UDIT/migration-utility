@@ -7,12 +7,34 @@ import { useDispatch } from 'react-redux';
 import { FaCircle, FaEdit } from "react-icons/fa";
 import CopyCell from '../ui/CopyCell';
 
+export function safe(s: any) {
+    return s === null || s === undefined || s === "" ? "-" : String(s);
+}
+
+// ---------- helpers ----------
+export function bytesToGB(bytes?: number | null) {
+    if (!bytes || bytes <= 0) return "0 GB";
+    return (bytes / 1024 / 1024 / 1024).toFixed(0);
+}
+
+export function msToHuman(ms?: number | null) {
+    if (!ms || ms <= 0) return "-";
+    const sec = Math.floor(ms / 1000);
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+}
 
 const FetchColumnDetail = () => {
     const [ColumnUUID, SetColumnUUID] = useState([]);
     const [ColumnObject, SetColumnObject] = useState([]);
     const [ColumnMasstech_column, SetColumnMasstech_column] = useState([]);
+    const [ColumnInstance, SetColumnInstance] = useState([]);
     const [ColumnReport, SetColumnReport] = useState([]);
+    const [nonActiveInstance, SetnonActiveInstance] = useState<number>(1);
     const [Downloadbtn, setReportsbtn] = useState<typeof import("xlsx") | any>(null);
     const [DownloadPannel, setReportsPannel] = useState<typeof import("xlsx") | any>(null);
     const Dispatch = useDispatch()
@@ -132,6 +154,62 @@ const FetchColumnDetail = () => {
                 </div>
             );
         }
+        else if (header === "health") {
+            const lastUpdate = new Date(props.row.original.lastupdatedDate).getTime();
+            const now = Date.now();
+            console.log(nonActiveInstance,"nonActiveInstance")
+
+            const diffHours = (now - lastUpdate) / (1000 * 60 * 60);
+
+            let color = "";
+            let label = "";
+
+            if (diffHours <= nonActiveInstance) {
+                color = "text-green-400 animate-[greenPulse_2s_ease-in-out_infinite]";
+                label = "Healthy";
+            } else if (diffHours <= 24) {
+                color = "text-red-500 animate-[redPulse_2s_ease-in-out_infinite]";
+                label = "Not Active";
+            } else {
+                color = "text-gray-400 animate-[grayPulse_2s_ease-in-out_infinite]";
+                label = "Offline (>24h)";
+            }
+
+            return (
+                <FaCircle
+                    className={`inline-block h-3 w-3 ${color}`}
+                    title={label}
+                />
+            );
+        }
+        else if (header === "drive_tid") {
+            return (
+                <span  >
+                    {safe(props.row.original.driveNB)} / {safe(props.row.original.tlID)}
+                </span>
+            );
+        }
+        else if (header === "currentTapeThroughput") {
+            return (
+                <span className="tabular-nums">{(Number(props.getValue() ?? 0).toFixed(0))} </span>
+            );
+        }
+        else if (header === "sizeTransferCurrentTape") {
+            return (
+                <span className="tabular-nums">{bytesToGB(Number(props.getValue() ?? 0))}</span>
+            );
+        }
+        else if (header === "durationCurrentTapeMS") {
+            return (
+                <span className="tabular-nums">{msToHuman(Number(props.getValue() ?? 0))}</span>
+            );
+        }
+        else if (header === "lastupdatedDate") {
+            const d = new Date(String(props.getValue()));
+            return (
+                <span >{isNaN(d.getTime()) ? "-" : d.toLocaleString()}</span>
+            );
+        }
         else {
             // return (<span title={props.getValue()} className={`tableHeaderSize wrapword ${alignText}`}>{props.getValue()}</span>)
             return (
@@ -143,8 +221,7 @@ const FetchColumnDetail = () => {
         }
     }
 
-    useEffect(() => {
-        console.log("RUN configFile")
+    useEffect(() => { 
         axios({
             method: "Get",
             url: './config.json',
@@ -229,23 +306,43 @@ const FetchColumnDetail = () => {
                     enableSorting: value.enableSorting,
                 }
             })
+            const ColumnInstance = response?.data?.InstanceDashBoard.map((value: any) => {
+                const alignClass = value.textAlign === 'text-left'
+                    ? 'text-left'
+                    : value.textAlign === 'text-center'
+                        ? 'text-center'
+                        : 'text-right';
+                return {
+                    accessorKey: value.accessorKey,
+                    header: () => { return (<span> {value.header}</span>) },
+                    size: value.size,
+                    minSize: value.minSize,
+                    // Add a small mapping in your component
+                    cell: (props: any) => getCelldetail(props, value.accessorKey, alignClass),
+                    enableResizing: value.enableResizing,
+                    meta: value.meta,
+                    enableColumnFilter: value.enableColumnFilter,
+                    enableSorting: value.enableSorting,
+                }
+            })
             SetColumnUUID(ColumnUUID);
             SetColumnObject(ColumnObject);
             SetColumnMasstech_column(ColumnMasstech_column);
             SetColumnReport(ColumnReport);
+            SetColumnInstance(ColumnInstance);
             setReportsbtn(response.data.ReportColumns);
             setReportsPannel(response.data.reportPanel);
             Dispatch(ipAddressStore(response.data.apiUrl));
             Dispatch(reshedularSelection(response.data.reshedularSelection));
             Dispatch(reportType(response.data.reportType));
-            Dispatch(nonActiveInstance(response.data.nonActiveInstance));
+            SetnonActiveInstance(response.data.nonActiveInstance);
         }).catch(error => {
             console.log(error, "error in Config File")
         });
 
-    }, []);
+    }, [nonActiveInstance]);
 
-    return { ColumnUUID, ColumnObject, ColumnMasstech_column, Downloadbtn, ColumnReport, DownloadPannel };
+    return { ColumnUUID, ColumnObject, ColumnMasstech_column, Downloadbtn, ColumnReport, DownloadPannel, ColumnInstance };
 }
 
 export default FetchColumnDetail

@@ -762,6 +762,83 @@
             "enableSorting": false
         }
     ],
+    "InstanceDashBoard": [
+        {
+            "accessorKey": "health",
+            "textAlign": "text-left",
+            "header": "",
+            "size": 20,
+            "minSize": 15,
+            "enableResizing": false
+        },
+        {
+            "accessorKey": "instanceName",
+            "textAlign": "text-left",
+            "header": "Instance",
+            "size": 160,
+            "minSize": 60,
+            "enableResizing": true
+        },
+        {
+            "accessorKey": "ip",
+            "header": "Ip",
+            "enableResizing": false,
+            "size": 140,
+            "minSize": 30,
+            "textAlign": "text-left"
+        },
+        {
+            "accessorKey": "drive_tid",
+            "header": "Drive / TID",
+            "enableResizing": false,
+            "size": 230,
+            "minSize": 30,
+            "textAlign": "text-left"
+        },
+        {
+            "accessorKey": "currentTape",
+            "textAlign": "text-right",
+            "header": "Current Tape",
+            "size": 100,
+            "minSize": 60,
+            "enableResizing": true
+        },
+        {
+            "accessorKey": "currentTapeThroughput",
+            "header": "Throughput (MB/s)",
+            "enableResizing": true,
+            "size": 125,
+            "minSize": 70,
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "sizsizeTransferCurrentTapeeKB",
+            "header": "Transferred (GB)",
+            "enableResizing": true,
+            "size": "110",
+            "minSize": "50",
+            "textAlign": "text-right",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "durationCurrentTapeMS",
+            "header": "Duration",
+            "size": "90",
+            "minSize": "50",
+            "enableResizing": "true",
+            "textAlign": "text-center"              
+        }, 
+        {
+            "accessorKey": "lastupdatedDate",
+            "header": "Last Updated",
+            "enableResizing": true,
+            "size": 100,
+            "minSize": 130,
+            "textAlign": "text-left",
+            "enableColumnFilter": false
+        }         
+    ],
     "ReportGenerate": [
         {
             "accessorKey": "barcode",
