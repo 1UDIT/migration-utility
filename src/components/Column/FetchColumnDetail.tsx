@@ -1,6 +1,6 @@
 
 import { Progress } from '@/components/ui/progress';
-import { ipAddressStore, nonActiveInstance, reportType, reshedularSelection } from '@/Redux/tableDropFilter';
+import { ipAddressStore, reportType, reshedularSelection } from '@/Redux/tableDropFilter';
 import axios from 'axios';
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
@@ -13,7 +13,7 @@ export function safe(s: any) {
 
 // ---------- helpers ----------
 export function bytesToGB(bytes?: number | null) {
-    if (!bytes || bytes <= 0) return "0 GB";
+    if (!bytes || bytes <= 0) return "0 ";
     return (bytes / 1024 / 1024 / 1024).toFixed(0);
 }
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   flexRender,
-  getCoreRowModel, 
+  getCoreRowModel,
   useReactTable,
   type PaginationState,
   type SortingState,
@@ -11,18 +11,12 @@ import type { RunningInstance } from "./types.ts";
 import { fetchData } from "../Object_Details/HandleApiCall/Apicall.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/Redux/Store.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx"; 
+import { Skeleton } from "@/components/ui/skeleton.tsx";
 import useKeyNavigationx from "@/hooks/useKeyNavigation.tsx";
 import { useSelectionRow } from "@/hooks/useSelectionRow.tsx.tsx";
-import { IoMdCloseCircleOutline } from "react-icons/io"; 
-import { FaSortDown, FaSortUp } from 'react-icons/fa'; 
-import FetchColumnDetail, { bytesToGB, msToHuman } from "@/components/Column/FetchColumnDetail.tsx";
-
- 
-function safe(s: any) {
-  return s === null || s === undefined || s === "" ? "-" : String(s);
-} 
-
+import { IoMdCloseCircleOutline } from "react-icons/io";
+import { FaSortDown, FaSortUp } from 'react-icons/fa';
+import FetchColumnDetail, { bytesToGB, msToHuman, safe } from "@/components/Column/FetchColumnDetail.tsx";
 
 // ---------- component ----------
 export default function RunningInstancesDashboard() {
@@ -37,7 +31,7 @@ export default function RunningInstancesDashboard() {
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 50,
-  }); 
+  });
   const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
   const [Filter, setFilter] = useState<any>();
   const { ColumnInstance } = FetchColumnDetail();
@@ -68,7 +62,7 @@ export default function RunningInstancesDashboard() {
   }, [Filter, sorting, status, q, nonActiveInstance]);
 
 
-  const { data, isLoading, refetch,  isFetched } = useQuery({
+  const { data, isLoading, refetch, isFetched } = useQuery({
     queryKey: ['running_instances', pagination, body, sorting, nonActiveInstance],
     queryFn: async ({ signal }) => {
       const endpoint = `http://${ipAddress}:4000/Instance?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
@@ -83,11 +77,11 @@ export default function RunningInstancesDashboard() {
     (isLoading === true ? Array(10).fill({}) : data?.data),
     [isLoading, data]
   );
- 
+
   // KPI calculations
   const kpi = useMemo(() => {
     const active = data?.activeInstance || 0;
-    const NotActive = data?.notActiveInstance || 0; 
+    const NotActive = data?.notActiveInstance || 0;
 
     return {
       active,
@@ -307,7 +301,7 @@ export default function RunningInstancesDashboard() {
           </div>
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as any)} 
+            onChange={(e) => setStatus(e.target.value as any)}
             onFocus={(e) => e.target.blur()}
             className="rounded-xl border bg-white px-3 py-2 font-semibold"
           >
@@ -408,7 +402,7 @@ export default function RunningInstancesDashboard() {
               </thead>
 
               <tbody>
-                {table.getRowModel().rows.map(row => {
+                {table.getRowModel().rows.map((row) => {
                   const isSelected = highlightedRows.includes(row.index);
                   const isCursor = keyNavigation === row.index && !isLoading;
                   const ageHours = (d: any) => (Date.now() - new Date(d).getTime()) / (1000 * 60 * 60);
@@ -420,9 +414,9 @@ export default function RunningInstancesDashboard() {
                         "font-medium h-7",
                         // ✅ age-based row background (only if not selected/cursor)
                         !isSelected && !isCursor
-                          ? ageHours((row.original as any).lastupdatedDate) > 24
+                          ? ageHours((row.original as RunningInstance).lastupdatedDate) > 24
                             ? "bg-gray-500 text-white"              // 24h+ grey
-                            : ageHours((row.original as any).lastupdatedDate) > nonActiveInstance
+                            : ageHours((row.original as RunningInstance).lastupdatedDate) > nonActiveInstance
                               ? "bg-[#f7545485] text-white"               // 2h+ red
                               : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white" // normal
                           : "",
@@ -437,7 +431,7 @@ export default function RunningInstancesDashboard() {
                       ].join(" ")}
                       onClick={(e) => {
                         const isRemoving = e.ctrlKey && highlightedRows.includes(row.index);
-                        handleRowClick(e, row.index); setSelected(row.original as any)
+                        handleRowClick(e, row.index); setSelected(row.original as RunningInstance)
                         if (isRemoving) {
                           const next = highlightedRows.filter((x) => x !== row.index).at(-1);
                           setActiveCursor(next ?? -1);
@@ -499,14 +493,14 @@ export default function RunningInstancesDashboard() {
 
               <Section title="File Info" color={statusColor}>
                 <InfoRow k="File Name" v={safe(selected.startedDumpingObjectName)} />
-                <InfoRow k="File Size" v={selected.startedDumpingObjectSize ? bytesToGB(selected.startedDumpingObjectSize)+" GB" : "-"} />
+                <InfoRow k="File Size" v={selected.startedDumpingObjectSize ? bytesToGB(selected.startedDumpingObjectSize) + " GB" : "-"} />
                 <InfoRow k="Prev Obj Throughput" v={safe(selected.previousObjectThroughput)} />
               </Section>
 
               <Section title="Current Tape" color={statusColor}>
                 <InfoRow k="Tape" v={safe(selected.currentTape)} />
                 <InfoRow k="Started" v={safe(selected.startTimeCurrentTape)} />
-                <InfoRow k="Transferred" v={bytesToGB(selected.sizeTransferCurrentTape)+" GB"} />
+                <InfoRow k="Transferred" v={bytesToGB(selected.sizeTransferCurrentTape) + " GB"} />
                 <InfoRow k="Duration" v={msToHuman(selected.durationCurrentTapeMS)} />
                 <InfoRow k="Throughput" v={`${safe(selected.currentTapeThroughput)} MB/s`} />
               </Section>
@@ -514,7 +508,7 @@ export default function RunningInstancesDashboard() {
               <Section title="Previous Tape" color={statusColor}>
                 <InfoRow k="Tape" v={safe(selected.previousTape)} />
                 <InfoRow k="Started" v={safe(selected.startTimePreviousTape)} />
-                <InfoRow k="Transferred" v={bytesToGB(selected.sizeTransferPreviousTape)+" GB"} />
+                <InfoRow k="Transferred" v={bytesToGB(selected.sizeTransferPreviousTape) + " GB"} />
                 <InfoRow k="Duration" v={msToHuman(selected.durationPreviousTapeMS)} />
                 <InfoRow k="Throughput" v={`${safe(selected.previousTapeThroughput)} MB/s`} />
               </Section>

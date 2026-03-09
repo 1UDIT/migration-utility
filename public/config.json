@@ -813,7 +813,7 @@
             "enableColumnFilter": false
         },
         {
-            "accessorKey": "sizsizeTransferCurrentTapeeKB",
+            "accessorKey": "sizeTransferCurrentTape",
             "header": "Transferred (GB)",
             "enableResizing": true,
             "size": "110",
