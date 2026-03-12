@@ -1,6 +1,6 @@
 
 import { Progress } from '@/components/ui/progress';
-import { ipAddressStore, reportType, reshedularSelection } from '@/Redux/tableDropFilter';
+import { ipAddressStore, nonActiveInstances, reportType, reshedularSelection } from '@/Redux/tableDropFilter';
 import axios from 'axios';
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
@@ -15,6 +15,10 @@ export function safe(s: any) {
 export function bytesToGB(bytes?: number | null) {
     if (!bytes || bytes <= 0) return "0 ";
     return (bytes / 1024 / 1024 / 1024).toFixed(0);
+}
+export function byteToKb(bytes?: number | null): string {
+  if (bytes == null || bytes <= 0) return "0";  
+  return `${(bytes / 1000).toFixed(2)}`;
 }
 
 export function msToHuman(ms?: number | null) {
@@ -156,10 +160,9 @@ const FetchColumnDetail = () => {
         }
         else if (header === "health") {
             const lastUpdate = new Date(props.row.original.lastupdatedDate).getTime();
-            const now = Date.now();
-            console.log(nonActiveInstance,"nonActiveInstance")
+            const now = Date.now(); 
 
-            const diffHours = (now - lastUpdate) / (1000 * 60 * 60);
+            const diffHours = (now - lastUpdate) / (1000); 
 
             let color = "";
             let label = "";
@@ -167,7 +170,7 @@ const FetchColumnDetail = () => {
             if (diffHours <= nonActiveInstance) {
                 color = "text-green-400 animate-[greenPulse_2s_ease-in-out_infinite]";
                 label = "Healthy";
-            } else if (diffHours <= 24) {
+            } else if (diffHours <= 86400) {
                 color = "text-red-500 animate-[redPulse_2s_ease-in-out_infinite]";
                 label = "Not Active";
             } else {
@@ -202,6 +205,16 @@ const FetchColumnDetail = () => {
         else if (header === "durationCurrentTapeMS") {
             return (
                 <span className="tabular-nums">{msToHuman(Number(props.getValue() ?? 0))}</span>
+            );
+        }
+        else if (header === "sizeKB") {
+            return (
+                <span className="tabular-nums">{byteToKb(Number(props.getValue() ?? 0))}</span>
+            );
+        }
+        else if (header === "instanceSizeBytes") {
+            return (
+                <span className="tabular-nums">{byteToKb(Number(props.getValue() ?? 0))}</span>
             );
         }
         else if (header === "lastupdatedDate") {
@@ -334,6 +347,7 @@ const FetchColumnDetail = () => {
             setReportsPannel(response.data.reportPanel);
             Dispatch(ipAddressStore(response.data.apiUrl));
             Dispatch(reshedularSelection(response.data.reshedularSelection));
+            Dispatch(nonActiveInstances(response.data.nonActiveInstance));
             Dispatch(reportType(response.data.reportType));
             SetnonActiveInstance(response.data.nonActiveInstance);
         }).catch(error => {

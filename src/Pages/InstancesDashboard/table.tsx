@@ -405,7 +405,7 @@ export default function RunningInstancesDashboard() {
                 {table.getRowModel().rows.map((row) => {
                   const isSelected = highlightedRows.includes(row.index);
                   const isCursor = keyNavigation === row.index && !isLoading;
-                  const ageHours = (d: any) => (Date.now() - new Date(d).getTime()) / (1000 * 60 * 60);
+                  const ageHours = (d: any) => (Date.now() - new Date(d).getTime()) / 1000;
                   return (
                     <tr
                       key={row.index}
@@ -414,7 +414,7 @@ export default function RunningInstancesDashboard() {
                         "font-medium h-7",
                         // ✅ age-based row background (only if not selected/cursor)
                         !isSelected && !isCursor
-                          ? ageHours((row.original as RunningInstance).lastupdatedDate) > 24
+                          ? ageHours((row.original as RunningInstance).lastupdatedDate) > 86400
                             ? "bg-gray-500 text-white"              // 24h+ grey
                             : ageHours((row.original as RunningInstance).lastupdatedDate) > nonActiveInstance
                               ? "bg-[#f7545485] text-white"               // 2h+ red

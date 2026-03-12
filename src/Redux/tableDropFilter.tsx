@@ -46,11 +46,11 @@ const tableDropDownSlice = createSlice({
         reportType: (state, action) => {
             state.reportType = action.payload; 
         },
-        nonActiveInstance: (state, action) => {
+        nonActiveInstances: (state, action) => {
             state.nonActiveInstance = action.payload; 
         },
     },
 });
 
-export const { setPaginationStore,ipAddressStore, reshedularSelection, reportType, nonActiveInstance } = tableDropDownSlice.actions;
+export const { setPaginationStore,ipAddressStore, reshedularSelection, reportType, nonActiveInstances } = tableDropDownSlice.actions;
 export default tableDropDownSlice.reducer;

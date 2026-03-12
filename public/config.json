@@ -950,7 +950,7 @@
         }
     ],
     "reshedularSelection": 20,
-    "nonActiveInstance": 3,
+    "nonActiveInstance": 7200,
     "reportType": [
         "Last 1 Week",
         "Yesterday ACS Wise",

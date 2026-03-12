@@ -51,11 +51,11 @@ const basePath = import.meta.env.BASE_URL;
 const items = [
     {
         title: "Instance View",
-        url: "/InstanceView",
+        url: "/",
     },
     {
         title: "Object Detail",
-        url: "/",
+        url: "/Object",
     },
     {
         title: "Uuid Detail",
@@ -94,7 +94,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
     const locationName = () => {
         switch (location.pathname) {
             case `/`:
-                return setName('Object List')
+                return setName('Running Instances')
             case `/uuid`:
                 return setName('Uuid List')
             case `/masstech`:
@@ -102,8 +102,8 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             case `/reportViewer`:
                 setDownloadChoice("Report")
                 return setName('Report')
-            case `/InstanceView`:
-                return setName('Running Instances')
+            case `/Object`:
+                return setName('Object List')
             default:
                 break;
         }
