@@ -24,4 +24,5 @@ export type RunningInstance = {
   durationPreviousTapeMS: number | null;
   sizeTransferPreviousTape: number | null;
   previousTapeThroughput: number | null; // DECIMAL(10,2)
+  totalFiles:number;
 };

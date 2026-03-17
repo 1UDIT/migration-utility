@@ -223,6 +223,12 @@ const FetchColumnDetail = () => {
                 <span >{isNaN(d.getTime()) ? "-" : d.toLocaleString()}</span>
             );
         }
+        else if (header === "haveComplexObject") {
+            const d = new Date(String(props.getValue()));
+            return (
+                <span >{props.getValue()==0?"N":"Y"}</span>
+            );
+        }
         else {
             // return (<span title={props.getValue()} className={`tableHeaderSize wrapword ${alignText}`}>{props.getValue()}</span>)
             return (

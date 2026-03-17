@@ -489,6 +489,7 @@ export default function RunningInstancesDashboard() {
                 <InfoRow k="Drive" v={safe(selected.driveNB)} />
                 <InfoRow k="TID" v={safe(selected.tlID)} />
                 <InfoRow k="Last Updated" v={new Date(selected.lastupdatedDate).toLocaleString()} />
+                <InfoRow k="Total Files" v={safe(selected.totalFiles)} />
               </Section>
 
               <Section title="File Info" color={statusColor}>
