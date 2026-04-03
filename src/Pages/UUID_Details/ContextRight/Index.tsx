@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/Redux/Store";
-
+import { FaCircle } from "react-icons/fa";
 
 interface props {
     MENU_ID: any
@@ -24,6 +24,12 @@ interface props {
 export default function ContextRight({ MENU_ID, Rescheduled, refetch, setRescheduled, setActiveCursor, SetMultipleRowsSelection, displayMenu }: props) {
     const queryClient = useQueryClient();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
+    const hasOnline = Rescheduled.some(item => item.isOnline === 1);
+    const hasOffline = Rescheduled.some(item => item.isOnline === 0);
+    const hasMT = Rescheduled.filter(item => item.mediaType.startsWith("MT"));
+
+    const disableItem = hasOnline && hasOffline || hasMT.length > 0;
+    console.log(disableItem, "Disable Item", hasMT)
 
     const runRuleProcesApi = useCallback(async (e: any) => {
         const body = {
@@ -45,18 +51,36 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
         });
     }, [Rescheduled])
 
-    // migration_failed = retry archive make it migration_complete 
-    // decoded_failed = reshedular make it Decoded_complete     in right click
+    const updateOnlineStatus = useCallback(async (e: any) => {
+        const formattedData = Rescheduled.map((item: any) => ({
+            UUID: item.UUID, // make sure this exists in your data
+            isOnline: item.isOnline
+        }));
 
-    // const isRescheduleDisabled =
-    //     !Rescheduled?.length ||
-    //     Rescheduled.some((row: any) => row.status !== "DECODE_FAILED");
+        const body = {
+            filter: formattedData
+        };
+
+        await axios({
+            method: 'post',
+            url: `http://${ipAddress}:4000/uuids/updateOnline`,
+            data: body,
+        })
+            .then(() => {
+                toast(`Online status updated`);
+                queryClient.invalidateQueries({ queryKey: ["uuidData"] });
+                SetMultipleRowsSelection([]);
+            })
+            .catch(error => {
+                console.log("Error In Post Data", error);
+            });
+    }, [Rescheduled]);
 
     const ALLOWED_RETRY_STATUSES = [
         "FAILED",
         "PARTIAL",
     ];
- 
+
 
     const isretryDisabled =
         !Rescheduled?.length ||
@@ -64,18 +88,28 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
             (row: any) => !ALLOWED_RETRY_STATUSES.includes(row.status)
         );
 
+    // console.log(Rescheduled, "Rescheduled", hasOnline)
 
     return (
         <Menu id={MENU_ID} className="font-medium">
-            {/* <Item onClick={(e) => { runRuleProcesApi(e) }}
-                disabled={isRescheduleDisabled}
-            >
-                <MdRestore className="mr-2" />     Rescheduled
-            </Item> */}
             <Item onClick={(e) => { runRuleProcesApi(e) }}
                 disabled={isretryDisabled}
             >
-                <MdRestore className="mr-2" />     Retry 
+                <MdRestore className="mr-2" />     Retry
+            </Item>
+            <Item
+                // onClick={(e) => runRuleProcesApi(e, Rescheduled?.isOnline)}
+                onClick={(e) => updateOnlineStatus(e,)}
+                disabled={disableItem}
+            >
+                <FaCircle
+                    className={
+                        hasOnline === true
+                            ? "text-sm text-red-500 mr-2"
+                            : "text-sm text-green-500 mr-2"
+                    }
+                />
+                {hasOnline === true ? "Offline" : "Online"}
             </Item>
         </Menu>
     )

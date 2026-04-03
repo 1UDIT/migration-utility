@@ -33,7 +33,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={queryClient}>
     <Provider store={store}>
       <RouterProvider router={router} />
-       <Toaster />
+       <Toaster position='bottom-left'/>
     </Provider>
   </QueryClientProvider>
   ,

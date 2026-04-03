@@ -52,7 +52,10 @@ interface TDatas {
     acs: number;
     migrationState: string; // Correct the spelling if needed
     UUID: string;
-    priority: number
+    priority: number;
+    online:string;
+    isOnline:string;
+    mediaType:string;
 }
 
 const Tabledata = () => {
@@ -444,7 +447,9 @@ const Tabledata = () => {
                 acs: row?.acs,
                 status: row?.migrationState,
                 UUID: row?.UUID,
-                priority: row?.priority
+                priority: row?.priority,
+                isOnline:row?.isOnline,
+                mediaType:row?.mediaType
             };
         });
     }, [highlightedRows, table]);
@@ -556,7 +561,7 @@ const Tabledata = () => {
                                     key={row.index}
                                     id={`row-${row.index}`}
                                     className={[
-                                        "font-medium h-7",
+                                        "font-medium h-7 select-none",
                                         isSelected ? "bg-[#e0cfb0] text-black" : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white",
                                         isCursor && !isSelected ? "!bg-[#e0cfb0] !text-black outline outline-1 outline-[#e0cfb0]" : "", // cursor but not selected
                                     ].join(" ")}
