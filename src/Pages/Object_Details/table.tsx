@@ -78,7 +78,7 @@ const Tabledata = () => {
     });
     const [Filter, setFilter] = useState<any>(draftFilter);
     // const debouncedDraftFilter = useDebouncedValue(draftFilter, 2000);
-    const { debounced: debouncedDraftFilter, isPending, setIsPending } = useDebouncedValue(draftFilter, 2000);
+    const { debounced: debouncedDraftFilter, isPending, setIsPending } = useDebouncedValue(draftFilter, 500);
 
     const [isCustomDateSelected, setIsCustomDateSelected] = useState(false);
     const [isFirstLoad, setIsFirstLoad] = useState(true); // ✅ new
@@ -113,7 +113,7 @@ const Tabledata = () => {
         if (isFirstLoad && Object.keys(debouncedDraftFilter).length === 1) {
             return {
                 lastUpdateDate: {
-                    from: format(subDays(new Date(), 7), "yyyy-MM-dd"),
+                    from: format(subDays(new Date(), 3), "yyyy-MM-dd"),
                     to: format(new Date(), "yyyy-MM-dd"),
                 }
             };
@@ -501,6 +501,7 @@ const Tabledata = () => {
                                                                         onClear={clearFilter}
                                                                         setIsCustomDateSelected={setIsCustomDateSelected}
                                                                         setIsFirstLoad={setIsFirstLoad}
+                                                                        table={table}
                                                                     /> </Suspense>
                                                             </Fragment>
                                                         )
@@ -522,7 +523,7 @@ const Tabledata = () => {
                                     key={row.index}
                                     id={`row-${row.index}`}
                                     className={[
-                                        "font-medium h-7 select-none",
+                                        "font-medium h-7",
                                         isSelected ? "bg-[#e0cfb0] text-black" : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white",
                                         isCursor && !isSelected ? "!bg-[#e0cfb0] !text-black outline outline-1 outline-[#e0cfb0]" : "", // cursor but not selected
                                     ].join(" ")}

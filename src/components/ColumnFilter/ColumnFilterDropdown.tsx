@@ -9,6 +9,7 @@ interface ColumnFilterDropdownProps {
   handleInputChange: (value: string, idHeader: string, column: any) => void;
   setIsCustomDateSelected: React.Dispatch<React.SetStateAction<boolean>>;
   setIsFirstLoad: React.Dispatch<React.SetStateAction<boolean>>;
+  table: any;
 }
 
 const ColumnFilterDropdown: React.FC<ColumnFilterDropdownProps> = ({
@@ -18,7 +19,8 @@ const ColumnFilterDropdown: React.FC<ColumnFilterDropdownProps> = ({
   Filter,
   handleInputChange, 
   setIsCustomDateSelected,
-  setIsFirstLoad
+  setIsFirstLoad,
+  table
 }) => {
   return (
     <div className="flex items-center">      
@@ -32,6 +34,7 @@ const ColumnFilterDropdown: React.FC<ColumnFilterDropdownProps> = ({
             clearFilter={onClear} 
             setIsCustomDateSelected={setIsCustomDateSelected}
             setIsFirstLoad={setIsFirstLoad}
+            table={table}
           />
         </Suspense>
       )}

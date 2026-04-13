@@ -540,6 +540,7 @@ const Tabledata = () => {
                                                                         onClear={clearFilter}
                                                                         setIsCustomDateSelected={setIsCustomDateSelected}
                                                                         setIsFirstLoad={setIsFirstLoad}
+                                                                        table={table}
                                                                     /> </Suspense>
                                                             </Fragment>
                                                         )
@@ -561,7 +562,7 @@ const Tabledata = () => {
                                     key={row.index}
                                     id={`row-${row.index}`}
                                     className={[
-                                        "font-medium h-7 select-none",
+                                        "font-medium h-7",
                                         isSelected ? "bg-[#e0cfb0] text-black" : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white",
                                         isCursor && !isSelected ? "!bg-[#e0cfb0] !text-black outline outline-1 outline-[#e0cfb0]" : "", // cursor but not selected
                                     ].join(" ")}

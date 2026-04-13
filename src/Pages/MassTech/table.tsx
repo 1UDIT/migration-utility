@@ -513,6 +513,7 @@ const Tabledata = () => {
                                                                         onClear={clearFilter}
                                                                         setIsCustomDateSelected={setIsCustomDateSelected}
                                                                         setIsFirstLoad={setIsFirstLoad}
+                                                                        table={table}
                                                                     /> </Suspense>
                                                             </Fragment>
                                                         )

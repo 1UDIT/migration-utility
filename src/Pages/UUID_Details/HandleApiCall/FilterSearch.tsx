@@ -50,6 +50,7 @@ interface props {
   Requesttype?: any;
   setIsCustomDateSelected: React.Dispatch<React.SetStateAction<boolean>>;
   setIsFirstLoad: React.Dispatch<React.SetStateAction<boolean>>;
+  table:any
 }
 
 
@@ -190,18 +191,25 @@ const ValueContainer = (props: ValueContainerProps<any, boolean>) => {
 
 
 export const Filter = ({
-  column, headerid, handleInputChange, clearFilter, date, setIsCustomDateSelected, setIsFirstLoad
+  column, headerid, handleInputChange, clearFilter, date, setIsCustomDateSelected, setIsFirstLoad, table
 }: props) => {
   const columnFilterValue = column.getFilterValue();
   const meta = column.columnDef.meta ?? {};
   const { filterVariant } = meta;
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  // console.log("Rendering Filter for column:", column.id, "with filterVariant:", filterVariant);
+  // ✅ SAFE barcode lookup
+  const barcodeColumn = table.getColumn("barcode");
 
+  // current barcode filter
+  const barcodeFilterValue = barcodeColumn?.getFilterValue();
 
+  // check if barcode selected
+  const hasBarcode =
+    Array.isArray(barcodeFilterValue)
+      ? barcodeFilterValue.length > 0
+      : !!String(barcodeFilterValue ?? "").trim();
 
-
-
-  // NEW: generic select content (no switch on headerid / accessorKey)
   const renderSelect = () => {
     const explicit = meta.selectOptions;
     const facetedMap: Map<any, number> | undefined = (column as any).getFacetedUniqueValues?.();
@@ -213,9 +221,28 @@ export const Filter = ({
         }))
         : [];
 
-    const options = (explicit && explicit.length ? explicit : derived) as {
-      label: string; value: string;
-    }[];
+    console.log(column.id)
+
+    // const options = (explicit && explicit.length ? explicit : derived) as {
+    //   label: string; value: string;
+    // }[];
+
+    const options = ((explicit && explicit.length ? explicit : derived) as {
+      label: string;
+      value: string;
+    }[]).map((opt) => {
+      const isPending = opt.value?.toUpperCase() === "PENDING";
+
+      if (column.id === "status" && isPending && !hasBarcode) {
+        return {
+          ...opt,
+          isDisabled: true,
+          label: "PENDING (Select barcode first)", // optional UX
+        };
+      }
+
+      return opt;
+    });
 
     const isMulti = !!meta.isMulti;
     const placeholder = meta.placeholder ?? 'Select...';
@@ -299,6 +326,122 @@ export const Filter = ({
     );
   };
 
+  // const renderSelect = () => {
+  //   const explicit = meta.selectOptions;
+  //   const facetedMap: Map<any, number> | undefined = (column as any).getFacetedUniqueValues?.();
+
+  //   const derived =
+  //     facetedMap
+  //       ? Array.from(facetedMap.keys()).map((v) => ({
+  //         value: String(v ?? ""),
+  //         label: String(v ?? ""),
+  //       }))
+  //       : [];
+
+  //   const isMulti = !!meta.isMulti;
+  //   const placeholder = meta.placeholder ?? "Select...";
+
+  //   // barcode filter value from table state
+  //   const barcodeFilterValue =
+  //     table
+  //       .getAllColumns()
+  //       .find((col) => col.id === "barcode")
+  //       ?.getFilterValue?.() ?? undefined;
+
+  //   const hasBarcode =
+  //     Array.isArray(barcodeFilterValue)
+  //       ? barcodeFilterValue.length > 0
+  //       : !!String(barcodeFilterValue ?? "").trim();
+
+  //   // build options with disable rule
+  //   const options = ((explicit && explicit.length ? explicit : derived) as {
+  //     label: string;
+  //     value: string;
+  //   }[]).map((opt) => {
+  //     // disable PENDING in status filter until barcode is selected
+  //     if (column.id === "status" && opt.value === "PENDING" && !hasBarcode) {
+  //       return {
+  //         ...opt,
+  //         isDisabled: true,
+  //       };
+  //     }
+  //     return opt;
+  //   });
+
+  //   // Normalize current filter value to react-select's shape
+  //   const current = (() => {
+  //     if (isMulti) {
+  //       const arr = Array.isArray(columnFilterValue) ? columnFilterValue : [];
+  //       return options.filter((o) => arr.includes(o.value));
+  //     }
+  //     if (typeof columnFilterValue === "string") {
+  //       return options.find((o) => o.value === columnFilterValue) ?? null;
+  //     }
+  //     return null;
+  //   })();
+
+  //   return (
+  //     <Select
+  //       options={options}
+  //       isMulti={isMulti}
+  //       value={current}
+  //       isSearchable={false}
+  //       isClearable
+  //       closeMenuOnSelect={true}
+  //       hideSelectedOptions={false}
+  //       isOptionDisabled={(option) => !!option.isDisabled}
+  //       onChange={(val: any, actionMeta: any) => {
+  //         const action = actionMeta?.action;
+
+  //         // clear-like actions
+  //         if (action === "clear" || action === "remove-value" || action === "pop-value") {
+  //           column.setFilterValue(undefined);
+  //           clearFilter(headerid);
+  //           return;
+  //         }
+
+  //         if (isMulti) {
+  //           if (action === "select-option") {
+  //             const clicked = String(actionMeta?.option?.value ?? "");
+  //             const prev = Array.isArray(column.getFilterValue())
+  //               ? (column.getFilterValue() as any[]).map(String)
+  //               : [];
+
+  //             const nextArr = prev.includes(clicked)
+  //               ? prev.filter((v) => v !== clicked)
+  //               : [...prev, clicked];
+
+  //             column.setFilterValue(nextArr.length ? nextArr : undefined);
+  //             handleInputChange(nextArr, headerid, column);
+  //             return;
+  //           }
+
+  //           const next = Array.isArray(val) ? val.map((o: any) => o.value) : [];
+  //           column.setFilterValue(next.length ? next : undefined);
+  //           handleInputChange(next, headerid, column);
+  //           return;
+  //         }
+
+  //         const next = val?.value ?? undefined;
+  //         column.setFilterValue(next);
+
+  //         if (next === undefined) {
+  //           clearFilter(headerid);
+  //           return;
+  //         }
+
+  //         handleInputChange(next, headerid, column);
+  //       }}
+  //       menuPosition="absolute"
+  //       menuPlacement="bottom"
+  //       menuPortalTarget={document.body}
+  //       placeholder={placeholder}
+  //       styles={customStyles}
+  //       className="text-sm"
+  //       components={{ ValueContainer }}
+  //     />
+  //   );
+  // };
 
   const renderCalendar = () => {
     const {
