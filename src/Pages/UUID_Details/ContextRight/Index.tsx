@@ -29,13 +29,13 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
     const hasMT = Rescheduled.filter(item => item.mediaType.startsWith("MT"));
 
     const disableItem = hasOnline && hasOffline || hasMT.length > 0;
-    console.log(disableItem, "Disable Item", hasMT)
+    // console.log(disableItem, "Disable Item", hasMT)
 
     const runRuleProcesApi = useCallback(async (e: any) => {
         const body = {
             "filter": Rescheduled
         }
-        console.log(Rescheduled, "Schedualar")
+        // console.log(Rescheduled, "Schedualar")
         await axios({
             method: 'post',
             url: `http://${ipAddress}:4000/uuids/reshedulerulejobs`,

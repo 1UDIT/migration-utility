@@ -29,7 +29,7 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
         const body = {
             "filter": Rescheduled
         }
-        console.log(Rescheduled, "Schedualar")
+        // console.log(Rescheduled, "Schedualar")
         await axios({
             method: 'post',
             url: `http://${ipAddress}:4000/objects/reshedulerulejobs`,

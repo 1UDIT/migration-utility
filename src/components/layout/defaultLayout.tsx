@@ -123,7 +123,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
     };
 
     const DownloadReport = useCallback(async (nameUrl: string) => {
-        console.log("downloadChoice", downloadChoice)
+        // console.log("downloadChoice", downloadChoice)
         try {
             if (downloadChoice === "OBJECT_LIST") {
 

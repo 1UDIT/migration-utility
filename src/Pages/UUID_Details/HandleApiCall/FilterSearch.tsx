@@ -50,7 +50,7 @@ interface props {
   Requesttype?: any;
   setIsCustomDateSelected: React.Dispatch<React.SetStateAction<boolean>>;
   setIsFirstLoad: React.Dispatch<React.SetStateAction<boolean>>;
-  table:any
+  table: any
 }
 
 
@@ -198,17 +198,20 @@ export const Filter = ({
   const { filterVariant } = meta;
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   // console.log("Rendering Filter for column:", column.id, "with filterVariant:", filterVariant);
-  // ✅ SAFE barcode lookup
   const barcodeColumn = table.getColumn("barcode");
+  const tapeBarcodeColumn = table.getColumn("tapeBarcode");
 
-  // current barcode filter
-  const barcodeFilterValue = barcodeColumn?.getFilterValue();
+  // Prefer barcode first, fallback to tapeBarcode
+  const barcodeFilterValue =
+    barcodeColumn?.getFilterValue() ??
+    tapeBarcodeColumn?.getFilterValue();
 
-  // check if barcode selected
-  const hasBarcode =
-    Array.isArray(barcodeFilterValue)
-      ? barcodeFilterValue.length > 0
-      : !!String(barcodeFilterValue ?? "").trim();
+  // Check if barcode exists
+  const hasBarcode = Array.isArray(barcodeFilterValue)
+    ? barcodeFilterValue.length > 0
+    : typeof barcodeFilterValue === "string"
+      ? barcodeFilterValue.trim().length > 0
+      : false;
 
   const renderSelect = () => {
     const explicit = meta.selectOptions;
@@ -221,7 +224,7 @@ export const Filter = ({
         }))
         : [];
 
-    console.log(column.id)
+    // console.log(column.id)
 
     // const options = (explicit && explicit.length ? explicit : derived) as {
     //   label: string; value: string;

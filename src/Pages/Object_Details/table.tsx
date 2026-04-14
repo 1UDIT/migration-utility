@@ -240,6 +240,7 @@ const Tabledata = () => {
         networkMode: "always",
         retry: false,
         refetchOnWindowFocus: false, // optional, avoid spam
+        refetchInterval: 12000
     });
 
     const tableData = useMemo(() =>
@@ -327,7 +328,7 @@ const Tabledata = () => {
             const hasAnyOtherFilter = Object.keys(updated).some(
                 (k) => k !== "lastUpdateDate"
             );
-            console.log("isCustomDateSelected", isCustomDateSelected, "hasAnyOtherFilter", hasAnyOtherFilter)
+            // console.log("isCustomDateSelected", isCustomDateSelected, "hasAnyOtherFilter", hasAnyOtherFilter)
 
             // If nothing else is filtered, show default 24h (only if you want UI to show it)
             if (!hasAnyOtherFilter && !isCustomDateSelected) {

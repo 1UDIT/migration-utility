@@ -293,7 +293,7 @@ const Tabledata = () => {
             fetchData(`http://${ipAddress}:4000/uuids/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
-        refetchInterval: 20000,
+        refetchInterval: 12000,
         refetchOnWindowFocus: false, // optional, avoid spam
     });
 

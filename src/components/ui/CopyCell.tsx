@@ -65,7 +65,7 @@ export default function CopyCell({
   return (
     <span
       onClick={handleCopy}
-      title="Click to copy"
+      title={`Click to copy:: ${value}`}
       className={`cursor-pointer ${className}`} 
     >
       {value} 

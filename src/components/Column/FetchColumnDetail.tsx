@@ -17,8 +17,8 @@ export function bytesToGB(bytes?: number | null) {
     return (bytes / 1024 / 1024 / 1024).toFixed(0);
 }
 export function byteToKb(bytes?: number | null): string {
-  if (bytes == null || bytes <= 0) return "0";  
-  return `${(bytes / 1000).toFixed(2)}`;
+    if (bytes == null || bytes <= 0) return "0";
+    return `${(bytes / 1000).toFixed(2)}`;
 }
 
 export function msToHuman(ms?: number | null) {
@@ -160,9 +160,9 @@ const FetchColumnDetail = () => {
         }
         else if (header === "health") {
             const lastUpdate = new Date(props.row.original.lastupdatedDate).getTime();
-            const now = Date.now(); 
+            const now = Date.now();
 
-            const diffHours = (now - lastUpdate) / (1000); 
+            const diffHours = (now - lastUpdate) / (1000);
 
             let color = "";
             let label = "";
@@ -226,21 +226,21 @@ const FetchColumnDetail = () => {
         else if (header === "haveComplexObject") {
             const d = new Date(String(props.getValue()));
             return (
-                <span >{props.getValue()==0?"N":"Y"}</span>
+                <span >{props.getValue() == 0 ? "N" : "Y"}</span>
             );
         }
         else {
             // return (<span title={props.getValue()} className={`tableHeaderSize wrapword ${alignText}`}>{props.getValue()}</span>)
             return (
                 <CopyCell
-                    value={props.getValue()}
+                    value={props.getValue()} 
                     className={`tableHeaderSize wrapword ${alignText}`}
                 />
             )
         }
     }
 
-    useEffect(() => { 
+    useEffect(() => {
         axios({
             method: "Get",
             url: './config.json',

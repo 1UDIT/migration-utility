@@ -288,9 +288,8 @@ const Tabledata = () => {
         queryFn: ({ signal }) =>
             fetchData(`http://${ipAddress}:4000/Masstech/total`, "POST", body, signal),
         networkMode: 'always',
-        refetchInterval: 20000,
-        retry: false,
-        enabled: !!data,   // 👈 only after list loads
+        refetchInterval: 12000,
+        retry: false, 
         refetchOnWindowFocus: false,  
     });
 
@@ -320,6 +319,8 @@ const Tabledata = () => {
     function clearFilter(idHeader: string) {
         setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
         setIsFirstLoad(true);
+        setActiveCursor(0);
+        SetMultipleRowsSelection([]);
         table.getColumn(idHeader)?.setFilterValue(undefined);
 
         setDraftFilter((prev: any) => {
@@ -362,6 +363,8 @@ const Tabledata = () => {
     function handleInputChange(value: any, idHeader: string, column: any, rawValue?: string) {
 
         setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
+        setActiveCursor(0);
+        SetMultipleRowsSelection([]);
         setIsPending(true);
 
         // ✅ IMPORTANT: keep column filter as STRING for text input
@@ -536,7 +539,7 @@ const Tabledata = () => {
                                     key={row.index}
                                     id={`row-${row.index}`}
                                     className={[
-                                        "font-medium h-7 select-none",
+                                        "font-medium h-7",
                                         isSelected ? "bg-[#e0cfb0] text-black" : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white",
                                         isCursor && !isSelected ? "!bg-[#e0cfb0] !text-black outline outline-1 outline-[#e0cfb0]" : "", // cursor but not selected
                                     ].join(" ")}

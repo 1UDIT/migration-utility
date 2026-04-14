@@ -117,7 +117,7 @@ const Tabledata = () => {
     }, [Filter, datePayload]);
 
     useEffect(() => {
-        console.log(isPending, "isPending from table", isFirstLoad);
+        // console.log(isPending, "isPending from table", isFirstLoad);
         // If still first load, make sure no toast is showing and do nothing
         if (isFirstLoad) {
             if (toastIdRef.current) {
