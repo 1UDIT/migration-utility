@@ -37,7 +37,7 @@ interface DateInterface {
     to: Date;
 }
 
-const dateStart = new Date(Date.now() - 1 * 60 * 60 * 1000);
+const dateStart = new Date(Date.now() - 1 * 60 * 60 * 1000); //Set to 1 hour ago from the current time
 const initialDateRange: DateInterface = {
     from: dateStart,
     to: new Date(),
@@ -72,7 +72,7 @@ const Tabledata = () => {
     });
     const [Filter, setFilter] = useState<any>(draftFilter);
     const [isCustomDateSelected, setIsCustomDateSelected] = useState(false);
-    const { debounced: debouncedDraftFilter, isPending, setIsPending } = useDebouncedValue(draftFilter, 2000);
+    const { debounced: debouncedDraftFilter, isPending, setIsPending } = useDebouncedValue(draftFilter, 550);
     const [isFirstLoad, setIsFirstLoad] = useState(true); // ✅ new
     const toastIdRef = useRef<string | number | null>(null);
     const prevPendingRef = useRef(false);

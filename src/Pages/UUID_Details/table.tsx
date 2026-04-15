@@ -14,6 +14,9 @@ import useWindowSize from '@/hooks/usescreen';
 import { FiFilter } from "react-icons/fi";
 import { MdOutlineFilterAltOff } from "react-icons/md";
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
+import {
+    Dialog,
+} from "@/components/ui/dialog"
 
 import "react-contexify/dist/ReactContexify.css";
 import Index from '@/components/Pagination/Index';
@@ -33,6 +36,7 @@ import {
 import "react-contexify/dist/ReactContexify.css";
 import axios from 'axios';
 import { FaSortDown, FaSortUp } from 'react-icons/fa';
+import IndexPopup from './DialogPopup';
 const MENU_ID = "menu-id";
 
 interface DateInterface {
@@ -47,15 +51,69 @@ const initialDateRange: DateInterface = {
     to: new Date(),
 };
 
+export type User = {
+  UUID: string;
+  UUIDPath: string | null;
+
+  acs: number;
+  acsID: number;
+
+  mediaName: string;
+  mediaType: string;
+
+  totalObjectSize: number;
+  migratedObjectSize: number;
+
+  totalObjectCount: number;
+  migratedObjectCount: number;
+
+  startDate: string; // you can also use Date if you parse it
+  endDate: string | null;
+
+  invoiceDate: string | null;
+  invoiceID: string | null;
+
+  priority: number;
+
+  failedObjectCount: number;
+
+  migrationState: string; // could be union if fixed values
+  DDNMigrationStatus: number;
+
+  migrationCountProgressPercent: number;
+  migrationSizeProgressPercent: number;
+
+  remarks: string | null;
+
+  isOnline: number; // 0 or 1 (can improve below)
+  haveComplexObject: number;
+
+  ip: string;
+  port: number;
+
+  Description: string;
+
+  TotalSize: number;
+  MigratedSize: number;
+
+  reserve1: string | null;
+  reserve2: string | null;
+
+  serial_no: string;
+
+  status: string; // e.g. "ONLINE"
+  acs_name: string;
+};
+
 interface TDatas {
     id: number;
     acs: number;
     migrationState: string; // Correct the spelling if needed
     UUID: string;
     priority: number;
-    online:string;
-    isOnline:string;
-    mediaType:string;
+    online: string;
+    isOnline: string;
+    mediaType: string;
 }
 
 const Tabledata = () => {
@@ -87,7 +145,9 @@ const Tabledata = () => {
     const [editingUuid, setEditingUuid] = useState<string | null>(null);
     const [priorityDraft, setPriorityDraft] = useState<number>(0);
     const [savingPriority, setSavingPriority] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false);
     const [sorting, setSorting] = useState<SortingState>([]);
+    const [selectedRow, setSelectedRow] = useState<User | null>(null);
 
 
     const updatePriority = async (uuid: string, priority: number) => {
@@ -316,7 +376,7 @@ const Tabledata = () => {
     const handleRowClick = (event: React.MouseEvent, id: number) => {
         useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection, isLoading);
     };
- 
+
     const table = useReactTable({
         data: tableData || [],
         columns: tableColumns,
@@ -374,7 +434,7 @@ const Tabledata = () => {
 
         setSearchTag((old) => old.filter((d: any) => d !== idHeader));
         setStoreFilterId((old) => old.filter((d: any) => d !== idHeader));
-    } 
+    }
 
     function handleInputChange(value: any, idHeader: string, column: any, rawValue?: string) {
 
@@ -448,8 +508,8 @@ const Tabledata = () => {
                 status: row?.migrationState,
                 UUID: row?.UUID,
                 priority: row?.priority,
-                isOnline:row?.isOnline,
-                mediaType:row?.mediaType
+                isOnline: row?.isOnline,
+                mediaType: row?.mediaType
             };
         });
     }, [highlightedRows, table]);
@@ -557,6 +617,7 @@ const Tabledata = () => {
                         {table.getRowModel().rows.map(row => {
                             const isSelected = highlightedRows.includes(row.index);
                             const isCursor = keyNavigation === row.index && !isLoading;
+                            // console.log((row.original as User).isOnline, "row", keyNavigation, "keyNavigation");
                             return (
                                 <tr
                                     key={row.index}
@@ -576,7 +637,13 @@ const Tabledata = () => {
                                             setActiveCursor(row.index);
                                         }
                                     }}
-
+                                    onDoubleClick={() => {
+                                        const data = row.original as User;
+                                        if (data.isOnline === 1) {
+                                            setSelectedRow(data);
+                                            setOpenDialog(true);
+                                        }
+                                    }}
                                     onContextMenu={(e) => {
                                         displayMenu(e);
                                         getSelectedRowData(e, table.getRowModel().rows, row.index);
@@ -603,6 +670,13 @@ const Tabledata = () => {
                 <ContextRight MENU_ID={MENU_ID} Rescheduled={Rescheduled} refetch={refetch} setRescheduled={Rescheduled}
                     setActiveCursor={setActiveCursor} SetMultipleRowsSelection={SetMultipleRowsSelection} displayMenu={displayMenu}
                 /> : null
+            }
+            {
+                openDialog && (
+                    <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+                       <IndexPopup data={selectedRow} />
+                    </Dialog>
+                )
             }
         </>
     )

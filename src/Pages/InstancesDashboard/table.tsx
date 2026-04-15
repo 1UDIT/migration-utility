@@ -226,7 +226,7 @@ export default function RunningInstancesDashboard() {
       {/* KPI row */}
       <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
         <KpiCard title="Active Instances" value={`${kpi.active}`} />
-        <KpiCard title={`Not Active (<${nonActiveInstance}h) Instances`} value={`${kpi.NotActive}`} />
+        <KpiCard title={`Not Active (<${nonActiveInstance/3600}h) Instances`} value={`${kpi.NotActive}`} />
       </div>
 
       {/* Content */}
@@ -245,7 +245,7 @@ export default function RunningInstancesDashboard() {
 
               <div className="flex items-center gap-1">
                 <span className="h-3 w-3 rounded-full bg-red-500 inline-block"></span>
-                <span> &lt; {nonActiveInstance}h</span>
+                <span> &lt; {nonActiveInstance/3600}h</span>
               </div>
 
               <div className="flex items-center gap-1">

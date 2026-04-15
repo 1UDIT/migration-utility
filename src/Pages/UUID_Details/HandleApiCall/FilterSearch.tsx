@@ -198,8 +198,8 @@ export const Filter = ({
   const { filterVariant } = meta;
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   // console.log("Rendering Filter for column:", column.id, "with filterVariant:", filterVariant);
-  const barcodeColumn = table.getColumn("barcode");
-  const tapeBarcodeColumn = table.getColumn("tapeBarcode");
+  const barcodeColumn = table?.getColumn("barcode");
+  const tapeBarcodeColumn = table?.getColumn("tapeBarcode");
 
   // Prefer barcode first, fallback to tapeBarcode
   const barcodeFilterValue =

@@ -207,11 +207,11 @@ const FetchColumnDetail = () => {
                 <span className="tabular-nums">{msToHuman(Number(props.getValue() ?? 0))}</span>
             );
         }
-        else if (header === "sizeKB") {
-            return (
-                <span className="tabular-nums">{byteToKb(Number(props.getValue() ?? 0))}</span>
-            );
-        }
+        // else if (header === "sizeKB") {
+        //     return (
+        //         <span className="tabular-nums">{byteToKb(Number(props.getValue() ?? 0))}</span>
+        //     );
+        // }
         else if (header === "instanceSizeBytes") {
             return (
                 <span className="tabular-nums">{byteToKb(Number(props.getValue() ?? 0))}</span>
@@ -355,7 +355,7 @@ const FetchColumnDetail = () => {
             Dispatch(reshedularSelection(response.data.reshedularSelection));
             Dispatch(nonActiveInstances(response.data.nonActiveInstance));
             Dispatch(reportType(response.data.reportType));
-            SetnonActiveInstance(response.data.nonActiveInstance);
+            SetnonActiveInstance(response.data.nonActiveInstance); //convert the seconds to hours for display in the UI
         }).catch(error => {
             console.log(error, "error in Config File")
         });

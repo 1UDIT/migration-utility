@@ -24,9 +24,9 @@ interface props {
 export default function ContextRight({ MENU_ID, Rescheduled, refetch, setRescheduled, setActiveCursor, SetMultipleRowsSelection, displayMenu }: props) {
     const queryClient = useQueryClient();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
-    const hasOnline = Rescheduled.some(item => item.isOnline === 1);
-    const hasOffline = Rescheduled.some(item => item.isOnline === 0);
-    const hasMT = Rescheduled.filter(item => item.mediaType.startsWith("MT"));
+    const hasOnline = Rescheduled.some(item => item?.isOnline === 1);
+    const hasOffline = Rescheduled.some(item => item?.isOnline === 0);
+    const hasMT = Rescheduled.filter(item => item?.mediaType?.startsWith("MT"));
 
     const disableItem = hasOnline && hasOffline || hasMT.length > 0;
     // console.log(disableItem, "Disable Item", hasMT)
