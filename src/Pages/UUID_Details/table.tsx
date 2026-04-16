@@ -14,6 +14,7 @@ import useWindowSize from '@/hooks/usescreen';
 import { FiFilter } from "react-icons/fi";
 import { MdOutlineFilterAltOff } from "react-icons/md";
 const ColumnFilterDropdown = lazy(() => import("@/components/ColumnFilter/ColumnFilterDropdown"));
+const IndexPopup = lazy(() => import("@/Pages/UUID_Details/DialogPopup/Index"));
 import {
     Dialog,
 } from "@/components/ui/dialog"
@@ -35,8 +36,7 @@ import {
 } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
 import axios from 'axios';
-import { FaSortDown, FaSortUp } from 'react-icons/fa';
-import IndexPopup from './DialogPopup';
+import { FaSortDown, FaSortUp } from 'react-icons/fa'; 
 const MENU_ID = "menu-id";
 
 interface DateInterface {
@@ -674,7 +674,7 @@ const Tabledata = () => {
             {
                 openDialog && (
                     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                       <IndexPopup data={selectedRow} />
+                       <Suspense fallback={""} ><IndexPopup data={selectedRow} /></Suspense> 
                     </Dialog>
                 )
             }
