@@ -308,17 +308,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { fetchData } from "@/Pages/Object_Details/HandleApiCall/Apicall";
-import { Label } from "@/components/ui/label";
 
-const statusOptions = [
-  { label: "MIGRATION_COMPLETED", value: "MIGRATION_COMPLETED" },
-  { label: "MIGRATION_SUBMITTED", value: "MIGRATION_SUBMITTED" },
-  { label: "Pending", value: "PENDING" },
-  { label: "MIGRATION_FAILED", value: "MIGRATION_FAILED" },
-  { label: "DECODE_STARTED", value: "DECODE_STARTED" },
-  { label: "DECODE_COMPLETED", value: "DECODE_COMPLETED" },
-  { label: "DECODE_FAILED", value: "DECODE_FAILED" },
-];
 
 type IndexPopupProps = {
   data: {
@@ -358,7 +348,7 @@ export default function IndexPopup({ data }: IndexPopupProps) {
   const rows = listDetails?.data || [];
 
   return (
-    <DialogContent className="max-w-7xl bg-[#18202b] text-white">
+    <DialogContent className="max-w-4xl bg-[#18202b] text-white">
       <DialogHeader>
         <DialogTitle className="text-white">Tape Details</DialogTitle>
         <DialogDescription asChild>
@@ -366,78 +356,76 @@ export default function IndexPopup({ data }: IndexPopupProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
                 <div className="text-sm text-gray-400">UUID</div>
-                <div className="mt-1 break-all font-medium text-white">{data?.UUID}</div>
+                <div className="mt-1 text-xl break-all font-medium text-white">{data?.UUID}</div>
               </div>
 
               <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
                 <div className="text-sm text-gray-400">Media Type</div>
-                <div className="mt-1 font-medium text-white">{data?.mediaType}</div>
+                <div className="mt-1 text-xl font-medium text-white">{data?.mediaType}</div>
               </div>
 
               <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
                 <div className="text-sm text-gray-400">Total Object Count</div>
-                <div className="mt-1 text-2xl font-bold text-white">{data?.totalObjectCount}</div>
+                <div className="mt-1 text-xl font-bold text-white">{data?.totalObjectCount}</div>
               </div>
-            </div> 
+            </div>
 
             <div>
               <div className="mb-2 text-sm font-semibold text-gray-300">Status Summary</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {summary.map((item: any) => {
                   const isActive = item.value === selectedStatus;
+                  const hasCount = Number(item.count || 0) > 0;
+
+                  const getCardClass = () => {
+                    
+                    if (item.value === "DECODE_FAILED") {
+                      return hasCount
+                        ? "border-red-500 bg-red-500/10"
+                        : "border-red-500/40 bg-[#111827]";
+                    }
+                    if (item.value === "PENDING") {
+                      return hasCount
+                        ? "border-blue-500 bg-blue-500/10"
+                        : "border-blue-500/40 bg-[#111827]";
+                    }
+
+                    if (item.value === "MIGRATION_FAILED") {
+                      return hasCount
+                        ? "border-yellow-500 bg-yellow-500/10"
+                        : "border-yellow-500/40 bg-[#111827]";
+                    }
+
+                    return isActive
+                      ? "border-blue-500 bg-blue-500/10"
+                      : "border-gray-700 bg-[#111827]";
+
+                  };
+
+                  const getCountClass = () => {
+                    if (!hasCount) return "text-gray-400";
+                    if (item.value === "DECODE_FAILED") return "text-red-500";
+                    if (item.value === "MIGRATION_FAILED") return "text-yellow-400";
+                    if (item.value === "PENDING") return "text-blue-400";
+                    return "text-white";
+                  };
+
                   return (
                     <button
                       key={item.value}
                       type="button"
-                    //   onClick={() => setSelectedStatus(item.value)}
-                      className={`rounded-xl border p-4 text-left transition`}
+                      // onClick={() => setSelectedStatus(item.value)}
+                      className={`rounded-xl border p-4 text-left transition ${getCardClass()}`}
                     >
-                      <div className="text-xs text-gray-400">{item.label}</div>
-                      <div className="mt-2 text-2xl font-bold text-white">{item.count}</div>
+                      <div className="text-xs text-gray-300">{item.label}</div>
+                      <div className={`mt-2 text-lg font-bold ${getCountClass()}`}>
+                        {item.count}
+                      </div>
                     </button>
                   );
                 })}
               </div>
-            </div>
-
-            {/* <div className="rounded-lg border border-gray-700 overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-[#0f172a]">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Object Name</th>
-                    <th className="px-4 py-3 text-left">Category</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-left">File Name</th>
-                    <th className="px-4 py-3 text-left">Barcode</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                        Loading...
-                      </td>
-                    </tr>
-                  ) : rows.length ? (
-                    rows.map((row: any, index: number) => (
-                      <tr key={index} className="border-t border-gray-800">
-                        <td className="px-4 py-3">{row.objectName || row.displayName || "-"}</td>
-                        <td className="px-4 py-3">{row.category || row.mediaType || "-"}</td>
-                        <td className="px-4 py-3">{row.status || "-"}</td>
-                        <td className="px-4 py-3">{row.fileName || "-"}</td>
-                        <td className="px-4 py-3">{row.barcode || row.tapeBarcode || "-"}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                        No data available
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div> */}
+            </div> 
           </div>
         </DialogDescription>
       </DialogHeader>

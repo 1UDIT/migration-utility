@@ -158,6 +158,31 @@ const FetchColumnDetail = () => {
                 </div>
             );
         }
+        // else if (header === "warningColor") {
+        //     const warning = props.getValue();
+
+        //     const getColorClass = () => {
+        //         if (warning === "red") return "text-red-500";
+        //         if (warning === "yellow") return "text-yellow-400";
+        //         return "text-gray-400"; // default (important)
+        //     };
+
+        //     const getTooltip = () => {
+        //         if (warning === "red") return "Migration Failed";
+        //         if (warning === "yellow") return "Decode Failed";
+        //         return "No Issues";
+        //     };
+
+        //     return (
+        //         <div className="flex items-center justify-center">
+        //             <FaCircle
+        //                 className={`text-xs ${getColorClass()}`}
+        //                 title={getTooltip()} // 👈 tooltip on hover
+        //             />
+        //         </div>
+        //     );
+        // }
+
         else if (header === "health") {
             const lastUpdate = new Date(props.row.original.lastupdatedDate).getTime();
             const now = Date.now();
@@ -233,7 +258,7 @@ const FetchColumnDetail = () => {
             // return (<span title={props.getValue()} className={`tableHeaderSize wrapword ${alignText}`}>{props.getValue()}</span>)
             return (
                 <CopyCell
-                    value={props.getValue()} 
+                    value={props.getValue()}
                     className={`tableHeaderSize wrapword ${alignText}`}
                 />
             )
