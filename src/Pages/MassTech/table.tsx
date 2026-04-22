@@ -577,8 +577,8 @@ const Tabledata = () => {
             </div>
             <Index table={table} data={data} initialDateRange={datePayload?.lastUpdatedDate} totalPage={totalQuery?.data?.total} />
             {highlightedRows.length <= reshedularSelection ?
-                <ContextRight MENU_ID={MENU_ID} Rescheduled={Rescheduled} refetch={refetch} setRescheduled={Rescheduled}
-                    setActiveCursor={setActiveCursor} SetMultipleRowsSelection={SetMultipleRowsSelection} displayMenu={displayMenu}
+                <ContextRight MENU_ID={MENU_ID} Rescheduled={Rescheduled} refetch={refetch}  
+                      SetMultipleRowsSelection={SetMultipleRowsSelection}  
                 /> : null
             }
         </>

@@ -36,7 +36,7 @@ import {
 } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
 import axios from 'axios';
-import { FaSortDown, FaSortUp } from 'react-icons/fa'; 
+import { FaSortDown, FaSortUp } from 'react-icons/fa';
 const MENU_ID = "menu-id";
 
 interface DateInterface {
@@ -52,57 +52,57 @@ const initialDateRange: DateInterface = {
 };
 
 export type User = {
-  UUID: string;
-  UUIDPath: string | null;
+    UUID: string;
+    UUIDPath: string | null;
 
-  acs: number;
-  acsID: number;
+    acs: number;
+    acsID: number;
 
-  mediaName: string;
-  mediaType: string;
+    mediaName: string;
+    mediaType: string;
 
-  totalObjectSize: number;
-  migratedObjectSize: number;
+    totalObjectSize: number;
+    migratedObjectSize: number;
 
-  totalObjectCount: number;
-  migratedObjectCount: number;
+    totalObjectCount: number;
+    migratedObjectCount: number;
 
-  startDate: string; // you can also use Date if you parse it
-  endDate: string | null;
+    startDate: string; // you can also use Date if you parse it
+    endDate: string | null;
 
-  invoiceDate: string | null;
-  invoiceID: string | null;
+    invoiceDate: string | null;
+    invoiceID: string | null;
 
-  priority: number;
+    priority: number;
 
-  failedObjectCount: number;
+    failedObjectCount: number;
 
-  migrationState: string; // could be union if fixed values
-  DDNMigrationStatus: number;
+    migrationState: string; // could be union if fixed values
+    DDNMigrationStatus: number;
 
-  migrationCountProgressPercent: number;
-  migrationSizeProgressPercent: number;
+    migrationCountProgressPercent: number;
+    migrationSizeProgressPercent: number;
 
-  remarks: string | null;
+    remarks: string | null;
 
-  isOnline: number; // 0 or 1 (can improve below)
-  haveComplexObject: number;
+    isOnline: number; // 0 or 1 (can improve below)
+    haveComplexObject: number;
 
-  ip: string;
-  port: number;
+    ip: string;
+    port: number;
 
-  Description: string;
+    Description: string;
 
-  TotalSize: number;
-  MigratedSize: number;
+    TotalSize: number;
+    MigratedSize: number;
 
-  reserve1: string | null;
-  reserve2: string | null;
+    reserve1: string | null;
+    reserve2: string | null;
 
-  serial_no: string;
+    serial_no: string;
 
-  status: string; // e.g. "ONLINE"
-  acs_name: string;
+    status: string; // e.g. "ONLINE"
+    acs_name: string;
 };
 
 interface TDatas {
@@ -184,6 +184,13 @@ const Tabledata = () => {
         // reset to first page when filter actually applies
         setPagination((p) => ({ ...p, pageIndex: 0 }));
     }, [debouncedDraftFilter]);
+
+    useEffect(() => { 
+        console.log("Dialog open state changed:", openDialog);
+        return () => { 
+            document.body.style.pointerEvents = '';
+         }; 
+        }, [openDialog]);
 
     const { show } = useContextMenu({
         id: MENU_ID
@@ -674,7 +681,7 @@ const Tabledata = () => {
             {
                 openDialog && (
                     <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                       <Suspense fallback={""} ><IndexPopup data={selectedRow} /></Suspense> 
+                        <Suspense fallback={""} ><IndexPopup data={selectedRow} setOpenDialog={setOpenDialog} openDialog={openDialog} /></Suspense>
                     </Dialog>
                 )
             }

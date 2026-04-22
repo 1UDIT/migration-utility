@@ -1,434 +1,483 @@
-// import {
-//     DialogContent,
-//     DialogDescription,
-//     DialogHeader,
-//     DialogTitle,
-// } from "@/components/ui/dialog";
-// import { useQuery } from "@tanstack/react-query";
-// import type { User } from "../table";
-// import { useSelector } from "react-redux";
-// import { fetchData } from "@/Pages/Object_Details/HandleApiCall/Apicall";
-// import {
-//     useReactTable,
-//     getCoreRowModel,
-//     flexRender,
-//     type ColumnDef,
-//     type PaginationState,
-//     getPaginationRowModel,
-// } from "@tanstack/react-table";
-// import { useMemo, useState } from "react";
-// import { Label } from "@/components/ui/label";
-
-// type ObjectItem = {
-//     objectName: string;
-//     category: string;
-//     mediaName: string;
-//     sizeKB: number;
-//     fileName: string;
-//     status: string;
-//     remarks: string;
-// };
-
-// type IndexPopupProps = {
-//     data: User;
-// };
-
-// const ltoStatusOptions = [
-//     { label: "MIGRATION_COMPLETED", value: "MIGRATION_COMPLETED" },
-//     { label: "MIGRATION_SUBMITTED", value: "MIGRATION_SUBMITTED" },
-//     { label: "Pending", value: "PENDING" },
-//     { label: "MIGRATION_FAILED", value: "MIGRATION_FAILED" },
-//     { label: "DECODE_STARTED", value: "DECODE_STARTED" },
-//     { label: "DECODE_COMPLETED", value: "DECODE_COMPLETED" },
-//     { label: "DECODE_FAILED", value: "DECODE_FAILED" }
-// ];
-
-// const mtStatusOptions = [
-//     { label: "MIGRATION_COMPLETED", value: "MIGRATION_COMPLETED" },
-//     { label: "MIGRATION_SUBMITTED", value: "MIGRATION_SUBMITTED" },
-//     { label: "Pending", value: "PENDING" },
-//     { label: "MIGRATION_FAILED", value: "MIGRATION_FAILED" },
-//     { label: "DECODE_STARTED", value: "DECODE_STARTED" },
-//     { label: "DECODE_COMPLETED", value: "DECODE_COMPLETED" },
-//     { label: "DECODE_FAILED", value: "DECODE_FAILED" },
-// ];
-
-// const normalizeData = (rows: any[], mediaType: string) => {
-//     console.log("Normalizing data for mediaType:", mediaType, "with rows:", rows);
-
-//     if (mediaType.startsWith("MT-LTO")) {
-//         return rows.map((r) => ({
-//             objectName: r.displayName || r.AO_OBJECT_NAME,
-//             category: r.mediaType || r.AO_CATEGORY,
-//             mediaName: r.mediaName || r.TA_BARCODE,
-//             sizeKB: r.size || r.SIZE || 0,
-//             fileName: r.fileName || r.FILE_NAME,
-//             status: r.status || r.STATUS,
-//             remarks: r.remarks || r.REMARKS,
-//         }));
-//     }
-
-//     return rows.map((r) => ({
-//         objectName: r.objectName,
-//         category: r.category,
-//         mediaName: r.mediaName || r.barcode,
-//         sizeKB: r.sizeKB || 0,
-//         fileName: r.fileName,
-//         status: r.status,
-//         remarks: r.remarks,
-//     }));
-// };
-
-// const IndexPopup = ({ data }: IndexPopupProps) => {
-//     const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
-//     const isMtType = data.mediaType?.startsWith("MT");
-//     const statusOptions = isMtType ? mtStatusOptions : ltoStatusOptions;
-//     const [selectedStatus, setSelectedStatus] = useState(
-//         isMtType ? "MIGRATION_COMPLETED" : "MIGRATION_COMPLETED"
-//     );
-//     const [pagination, setPagination] = useState<PaginationState>({
-//         pageIndex: 0,
-//         pageSize: 50,
-//     });
-
-//     const columns = useMemo<ColumnDef<ObjectItem>[]>(
-//         () => [
-//             { accessorKey: "objectName", header: "Object Name",
-//                 cell: (info: any) => (
-//                     <div title={info.getValue() as string} className="truncate max-w-[200px]">
-//                         {info.getValue()}
-//                     </div>
-//                 ),
-//              },
-//             { accessorKey: "category", header: "Category",
-//                 cell: (info: any) => (
-//                     <div title={info.getValue() as string} className="truncate max-w-[150px]">
-//                         {info.getValue()}
-//                     </div>
-//                 ),
-//              },
-//             { accessorKey: "mediaName", header: "Media Name",
-//                 cell: (info: any) => (
-//                     <div title={info.getValue() as string} className="truncate max-w-[150px]">
-//                         {info.getValue()}
-//                     </div>
-//                 ),
-//              },
-//             { accessorKey: "sizeKB", header: "Size (KB)",
-//                 cell: (info: any) => (
-//                     <div title={info.getValue() as string} className="truncate max-w-[150px]">
-//                         {info.getValue()}
-//                     </div>
-//                 ),
-//              },
-//             { accessorKey: "fileName", header: "File Name",
-//                 cell: (info: any) => (
-//                     <div title={info.getValue() as string} className="truncate max-w-[150px]">
-//                         {info.getValue()}
-//                     </div>
-//                 ),
-//              },
-//             { accessorKey: "status", header: "Status",
-//                 cell: (info: any) => (
-//                     <div title={info.getValue() as string} className="truncate max-w-[150px]">
-//                         {info.getValue()}
-//                     </div>
-//                 ),
-//              },
-//             { accessorKey: "remarks", header: "Remark",
-//                 cell: (info: any) => (
-//                     <div title={info.getValue() as string} className="truncate max-w-[150px]">
-//                         {info.getValue()}
-//                     </div>
-//                 ),
-//              },
-//         ],
-//         []
-//     );
-
-//     const [pageCursors, setPageCursors] = useState<(number | null)[]>([null]);
-//     const currentCursor = pageCursors[pagination.pageIndex] ?? null;
-
-//     const body = useMemo(() => {
-//         return {
-//             filters: {
-//                 uuid: data.UUID,
-//                 mediaType: data.mediaType,
-//                 status: selectedStatus, // send selected option to backend
-//             },
-//         };
-//     }, [data.UUID, data.mediaType, selectedStatus]);
-
-//     const { data: listDetails, isLoading } = useQuery({
-//         queryKey: ["objectDetails", pagination.pageIndex, pagination.pageSize, body, currentCursor],
-//         queryFn: async ({ signal }) => {
-//             const endpoint = `http://${ipAddress}:4000/uuids/tapeDetails`;
-//             return fetchData(endpoint, "POST", body, signal);
-//         },
-//         networkMode: "always",
-//         refetchInterval: 20000,
-//         retry: false,
-//     });
-
-//     const normalizedRows = useMemo(
-//         () => normalizeData(listDetails?.data || [], data.mediaType),
-//         [listDetails, data.mediaType]
-//     );
-
-//     const table = useReactTable({
-//         data: normalizedRows || [],
-//         columns,
-//         getCoreRowModel: getCoreRowModel(),
-//         getPaginationRowModel: getPaginationRowModel(),
-//         manualPagination: true,
-//         enableColumnResizing: true,
-//         columnResizeMode: "onChange",
-//         manualSorting: true,
-//     });
-
-
-//     return (
-//         <DialogContent className="w-[75rem] bg-[#18202b] text-white h-[550px]">
-//             <DialogHeader>
-//                 <DialogTitle className="text-white">Details</DialogTitle>
-
-//                 <DialogDescription asChild>
-//                     <div className="flex flex-col h-[450px] space-y-4">
-//                         <div className="grid grid-cols-[50px_minmax(300px,_1fr)_200px_minmax(300px,_1fr)] gap-4">
-//                             <Label className="text-gray-300">UUID:</Label>
-//                             <input
-//                                 value={data.UUID}
-//                                 readOnly
-//                                 className="bg-black text-white border border-gray-700 rounded px-3 py-2"
-//                             />
-
-//                             <Label className="text-gray-300">Total Object Count:</Label>
-//                             <input
-//                                 value={data.totalObjectCount}
-//                                 readOnly
-//                                 className="bg-black text-white border border-gray-700 rounded px-3 py-2"
-//                             />
-//                         </div>
-
-//                         {/* Status Select */}
-//                         <div className="grid grid-cols-[50px_minmax(300px,_1fr)_200px_minmax(300px,_1fr)] gap-4 items-center">
-//                             <Label className="text-gray-300">Status:</Label>
-//                             <select
-//                                 value={selectedStatus}
-//                                 onChange={(e) => {
-//                                     setSelectedStatus(e.target.value);
-//                                     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-//                                     setPageCursors([null]);
-//                                 }}
-//                                 className="bg-black text-white border border-gray-700 rounded px-3 py-2"
-//                             >
-//                                 {statusOptions.map((option) => (
-//                                     <option key={option.value} value={option.value}>
-//                                         {option.label}
-//                                     </option>
-//                                 ))}
-//                             </select>
-//                             <Label className="text-gray-300">Status Count:</Label>
-//                             <input
-//                                 value={listDetails?.totalStatusCount}
-//                                 readOnly
-//                                 className="bg-black text-white border border-gray-700 rounded px-3 py-2"
-//                             />
-//                         </div>
-
-//                         <div className="flex-1 overflow-auto border border-gray-700 rounded">
-//                             <table className="w-full text-sm">
-//                                 <thead className="bg-gray-900 sticky top-0">
-//                                     {table.getHeaderGroups().map((hg) => (
-//                                         <tr key={hg.id}>
-//                                             {hg.headers.map((header) => (
-//                                                 <th
-//                                                     key={header.id}
-//                                                     className="px-3 py-2 text-left text-gray-300"
-//                                                 >
-//                                                     {flexRender(
-//                                                         header.column.columnDef.header,
-//                                                         header.getContext()
-//                                                     )}
-//                                                 </th>
-//                                             ))}
-//                                         </tr>
-//                                     ))}
-//                                 </thead>
-
-//                                 <tbody>
-//                                     {isLoading ? (
-//                                         <tr>
-//                                             <td colSpan={6} className="text-center py-4">
-//                                                 Loading...
-//                                             </td>
-//                                         </tr>
-//                                     ) : table.getRowModel().rows.length ? (
-//                                         table.getRowModel().rows.map((row) => (
-//                                             <tr
-//                                                 key={row.id}
-//                                                 className="border-t border-gray-800 text-white odd:bg-[#24303f] even:bg-[#2d3d52]"
-//                                             >
-//                                                 {row.getVisibleCells().map((cell) => (
-//                                                     <td key={cell.id} className="px-3 py-2">
-//                                                         {flexRender(
-//                                                             cell.column.columnDef.cell,
-//                                                             cell.getContext()
-//                                                         )}
-//                                                     </td>
-//                                                 ))}
-//                                             </tr>
-//                                         ))
-//                                     ) : (
-//                                         <tr>
-//                                             <td colSpan={6} className="text-center py-4 text-gray-400">
-//                                                 No data available
-//                                             </td>
-//                                         </tr>
-//                                     )}
-//                                 </tbody>
-//                             </table>
-//                         </div>
-//                     </div>
-//                 </DialogDescription>
-//             </DialogHeader>
-//         </DialogContent>
-//     );
-// };
-
-// export default IndexPopup;
-
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
+  Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  type ColumnDef,
+} from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { fetchData } from "@/Pages/Object_Details/HandleApiCall/Apicall";
+import "react-contexify/dist/ReactContexify.css";
+import {
+  useContextMenu
+} from "react-contexify";
+import useKeyNavigationx from "@/hooks/useKeyNavigation";
+import { useSelectionRow } from "@/hooks/useSelectionRow.tsx";
+import type { RootState } from "@/Redux/Store";
+import ContextRight from "@/Pages/Object_Details/ContextRight/Index";
+const MTContextRight = lazy(() => import('@/Pages/MassTech/ContextRight/Index'));
+import { MdClose } from "react-icons/md";
+import { byteToKb } from "@/components/Column/FetchColumnDetail";
 
 
-type IndexPopupProps = {
-  data: {
-    UUID: string;
-    mediaType: string;
-    totalObjectCount: number;
-  };
+type User = {
+  UUID: string;
+  mediaType: string;
+  totalObjectCount?: number;
 };
 
-export default function IndexPopup({ data }: IndexPopupProps) {
+type StatusSummaryItem = {
+  label: string;
+  value: string;
+  count: number;
+};
+
+type TapeDetailsRow = {
+  objectName?: string;
+  displayName?: string;
+  category?: string;
+  mediaType?: string;
+  mediaName?: string;
+  barcode?: string;
+  tapeBarcode?: string;
+  sizeKB?: number;
+  fileName?: string;
+  status?: string;
+  remarks?: string;
+};
+
+type TapeDetailsResponse = {
+  data: TapeDetailsRow[];
+  selectedStatus?: string;
+  selectedCount?: number;
+  statusSummary?: StatusSummaryItem[];
+};
+
+type IndexPopupProps = {
+  data: User;
+  setOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
+  openDialog: boolean;
+};
+
+interface TDatas {
+  id: number;
+  acs: number;
+  status: string; // Correct the spelling if needed
+  barcode: string;
+}
+
+type ObjectItem = {
+  objectName: string;
+  category: string;
+  mediaName: string;
+  sizeKB: number;
+  fileName: string;
+  status: string;
+  remarks: string;
+  barcode: string;
+  id: number;
+  acs: number;
+};
+
+
+const normalizeData = (rows: any[], mediaType: string) => {
+
+  if (mediaType.startsWith("MT-LTO")) {
+    return rows.map((r) => ({
+      objectName: r.displayName || r.AO_OBJECT_NAME,
+      category: r.collectionName || r.AO_CATEGORY,
+      mediaName: r.mediaName || r.TA_BARCODE,
+      sizeKB: r.instanceSizeBytes || r.SIZE || 0,
+      fileName: r.fileName || r.FILE_NAME,
+      status: r.status || r.STATUS,
+      remarks: r.remarks || r.REMARKS,
+      barcode: r.tapeBarcode || r.TA_BARCODE,
+      id: r.id,
+      acs: r.acs,
+    }));
+  }
+
+  return rows.map((r) => ({
+    objectName: r.objectName,
+    category: r.category,
+    mediaName: r.mediaName || r.barcode,
+    sizeKB: r.sizeKB || 0,
+    fileName: r.fileName,
+    status: r.status,
+    remarks: r.remarks,
+    barcode: r.barcode,
+    id: r.id,
+    acs: r.acs,
+  }));
+};
+
+const MENU_ID = "tape-details-menu";
+
+export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPopupProps) {
   const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
   const [selectedStatus, setSelectedStatus] = useState("MIGRATION_FAILED");
+  const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
+  const reshedularSelection = useSelector((state: RootState) => state.tableDownClick.reshedularSelection)
+  const columns = useMemo<ColumnDef<ObjectItem>[]>(() => [
+    {
+      accessorKey: "objectName",
+      header: "Object Name",
+      cell: ({ row }) => (
+        <span title={row.original.objectName || "-"}>
+          {row.original.objectName || "-"}
+        </span>
+      ),
+      size: 250,
+    },
+    {
+      accessorKey: "category",
+      header: "Category",
+      cell: ({ row }) => (
+        <span title={row.original.category || "-"}>
+          {row.original.category || "-"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "sizeKB",
+      header: "size (KB)",
+      cell: ({ row }) => {
+        const rowsizeKB = row.original.sizeKB;
+        if (data?.mediaType.startsWith("LTO")) {
+          return (<span className="font-medium">{rowsizeKB || "-"}</span>);
+        }else {
+          return (<span className="font-medium">{byteToKb(rowsizeKB) || "-"}</span>);
+        }
+      },
+      size: 70,
+    },
+    {
+      accessorKey: "fileName",
+      header: "File Name",
+      cell: ({ row }) => (
+        <span title={row.original.fileName}>
+          {row.original.fileName || "-"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "remarks",
+      header: "remarks",
+      cell: ({ row }) => (
+        <span title={row.original.remarks}>
+          {row.original.remarks || "-"}
+        </span>
+      ),
+      size: 250,
+    },
+  ], []);
 
-  const body = useMemo(() => {
-    return {
+
+  useEffect(() => {
+    setSelectedStatus("MIGRATION_FAILED");
+  }, [data?.UUID, data?.mediaType]);
+
+  const body = useMemo(
+    () => ({
       filters: {
         uuid: data.UUID,
         mediaType: data.mediaType,
         status: selectedStatus,
       },
-    };
-  }, [data.UUID, data.mediaType, selectedStatus]);
+    }),
+    [data.UUID, data.mediaType, selectedStatus]
+  );
 
-  const { data: listDetails, isLoading } = useQuery({
+  const { show } = useContextMenu({ id: MENU_ID });
+
+
+
+  const { data: listDetails, isLoading, isFetching, refetch } = useQuery<TapeDetailsResponse>({
     queryKey: ["tapeDetails", body],
     queryFn: async ({ signal }) => {
       const endpoint = `http://${ipAddress}:4000/uuids/tapeDetails`;
       return fetchData(endpoint, "POST", body, signal);
     },
-    networkMode: "always",
+    enabled: !!data?.UUID && !!data?.mediaType,
     retry: false,
-    refetchInterval: 20000,
+    refetchOnWindowFocus: false,
+    placeholderData: (prev) => prev,
   });
 
-  const summary = listDetails?.statusSummary || [];
-  const selectedCount = listDetails?.selectedCount || 0;
-  const rows = listDetails?.data || [];
+  const normalizedRows = useMemo(
+    () => normalizeData(listDetails?.data || [], data.mediaType),
+    [listDetails, data.mediaType]
+  );
+
+  const summary = useMemo(() => listDetails?.statusSummary || [], [listDetails]);
+  const table = useReactTable({
+    data: normalizedRows || [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const getCardClass = (item: StatusSummaryItem, isActive: boolean) => {
+    const hasCount = Number(item.count || 0) > 0;
+    if (item.value === "DECODE_FAILED") {
+      return hasCount
+        ? "border-red-500 bg-red-500/10"
+        : "border-red-500/40 bg-[#111827]";
+    }
+    if (item.value === "PENDING") {
+      return hasCount
+        ? "border-blue-500 bg-blue-500/10"
+        : "border-blue-500/40 bg-[#111827]";
+    }
+
+    if (item.value === "MIGRATION_FAILED") {
+      return hasCount
+        ? "border-yellow-500 bg-yellow-500/10"
+        : "border-yellow-500/40 bg-[#111827]";
+    }
+
+    return isActive
+      ? "border-blue-500 bg-blue-500/10"
+      : "border-gray-700 bg-[#111827]";
+  };
+
+  const [previousSelection, setPreviousSelection] = useState<number | null>(null);
+  const [keyNavigation, setActiveCursor] = useKeyNavigationx(
+    listDetails?.data,
+    setPreviousSelection,
+    SetMultipleRowsSelection,
+    (index) => {
+      requestAnimationFrame(() => {
+        document.getElementById(`row-${index}`)?.scrollIntoView({
+          block: "center",
+          behavior: "auto",
+        });
+      });
+    }
+
+  );
+
+
+  const handleRowClick = (event: React.MouseEvent, id: number) => {
+    useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection, isLoading);
+  };
+
+
+  const getSelectedRowData = (e: React.MouseEvent, rows: any, activeRow: any) => {
+    // console.log(highlightedRows, "highlightedRows");
+    const isHighlighted = highlightedRows.includes(activeRow);//Highlight multiple rows  
+    if (isHighlighted === false) {
+      setActiveCursor(activeRow);
+      handleRowClick(e, activeRow);
+    }
+  };
+
+  const getCountClass = (item: StatusSummaryItem) => {
+    const hasCount = Number(item.count || 0) > 0;
+
+    if (!hasCount) return "text-gray-400";
+    if (item.value === "MIGRATION_FAILED") return "text-red-500";
+    if (item.value === "DECODE_FAILED") return "text-yellow-400";
+    return "text-white";
+  };
+
+
+  const Rescheduled = useMemo(() => {
+    return highlightedRows.map((index: any) => {
+      const row = table.getRowModel().rows[index]?.original as ObjectItem;
+      console.log(row, "row");
+      return {
+        id: row?.id,
+        acs: row?.acs,
+        status: row?.status,
+        barcode: row?.barcode,
+      };
+    });
+  }, [highlightedRows, table]);
+
 
   return (
-    <DialogContent className="max-w-4xl bg-[#18202b] text-white">
-      <DialogHeader>
-        <DialogTitle className="text-white">Tape Details</DialogTitle>
-        <DialogDescription asChild>
-          <div className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
-                <div className="text-sm text-gray-400">UUID</div>
-                <div className="mt-1 text-xl break-all font-medium text-white">{data?.UUID}</div>
+    <>
+      <DialogContent className="max-w-7xl bg-[#18202b] text-white"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={() => setOpenDialog(false)}
+        onClick={() => {
+          setOpenDialog(true)
+          setTimeout(() => (document.body.style.pointerEvents = ""), 0)
+        }}
+      >
+        <DialogClose asChild={true}>
+          <MdClose className="flex flex-row justify-self-end" onClick={(e) => { e.stopPropagation(); setOpenDialog(false) }} />
+        </DialogClose>
+        <DialogHeader>
+          <DialogTitle className="text-white">Tape Details</DialogTitle>
+
+          <DialogDescription asChild>
+            <div className="space-y-5 z-30">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
+                  <div className="text-sm text-gray-400">UUID</div>
+                  <div className="mt-1 break-all font-medium text-white">{data.UUID}</div>
+                </div>
+
+                <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
+                  <div className="text-sm text-gray-400">Media Type</div>
+                  <div className="mt-1 font-medium text-white">{data.mediaType}</div>
+                </div>
+
+                <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
+                  <div className="text-sm text-gray-400">Total Object Count</div>
+                  <div className="mt-1 text-2xl font-bold text-white">{data?.totalObjectCount}</div>
+                </div>
               </div>
 
-              <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
-                <div className="text-sm text-gray-400">Media Type</div>
-                <div className="mt-1 text-xl font-medium text-white">{data?.mediaType}</div>
-              </div>
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold text-gray-300">Status Summary</div>
+                  {isFetching && <div className="text-xs text-gray-400">Updating...</div>}
+                </div>
 
-              <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
-                <div className="text-sm text-gray-400">Total Object Count</div>
-                <div className="mt-1 text-xl font-bold text-white">{data?.totalObjectCount}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {summary.map((item) => {
+                    const isActive = item.value === selectedStatus;
+
+                    return (
+                      <button
+                        key={item.value}
+                        type="button"
+                        onClick={() => setSelectedStatus(item.value)}
+                        className={`rounded-xl border p-4 text-left transition-colors ${getCardClass(item, isActive)}`}
+                      >
+                        <div className="text-xs text-gray-300">{item.label}</div>
+                        <div className={`mt-2 text-lg font-bold ${getCountClass(item)}`}>
+                          {item.count}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="rounded-lg border border-gray-700 overflow-x-auto h-[15rem]">
+                  <table className="w-full text-sm">
+                    <thead className="th select-none text-white sticky top-0 bg-[#2d3d52] z-50">
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <tr key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              className="px-4 py-3 text-left"
+                              style={{
+                                position: "relative",
+                                width: header.getSize(),
+                                fontSize: "clamp(0.8rem, 1.5vw, 1rem)",
+                              }}
+                            >
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(header.column.columnDef.header, header.getContext())}
+                            </th>
+                          ))}
+                        </tr>
+                      ))}
+                    </thead>
+
+                    <tbody>
+                      {isLoading ? (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                            Loading...
+                          </td>
+                        </tr>
+                      ) : table.getRowModel().rows.length ? (
+                        table.getRowModel().rows.map((row) => {
+                          const isSelected = highlightedRows.includes(row.index);
+                          const isCursor = keyNavigation === row.index && !isLoading;
+
+                          return (
+                            <tr
+                              key={row.index}
+                              id={`row-${row.index}`}
+                              className={[
+                                "font-medium h-7",
+                                isSelected
+                                  ? "bg-[#e0cfb0] text-black"
+                                  : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white",
+                                isCursor && !isSelected
+                                  ? "!bg-[#e0cfb0] !text-black outline outline-1 outline-[#e0cfb0]"
+                                  : "",
+                              ].join(" ")}
+                              onClick={(e) => {
+                                const isRemoving = e.ctrlKey && highlightedRows.includes(row.index);
+                                handleRowClick(e, row.index);
+
+                                if (isRemoving) {
+                                  const next = highlightedRows.filter((x) => x !== row.index).at(-1);
+                                  setActiveCursor(next ?? -1);
+                                } else {
+                                  setActiveCursor(row.index);
+                                }
+                              }}
+                              onContextMenu={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                getSelectedRowData(e, table.getRowModel().rows, row.index);
+                                setActiveCursor(row.index);
+
+                                show({
+                                  event: e,
+                                });
+                              }}
+                            >
+                              {row.getVisibleCells().map((cell) => (
+                                <td key={cell.id} style={{ width: cell.column.getSize() }} className="px-1">
+                                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </td>
+                              ))}
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                            No data available
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
+          </DialogDescription>
+        </DialogHeader>
+      </DialogContent>
+      {data.mediaType.startsWith("LTO") && highlightedRows.length <= reshedularSelection ? (
+        <ContextRight
+          MENU_ID={MENU_ID}
+          Rescheduled={Rescheduled}
+          refetch={refetch}
+          SetMultipleRowsSelection={SetMultipleRowsSelection}
+        />
+      ) : <Suspense>
+        <MTContextRight
+          MENU_ID={MENU_ID}
+          Rescheduled={Rescheduled}
+          refetch={refetch}
+          SetMultipleRowsSelection={SetMultipleRowsSelection}
+        />
+      </Suspense>}
 
-            <div>
-              <div className="mb-2 text-sm font-semibold text-gray-300">Status Summary</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {summary.map((item: any) => {
-                  const isActive = item.value === selectedStatus;
-                  const hasCount = Number(item.count || 0) > 0;
-
-                  const getCardClass = () => {
-                    
-                    if (item.value === "DECODE_FAILED") {
-                      return hasCount
-                        ? "border-red-500 bg-red-500/10"
-                        : "border-red-500/40 bg-[#111827]";
-                    }
-                    if (item.value === "PENDING") {
-                      return hasCount
-                        ? "border-blue-500 bg-blue-500/10"
-                        : "border-blue-500/40 bg-[#111827]";
-                    }
-
-                    if (item.value === "MIGRATION_FAILED") {
-                      return hasCount
-                        ? "border-yellow-500 bg-yellow-500/10"
-                        : "border-yellow-500/40 bg-[#111827]";
-                    }
-
-                    return isActive
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-gray-700 bg-[#111827]";
-
-                  };
-
-                  const getCountClass = () => {
-                    if (!hasCount) return "text-gray-400";
-                    if (item.value === "DECODE_FAILED") return "text-red-500";
-                    if (item.value === "MIGRATION_FAILED") return "text-yellow-400";
-                    if (item.value === "PENDING") return "text-blue-400";
-                    return "text-white";
-                  };
-
-                  return (
-                    <button
-                      key={item.value}
-                      type="button"
-                      // onClick={() => setSelectedStatus(item.value)}
-                      className={`rounded-xl border p-4 text-left transition ${getCardClass()}`}
-                    >
-                      <div className="text-xs text-gray-300">{item.label}</div>
-                      <div className={`mt-2 text-lg font-bold ${getCountClass()}`}>
-                        {item.count}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div> 
-          </div>
-        </DialogDescription>
-      </DialogHeader>
-    </DialogContent>
+    </>
   );
 }

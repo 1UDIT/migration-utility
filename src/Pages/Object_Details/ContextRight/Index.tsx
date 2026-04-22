@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import {
     Menu,
     Item,
+    contextMenu,
 } from "react-contexify";
 
 import "react-contexify/dist/ReactContexify.css";
@@ -17,12 +18,10 @@ interface props {
     MENU_ID: any
     Rescheduled: any,
     refetch: any,
-    setRescheduled: any,
-    setActiveCursor: any, SetMultipleRowsSelection: any, displayMenu: any
+    SetMultipleRowsSelection: any,
 }
 
-export default function ContextRight({ MENU_ID, Rescheduled, refetch, setRescheduled, setActiveCursor, SetMultipleRowsSelection, displayMenu }: props) {
-    const queryClient = useQueryClient();
+export default function ContextRight({ MENU_ID, Rescheduled, refetch, SetMultipleRowsSelection }: props) { 
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
 
     const runRuleProcesApi = useCallback(async (e: any) => {
@@ -38,15 +37,14 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
             toast(
                 `Your Request Rescheduled`
             )
-            queryClient.invalidateQueries({ queryKey: ["uuidData"] });
+            refetch();
             SetMultipleRowsSelection([])
+            contextMenu.hideAll();
         }).catch(error => {
             console.log("Error In Post Data", error);
         });
     }, [Rescheduled])
-
-    // migration_failed = retry archive make it migration_complete 
-    // decoded_failed = reshedular make it Decoded_complete     in right click
+ 
 
     const isRescheduleDisabled =
         !Rescheduled?.length ||
@@ -66,8 +64,11 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
 
     return (
         <Menu id={MENU_ID} className="font-medium">
-            <Item onClick={(e) => { runRuleProcesApi(e) }}
-                disabled={isRescheduleDisabled}
+            <Item onClick={(e) => {
+                runRuleProcesApi(e); 
+            }}
+
+                disabled={isRescheduleDisabled} className="z-50"
             >
                 <MdRestore className="mr-2" />     Rescheduled
             </Item>

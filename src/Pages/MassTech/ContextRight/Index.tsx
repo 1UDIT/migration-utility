@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import {
     Menu,
     Item,
+    contextMenu,
 } from "react-contexify";
 
 import "react-contexify/dist/ReactContexify.css";
@@ -17,11 +18,10 @@ interface props {
     MENU_ID: any
     Rescheduled: any,
     refetch: any,
-    setRescheduled: any,
-    setActiveCursor: any, SetMultipleRowsSelection: any, displayMenu: any
+    SetMultipleRowsSelection: any,
 }
 
-export default function ContextRight({ MENU_ID, Rescheduled, refetch, setRescheduled, setActiveCursor, SetMultipleRowsSelection, displayMenu }: props) {
+export default function ContextRight({ MENU_ID, Rescheduled, refetch, SetMultipleRowsSelection, }: props) {
     const queryClient = useQueryClient();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
 
@@ -38,8 +38,9 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
             toast(
                 `Your Request Rescheduled`
             )
-            queryClient.invalidateQueries({ queryKey: ["uuidData"] });
-            SetMultipleRowsSelection([])
+            refetch();
+            SetMultipleRowsSelection([]);
+            contextMenu.hideAll();
         }).catch(error => {
             console.log("Error In Post Data", error);
         });
