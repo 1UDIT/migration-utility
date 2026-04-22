@@ -43,6 +43,13 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, SetMultipl
             contextMenu.hideAll();
         }).catch(error => {
             console.log("Error In Post Data", error);
+            toast.error("Error In Data", {
+                style: {
+                    background: "#ef4444", // Tailwind red-500
+                    color: "#fff",
+                },
+            });
+            contextMenu.hideAll();
         });
     }, [Rescheduled])
 

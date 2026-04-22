@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import {
     Menu,
     Item,
+    contextMenu,
 } from "react-contexify";
 
 import "react-contexify/dist/ReactContexify.css";
@@ -45,9 +46,17 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
                 `Your Request Rescheduled`
             )
             queryClient.invalidateQueries({ queryKey: ["uuidData"] });
-            SetMultipleRowsSelection([])
+            SetMultipleRowsSelection([]);
+            contextMenu.hideAll();
         }).catch(error => {
             console.log("Error In Post Data", error);
+            toast.error("Error In Data", {
+                style: {
+                    background: "#ef4444", // Tailwind red-500
+                    color: "#fff",
+                },
+            });
+            contextMenu.hideAll();
         });
     }, [Rescheduled])
 
@@ -70,9 +79,17 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
                 toast(`Online status updated`);
                 queryClient.invalidateQueries({ queryKey: ["uuidData"] });
                 SetMultipleRowsSelection([]);
+                contextMenu.hideAll();
             })
             .catch(error => {
                 console.log("Error In Post Data", error);
+                toast.error("Error In Data", {
+                    style: {
+                        background: "#ef4444", // Tailwind red-500
+                        color: "#fff",
+                    },
+                });
+                contextMenu.hideAll();
             });
     }, [Rescheduled]);
 

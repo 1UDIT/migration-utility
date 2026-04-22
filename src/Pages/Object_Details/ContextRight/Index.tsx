@@ -21,7 +21,7 @@ interface props {
     SetMultipleRowsSelection: any,
 }
 
-export default function ContextRight({ MENU_ID, Rescheduled, refetch, SetMultipleRowsSelection }: props) { 
+export default function ContextRight({ MENU_ID, Rescheduled, refetch, SetMultipleRowsSelection }: props) {
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
 
     const runRuleProcesApi = useCallback(async (e: any) => {
@@ -42,9 +42,16 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, SetMultipl
             contextMenu.hideAll();
         }).catch(error => {
             console.log("Error In Post Data", error);
+            toast.error("Error In Data", {
+                style: {
+                    background: "#ef4444", // Tailwind red-500
+                    color: "#fff",
+                },
+            });
+            contextMenu.hideAll();
         });
     }, [Rescheduled])
- 
+
 
     const isRescheduleDisabled =
         !Rescheduled?.length ||
@@ -65,7 +72,7 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, SetMultipl
     return (
         <Menu id={MENU_ID} className="font-medium">
             <Item onClick={(e) => {
-                runRuleProcesApi(e); 
+                runRuleProcesApi(e);
             }}
 
                 disabled={isRescheduleDisabled} className="z-50"

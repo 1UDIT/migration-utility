@@ -13,6 +13,7 @@ import {
   getCoreRowModel,
   flexRender,
   type ColumnDef,
+  type SortingState,
 } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
@@ -28,7 +29,7 @@ import ContextRight from "@/Pages/Object_Details/ContextRight/Index";
 const MTContextRight = lazy(() => import('@/Pages/MassTech/ContextRight/Index'));
 import { MdClose } from "react-icons/md";
 import { byteToKb } from "@/components/Column/FetchColumnDetail";
-
+import { FaSortDown, FaSortUp } from 'react-icons/fa';
 
 type User = {
   UUID: string;
@@ -128,6 +129,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
   const [selectedStatus, setSelectedStatus] = useState("MIGRATION_FAILED");
   const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
   const reshedularSelection = useSelector((state: RootState) => state.tableDownClick.reshedularSelection)
+  const [sorting, setSorting] = useState<SortingState>([{id: "remarks", desc: true}]);
   const columns = useMemo<ColumnDef<ObjectItem>[]>(() => [
     {
       accessorKey: "objectName",
@@ -155,7 +157,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
         const rowsizeKB = row.original.sizeKB;
         if (data?.mediaType.startsWith("LTO")) {
           return (<span className="font-medium">{rowsizeKB || "-"}</span>);
-        }else {
+        } else {
           return (<span className="font-medium">{byteToKb(rowsizeKB) || "-"}</span>);
         }
       },
@@ -194,8 +196,9 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
         mediaType: data.mediaType,
         status: selectedStatus,
       },
+      sorting,
     }),
-    [data.UUID, data.mediaType, selectedStatus]
+    [data.UUID, data.mediaType, selectedStatus, sorting]
   );
 
   const { show } = useContextMenu({ id: MENU_ID });
@@ -224,6 +227,11 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
     data: normalizedRows || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
+    onSortingChange: setSorting,
+    state: {
+      sorting,
+    },
+    manualSorting: true,
   });
 
   const getCardClass = (item: StatusSummaryItem, isActive: boolean) => {
@@ -371,22 +379,42 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
                   <table className="w-full text-sm">
                     <thead className="th select-none text-white sticky top-0 bg-[#2d3d52] z-50">
                       {table.getHeaderGroups().map((headerGroup) => (
-                        <tr key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <th
-                              key={header.id}
-                              className="px-4 py-3 text-left"
-                              style={{
-                                position: "relative",
-                                width: header.getSize(),
-                                fontSize: "clamp(0.8rem, 1.5vw, 1rem)",
-                              }}
-                            >
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(header.column.columnDef.header, header.getContext())}
-                            </th>
-                          ))}
+                        <tr>
+                          {headerGroup.headers.map(header => {
+                            return (
+                              <th
+                                key={header.id}
+                                colSpan={header.colSpan}
+                                style={{ position: 'relative', width: header.getSize(), fontSize: "clamp(0.8rem, 1.5vw, 1rem)" }}
+                                className="th select-none px-1.5 text-white sticky top-0 bg-[#2d3d52] drop-shadow-md"
+                              >
+                                <div className="flex justify-between items-center w-full">
+                                  <span
+                                    className={`flex items-center hover:border-r hover:border-[#414954] ${header.column.getCanFilter() ? 'w-[100%]' : 'w-[100%]'}`}
+                                    onClick={header.column.getToggleSortingHandler()}
+                                  >
+                                    <span className='w-[70%]'>     {flexRender(header.column.columnDef.header, header.getContext())}</span>
+                                    <span className="pt-1 w-[30%] flex justify-end ">
+                                      {{
+                                        asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
+                                        desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
+                                      }[header.column.getIsSorted() as string] ?? null}
+                                    </span>
+                                  </span>                                   
+                                </div>
+
+                                {header.column.getCanResize() && (
+                                  <div
+                                    onDoubleClick={() => header.column.resetSize()}
+                                    onMouseDown={header.getResizeHandler()}
+                                    onTouchStart={header.getResizeHandler()}
+                                    className={`resizer ${header.column.getIsResizing() ? 'isResizing' : ''
+                                      }`}
+                                  ></div>
+                                )}
+                              </th>
+                            )
+                          })}
                         </tr>
                       ))}
                     </thead>
@@ -469,14 +497,17 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
           refetch={refetch}
           SetMultipleRowsSelection={SetMultipleRowsSelection}
         />
-      ) : <Suspense>
-        <MTContextRight
-          MENU_ID={MENU_ID}
-          Rescheduled={Rescheduled}
-          refetch={refetch}
-          SetMultipleRowsSelection={SetMultipleRowsSelection}
-        />
-      </Suspense>}
+      ) : null
+      }
+      {data.mediaType.startsWith("MT") && highlightedRows.length <= reshedularSelection ? (
+        <Suspense>
+          <MTContextRight
+            MENU_ID={MENU_ID}
+            Rescheduled={Rescheduled}
+            refetch={refetch}
+            SetMultipleRowsSelection={SetMultipleRowsSelection}
+          /></Suspense>) : null
+      }
 
     </>
   );
