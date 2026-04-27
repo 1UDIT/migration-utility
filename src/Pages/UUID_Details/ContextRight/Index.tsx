@@ -96,6 +96,7 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
     const ALLOWED_RETRY_STATUSES = [
         "FAILED",
         "PARTIAL",
+        "PROCESSED"
     ];
 
 

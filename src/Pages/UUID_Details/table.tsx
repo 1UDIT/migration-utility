@@ -646,10 +646,10 @@ const Tabledata = () => {
                                     }}
                                     onDoubleClick={() => {
                                         const data = row.original as User;
-                                        if (data.isOnline === 1) {
+                                        // if (data.isOnline === 1) {
                                             setSelectedRow(data);
                                             setOpenDialog(true);
-                                        }
+                                        // }
                                     }}
                                     onContextMenu={(e) => {
                                         displayMenu(e);

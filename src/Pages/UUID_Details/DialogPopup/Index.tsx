@@ -70,13 +70,6 @@ type IndexPopupProps = {
   openDialog: boolean;
 };
 
-interface TDatas {
-  id: number;
-  acs: number;
-  status: string; // Correct the spelling if needed
-  barcode: string;
-}
-
 type ObjectItem = {
   objectName: string;
   category: string;
@@ -192,13 +185,13 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
   const body = useMemo(
     () => ({
       filters: {
-        uuid: data.UUID,
-        mediaType: data.mediaType,
+        uuid: data?.UUID,
+        mediaType: data?.mediaType,
         status: selectedStatus,
       },
       sorting,
     }),
-    [data.UUID, data.mediaType, selectedStatus, sorting]
+    [data?.UUID, data?.mediaType, selectedStatus, sorting]
   );
 
   const { show } = useContextMenu({ id: MENU_ID });
