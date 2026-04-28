@@ -179,7 +179,7 @@
                 ],
                 "isMulti": false
             }
-        },        
+        },
         {
             "accessorKey": "priority",
             "header": "Priority",
@@ -372,7 +372,28 @@
             "enableSorting": false
         }
     ],
-    "Object_column": [
+    "Object_column": [        
+        {
+            "accessorKey": "matchChecksum",
+            "header": "Match Checksum",
+            "size": 115,
+            "minSize": 70,
+            "textAlign": "text-right",
+            "enableResizing": false,"meta": {
+                "filterVariant": "select",
+                "selectOptions": [
+                    {
+                        "label": "no-match",
+                        "value": "0"
+                    },
+                    {
+                        "label": "Match",
+                        "value": "1"
+                    }
+                ],
+                "isMulti": false
+            }
+        },
         {
             "accessorKey": "objectName",
             "textAlign": "text-left",
@@ -567,7 +588,28 @@
             "enableSorting": false
         }
     ],
-    "Masstech_column": [
+    "Masstech_column": [        
+        {
+            "accessorKey": "matchChecksum",
+            "header": "Match Checksum",
+            "size": 115,
+            "minSize": 70,
+            "textAlign": "text-right",
+            "enableResizing": false,"meta": {
+                "filterVariant": "select",
+                "selectOptions": [
+                    {
+                        "label": "no-match",
+                        "value": "0"
+                    },
+                    {
+                        "label": "Match",
+                        "value": "1"
+                    }
+                ],
+                "isMulti": false
+            }
+        },
         {
             "accessorKey": "id",
             "textAlign": "text-left",
@@ -827,8 +869,8 @@
             "size": "90",
             "minSize": "50",
             "enableResizing": "true",
-            "textAlign": "text-center"              
-        }, 
+            "textAlign": "text-center"
+        },
         {
             "accessorKey": "lastupdatedDate",
             "header": "Last Updated",
@@ -837,7 +879,7 @@
             "minSize": 130,
             "textAlign": "text-left",
             "enableColumnFilter": false
-        }         
+        }
     ],
     "ReportGenerate": [
         {
@@ -960,6 +1002,6 @@
         "Masstech_Tape_completed",
         "MassTech_Object_Completed",
         "Tape_details",
-        "Diva_Tape_completed" 
+        "Diva_Tape_completed"
     ]
 }

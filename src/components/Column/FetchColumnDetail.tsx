@@ -158,31 +158,21 @@ const FetchColumnDetail = () => {
                 </div>
             );
         }
-        // else if (header === "warningColor") {
-        //     const warning = props.getValue();
+        else if (header === "matchChecksum") {
+            const isOnline = props.getValue() === 1;
 
-        //     const getColorClass = () => {
-        //         if (warning === "red") return "text-red-500";
-        //         if (warning === "yellow") return "text-yellow-400";
-        //         return "text-gray-400"; // default (important)
-        //     };
-
-        //     const getTooltip = () => {
-        //         if (warning === "red") return "Migration Failed";
-        //         if (warning === "yellow") return "Decode Failed";
-        //         return "No Issues";
-        //     };
-
-        //     return (
-        //         <div className="flex items-center justify-center">
-        //             <FaCircle
-        //                 className={`text-xs ${getColorClass()}`}
-        //                 title={getTooltip()} // 👈 tooltip on hover
-        //             />
-        //         </div>
-        //     );
-        // }
-
+            return (
+                <div className="flex items-center justify-center w-full h-full">
+                    <FaCircle
+                        className={
+                            isOnline
+                                ? "text-sm text-green-500"
+                                : "text-sm text-red-500"
+                        }
+                    />
+                </div>
+            );
+        }
         else if (header === "health") {
             const lastUpdate = new Date(props.row.original.lastupdatedDate).getTime();
             const now = Date.now();
