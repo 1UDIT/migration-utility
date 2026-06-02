@@ -25,4 +25,8 @@ export type RunningInstance = {
   sizeTransferPreviousTape: number | null;
   previousTapeThroughput: number | null; // DECIMAL(10,2)
   totalFiles:number;
+
+  driveRemainingSize: number | null; // New field for drive remaining size
+  driveTotalSize: string | null; // New field for total space
+  driveLetter: string | null; // New field for drive letter
 };

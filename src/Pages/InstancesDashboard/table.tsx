@@ -7,49 +7,126 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
-import type { RunningInstance } from "./types.ts";
-import { fetchData } from "../Object_Details/HandleApiCall/Apicall.tsx";
 import { useSelector } from "react-redux";
+import { AlertTriangle, CheckCircle2, Server } from "lucide-react";
+import { IoMdCloseCircleOutline } from "react-icons/io";
+import { FaSortDown, FaSortUp } from "react-icons/fa";
+
 import type { RootState } from "@/Redux/Store.tsx";
+import type { RunningInstance } from "./types.ts";
+
+import { fetchData } from "../Object_Details/HandleApiCall/Apicall.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import useKeyNavigationx from "@/hooks/useKeyNavigation.tsx";
 import { useSelectionRow } from "@/hooks/useSelectionRow.tsx.tsx";
-import { IoMdCloseCircleOutline } from "react-icons/io";
-import { FaSortDown, FaSortUp } from 'react-icons/fa';
-import FetchColumnDetail, { bytesToGB, msToHuman, safe } from "@/components/Column/FetchColumnDetail.tsx";
+import FetchColumnDetail, {
+  bytesToGB,
+  msToHuman,
+  safe,
+} from "@/components/Column/FetchColumnDetail.tsx";
+import { KpiCard } from "@/components/ui/KpiCard.tsx";
+import { InfoRow } from "@/components/InfoRow.tsx";
 
-// ---------- component ----------
+type InfoRowStatus = "normal" | "Unknown" | "warning" | "critical" | "success";
+type KpiStatus = "healthy" | "warning" | "critical" | "info";
+
+const KB_IN_TB = 1024 * 1024 * 1024;
+
+const toNumber = (value: unknown): number => {
+  if (value === null || value === undefined || value === "") return 0;
+
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+};
+
+const kbToTb = (kb: number): number => {
+  return kb / KB_IN_TB;
+};
+
+const formatKbToTb = (value: unknown): string => {
+  const kb = toNumber(value);
+  if (kb <= 0) return "0.00 TB";
+
+  return `${kbToTb(kb).toFixed(2)} TB`;
+};
+
+const getPercent = (value: number, total: number): number => {
+  if (total <= 0) return 0;
+
+  return Number(((value / total) * 100).toFixed(2));
+};
+
+
+const getStorageStatusByUsedPercent = (
+  usedPercent: number
+): InfoRowStatus => {
+  if (usedPercent <= 0) return "normal";
+  if (usedPercent > 70) return "critical";
+  if (usedPercent > 50) return "warning";
+
+  return "success";
+};
+
+const getKpiStatusByUsedPercent = (usedPercent: number): KpiStatus => {
+  if (usedPercent >= 70) return "critical";
+  if (usedPercent >= 50) return "warning";
+  return "healthy";
+};
+
+const getStorageStatusTextByUsedPercent = (usedPercent: number): string => {
+  if (usedPercent <= 0) return "Unknown";
+  if (usedPercent > 70) return "Critical";
+  if (usedPercent > 50) return "Warning";
+
+  return "Healthy";
+};
+
+
+
 export default function RunningInstancesDashboard() {
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState<"ALL" | "Running" | "Stale">("ALL");
+  const [status, setStatus] = useState<
+    "ALL" | "Running" | "NotActive" | "Stale"
+  >("ALL");
 
   const [selected, setSelected] = useState<RunningInstance | null>(null);
+
   const [sorting, setSorting] = useState<SortingState>([
     { id: "ip", desc: false },
   ]);
-  const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
+
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 50,
   });
+
   const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
   const [Filter, setFilter] = useState<any>();
+  const [previousSelection, setPreviousSelection] = useState<number | null>(
+    null
+  );
+
+  const ipAddress = useSelector(
+    (state: RootState) => state.tableDownClick.ipAddressStore
+  );
+
+  const nonActiveInstance = useSelector(
+    (state: RootState) => state.tableDownClick.nonActiveInstance
+  );
+
   const { ColumnInstance } = FetchColumnDetail();
-  const nonActiveInstance = useSelector((state: RootState) => state.tableDownClick.nonActiveInstance)
 
   const body = useMemo(() => {
-    const { startDate, ...rest } = (Filter ?? {});
+    const { startDate, ...rest } = Filter ?? {};
 
     const filters: any = {
       ...rest,
     };
 
-    // add search only if text exists
     if (q.trim() !== "") {
       filters.q = q.trim();
     }
 
-    // add status only if not ALL
     if (status !== "ALL") {
       filters.status = status;
     }
@@ -57,77 +134,144 @@ export default function RunningInstancesDashboard() {
     return {
       filters,
       sorting,
-      nonActiveInstance
+      nonActiveInstance,
     };
   }, [Filter, sorting, status, q, nonActiveInstance]);
 
-
   const { data, isLoading, refetch, isFetched } = useQuery({
-    queryKey: ['running_instances', pagination, body, sorting, nonActiveInstance],
+    queryKey: [
+      "running_instances",
+      pagination,
+      body,
+      sorting,
+      nonActiveInstance,
+    ],
     queryFn: async ({ signal }) => {
-      const endpoint = `http://${ipAddress}:4000/Instance?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+      const endpoint = `http://${ipAddress}:4000/Instance?page=${pagination.pageIndex + 1
+        }&limit=${pagination.pageSize}`;
+
       return fetchData(endpoint, "POST", body, signal);
     },
-    networkMode: 'always',
+    networkMode: "always",
     refetchInterval: 15000,
     retry: false,
   });
 
-  const tableData = useMemo(() =>
-    (isLoading === true ? Array(10).fill({}) : data?.data),
-    [isLoading, data]
-  );
+  const tableData = useMemo(() => {
+    if (isLoading) return Array(10).fill({});
 
-  // KPI calculations
-  const kpi = useMemo(() => {
-    const active = data?.activeInstance || 0;
-    const NotActive = data?.notActiveInstance || 0;
+    return Array.isArray(data?.data) ? data.data : [];
+  }, [isLoading, data]);
+
+  const storage = useMemo(() => {
+    const rows = Array.isArray(data?.data) ? data.data : [];
+
+    const totalKb = rows.reduce((sum: number, row: any) => {
+      return sum + toNumber(row.driveTotalSize);
+    }, 0);
+
+    const freeKb = rows.reduce((sum: number, row: any) => {
+      return sum + toNumber(row.driveRemainingSize);
+    }, 0);
+
+    const usedKb = Math.max(totalKb - freeKb, 0);
+
+    const freePercent = getPercent(freeKb, totalKb);
+    const usedPercent = getPercent(usedKb, totalKb);
+
+    const status = getKpiStatusByUsedPercent(usedPercent);
 
     return {
-      active,
-      NotActive
+      totalKb,
+      freeKb,
+      usedKb,
+      totalSpace: formatKbToTb(totalKb),
+      freeSpace: formatKbToTb(freeKb),
+      usedSpace: formatKbToTb(usedKb),
+      freePercent,
+      usedPercent,
+      status,
+      statusText: getStorageStatusTextByUsedPercent(usedPercent),
     };
   }, [data]);
 
-  const tableColumns = useMemo(
-    () =>
-      isLoading === true
-        ? ColumnInstance.map((column) => ({
-          ...column,
-          cell: () => (
-            <div className="flex flex-col space-y-3">
-              <Skeleton className="h-[20px] w-full rounded-xl mt-1" />
-            </div>
-          )
-        }))
-        : ColumnInstance,
-    [isLoading, ColumnInstance]
-  );
+  const selectedStorage = useMemo(() => {
+    const totalKb = toNumber(selected?.driveTotalSize);
+    // Your DB value is acting like USED SPACE
+    const usedKbFromDb = toNumber(selected?.driveRemainingSize);
+
+    const usedKb = Math.min(Math.max(usedKbFromDb, 0), totalKb);
+    const freeKb = Math.max(totalKb - usedKb, 0);
+
+    const freePercent = getPercent(freeKb, totalKb);
+    const usedPercent = getPercent(usedKb, totalKb);
+
+    const status = getStorageStatusByUsedPercent(usedPercent);
+
+    return {
+      totalKb,
+      freeKb,
+      usedKb,
+      totalSpace: formatKbToTb(totalKb),
+      freeSpace: formatKbToTb(freeKb),
+      usedSpace: formatKbToTb(usedKb),
+      freePercent,
+      usedPercent,
+      status,
+      statusText: getStorageStatusTextByUsedPercent(usedPercent),
+    };
+  }, [selected]);
+
+  const kpi = useMemo(() => {
+    return {
+      active: data?.activeInstance || 0,
+      NotActive: data?.notActiveInstance || 0,
+    };
+  }, [data]);
+
+  const tableColumns = useMemo(() => {
+    if (!isLoading) return ColumnInstance;
+
+    return ColumnInstance.map((column) => ({
+      ...column,
+      cell: () => (
+        <div className="flex flex-col space-y-3">
+          <Skeleton className="mt-1 h-[20px] w-full rounded-xl" />
+        </div>
+      ),
+    }));
+  }, [isLoading, ColumnInstance]);
+
+  const getAgeSeconds = (dateValue: unknown): number => {
+    if (!dateValue) return Number.MAX_SAFE_INTEGER;
+
+    const time = new Date(String(dateValue)).getTime();
+
+    if (Number.isNaN(time)) return Number.MAX_SAFE_INTEGER;
+
+    return (Date.now() - time) / 1000;
+  };
 
   const borderColor = useMemo(() => {
     if (!selected?.lastupdatedDate) return "border-slate-500";
 
-    const diffHours =
-      (Date.now() - new Date(selected.lastupdatedDate).getTime()) /
-      (1000 * 60 * 60);
+    const diffSeconds = getAgeSeconds(selected.lastupdatedDate);
 
-    if (diffHours <= nonActiveInstance) return "border-green-500";
-    if (diffHours <= 24) return "border-red-500";
+    if (diffSeconds <= nonActiveInstance) return "border-green-500";
+    if (diffSeconds <= 86400) return "border-red-500";
+
     return "border-red-500";
   }, [selected, nonActiveInstance]);
 
   const statusColor = useMemo(() => {
     if (!selected?.lastupdatedDate) return "text-white border-gray-500";
 
-    const diffHours =
-      (Date.now() - new Date(selected.lastupdatedDate).getTime()) /
-      (1000 * 60 * 60);
+    const diffSeconds = getAgeSeconds(selected.lastupdatedDate);
 
-    if (diffHours <= 24) return "text-white";
+    if (diffSeconds <= nonActiveInstance) return "text-white";
     return "text-red-400 border-red-500";
   }, [selected, nonActiveInstance]);
 
-  const [previousSelection, setPreviousSelection] = useState<number | null>(null);
   const [keyNavigation, setActiveCursor] = useKeyNavigationx(
     tableData,
     setPreviousSelection,
@@ -140,7 +284,6 @@ export default function RunningInstancesDashboard() {
         });
       });
     }
-
   );
 
   useEffect(() => {
@@ -150,7 +293,14 @@ export default function RunningInstancesDashboard() {
   }, [isLoading, tableData, keyNavigation]);
 
   const handleRowClick = (event: React.MouseEvent, id: number) => {
-    useSelectionRow(event, id, SetMultipleRowsSelection, previousSelection, setPreviousSelection, isLoading);
+    useSelectionRow(
+      event,
+      id,
+      SetMultipleRowsSelection,
+      previousSelection,
+      setPreviousSelection,
+      isLoading
+    );
   };
 
   const table = useReactTable({
@@ -159,7 +309,7 @@ export default function RunningInstancesDashboard() {
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
     enableColumnResizing: true,
-    columnResizeMode: 'onChange',
+    columnResizeMode: "onChange",
     manualSorting: true,
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
@@ -171,13 +321,15 @@ export default function RunningInstancesDashboard() {
 
   return (
     <div className="min-h-screen p-2">
-      {/* Header */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {/* <div className="h-10 w-10 rounded-xl bg-slate-900" /> */}
           <div>
-            <div className="text-2xl font-bold text-white">Running Instances</div>
-            <div className="text-sm text-white">Live view of current tape transfers</div>
+            <div className="text-2xl font-bold text-white">
+              Running Instances
+            </div>
+            <div className="text-sm text-white">
+              Live view of current tape transfers
+            </div>
           </div>
         </div>
 
@@ -200,6 +352,7 @@ export default function RunningInstancesDashboard() {
               </button>
             )}
           </div>
+
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as any)}
@@ -207,8 +360,10 @@ export default function RunningInstancesDashboard() {
             className="rounded-xl border bg-white px-3 py-2 font-semibold"
           >
             <option value="ALL">Status: All</option>
-            <option value="Running">Running (&lt; 2h)</option>
-            <option value="NotActive">Not Active (2-24h)</option>
+            <option value="Running">
+              Running (&lt; {nonActiveInstance / 3600}h)
+            </option>
+            <option value="NotActive">Not Active</option>
             <option value="Stale">Stale (&gt; 24h)</option>
           </select>
 
@@ -218,86 +373,136 @@ export default function RunningInstancesDashboard() {
           >
             Refresh
           </button>
-
-
         </div>
       </div>
 
-      {/* KPI row */}
-      <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
-        <KpiCard title="Active Instances" value={`${kpi.active}`} />
-        <KpiCard title={`Not Active (<${nonActiveInstance/3600}h) Instances`} value={`${kpi.NotActive}`} />
+      <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          title="Active Instances"
+          value={`${kpi.active}`}
+          subtitle="Currently running"
+          status="info"
+          icon={<CheckCircle2 size={20} />}
+        />
+
+        <KpiCard
+          title={`Not Active (<${nonActiveInstance / 3600}h) Instances`}
+          value={`${kpi.NotActive}`}
+          subtitle="Recently inactive"
+          status={kpi.NotActive > 0 ? "warning" : "healthy"}
+          icon={<AlertTriangle size={20} />}
+        />
+
+        <KpiCard
+          title="Total Storage"
+          value={storage.totalSpace}
+          subtitle={`${storage.usedPercent}% used`}
+          status={storage.status}
+          icon={<Server size={20} />}
+          progress={storage.usedPercent}
+          progressLabel="Used Space"
+        />
+
+        <KpiCard
+          title="Free Space"
+          value={storage.freeSpace}
+          subtitle={`${storage.freePercent}% free remaining`}
+          status={storage.status}
+          icon={
+            storage.status === "critical" || storage.status === "warning" ? (
+              <AlertTriangle size={20} />
+            ) : (
+              <CheckCircle2 size={20} />
+            )
+          }
+          progress={storage.freePercent}
+          progressLabel="Free Space"
+        />
       </div>
 
-      {/* Content */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px] h-[75%] 2xl:w-[100%] lg:w-full ">
-        {/* Table */}
-        <div className="rounded-2xl border bg-[#24303f] overflow-auto">
+      <div className="grid h-[65%] grid-cols-1 gap-4 lg:grid-cols-[1fr_360px] lg:w-full 2xl:w-[100%]">
+        <div className="overflow-auto rounded-2xl border bg-[#24303f]">
           <div className="flex items-center justify-between border-b px-4 py-3">
             <div className="font-semibold text-white">Instances</div>
-            {/* Legend */}
-            <div className="flex items-center gap-4 text-xs text-white">
 
+            <div className="flex items-center gap-4 text-xs text-white">
               <div className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded-full bg-green-500 inline-block"></span>
+                <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
                 <span>Updated</span>
               </div>
 
               <div className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded-full bg-red-500 inline-block"></span>
-                <span> &lt; {nonActiveInstance/3600}h</span>
+                <span className="inline-block h-3 w-3 rounded-full bg-red-500" />
+                <span>&gt; {nonActiveInstance / 3600}h</span>
               </div>
 
               <div className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded-full bg-gray-500 inline-block"></span>
-                <span>&lt; 24h</span>
+                <span className="inline-block h-3 w-3 rounded-full bg-gray-500" />
+                <span>&gt; 24h</span>
               </div>
-
             </div>
+
             <div className="text-sm text-white">
-              {!isFetched ? "Updating..." : `${data?.data?.length} rows`}
+              {!isFetched ? "Updating..." : `${tableData?.length ?? 0} rows`}
             </div>
           </div>
+
           <div className="overflow-auto">
             <table className="w-full min-w-[900px] border-collapse">
-              <thead className={`th select-none text-white sticky top-0 bg-[#2d3d52]  z-50 `}>
-                {table.getHeaderGroups().map(headerGroup => (
+              <thead className="sticky top-0 z-50 bg-[#2d3d52] text-white drop-shadow-md">
+                {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
-                    {headerGroup.headers.map(header => {
-                      return (
-                        <th
-                          key={header.id}
-                          colSpan={header.colSpan}
-                          style={{ position: 'relative', width: header.getSize(), fontSize: "clamp(0.8rem, 1.5vw, 1rem)" }}
-                          className="th select-none px-1.5 text-white sticky top-0 bg-[#2d3d52] drop-shadow-md"
-                        >
-                          <div className="flex justify-between items-center w-full">
-                            <span
-                              className={`flex items-center hover:border-r hover:border-[#414954] ${header.column.getCanFilter() ? 'w-[100%]' : 'w-[100%]'}`}
-                              onClick={header.column.getToggleSortingHandler()}
-                            >
-                              <span className='w-[70%]'>     {flexRender(header.column.columnDef.header, header.getContext())}</span>
-                              <span className="pt-1 w-[30%] flex justify-end ">
-                                {{
-                                  asc: <FaSortUp className="h-4 w-4 font-bold text-red-500" />,
-                                  desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
-                                }[header.column.getIsSorted() as string] ?? null}
-                              </span>
+                    {headerGroup.headers.map((header) => (
+                      <th
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        style={{
+                          position: "relative",
+                          width: header.getSize(),
+                          fontSize: "clamp(0.8rem, 1.5vw, 1rem)",
+                        }}
+                        className="sticky top-0 bg-[#2d3d52] px-1.5 text-white drop-shadow-md"
+                      >
+                        <div className="flex w-full items-center justify-between">
+                          <span
+                            className="flex w-full items-center hover:border-r hover:border-[#414954]"
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            <span className="w-[70%]">
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
                             </span>
-                          </div>
 
-                          {header.column.getCanResize() && (
-                            <div
-                              onDoubleClick={() => header.column.resetSize()}
-                              onMouseDown={header.getResizeHandler()}
-                              onTouchStart={header.getResizeHandler()}
-                              className={`resizer ${header.column.getIsResizing() ? 'isResizing' : ''
-                                }`}
-                            ></div>
-                          )}
-                        </th>
-                      )
-                    })}
+                            <span className="flex w-[30%] justify-end pt-1">
+                              {{
+                                asc: (
+                                  <FaSortUp className="h-4 w-4 font-bold text-red-500" />
+                                ),
+                                desc: (
+                                  <FaSortDown className="h-4 w-4 font-bold text-red-500" />
+                                ),
+                              }[
+                                header.column.getIsSorted() as string
+                              ] ?? null}
+                            </span>
+                          </span>
+                        </div>
+
+                        {header.column.getCanResize() && (
+                          <div
+                            onDoubleClick={() => header.column.resetSize()}
+                            onMouseDown={header.getResizeHandler()}
+                            onTouchStart={header.getResizeHandler()}
+                            className={`resizer ${header.column.getIsResizing()
+                              ? "isResizing"
+                              : ""
+                              }`}
+                          />
+                        )}
+                      </th>
+                    ))}
                   </tr>
                 ))}
               </thead>
@@ -306,58 +511,69 @@ export default function RunningInstancesDashboard() {
                 {table.getRowModel().rows.map((row) => {
                   const isSelected = highlightedRows.includes(row.index);
                   const isCursor = keyNavigation === row.index && !isLoading;
-                  const ageHours = (d: any) => (Date.now() - new Date(d).getTime()) / 1000;
+
+                  const rowAgeSeconds = getAgeSeconds(
+                    (row.original as RunningInstance).lastupdatedDate
+                  );
+
                   return (
                     <tr
                       key={row.index}
                       id={`row-${row.index}`}
                       className={[
-                        "font-medium h-7",
-                        // ✅ age-based row background (only if not selected/cursor)
+                        "h-7 font-medium",
                         !isSelected && !isCursor
-                          ? ageHours((row.original as RunningInstance).lastupdatedDate) > 86400
-                            ? "bg-gray-500 text-white"              // 24h+ grey
-                            : ageHours((row.original as RunningInstance).lastupdatedDate) > nonActiveInstance
-                              ? "bg-[#f7545485] text-white"               // 2h+ red
-                              : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white" // normal
+                          ? rowAgeSeconds > 86400
+                            ? "bg-gray-500 text-white"
+                            : rowAgeSeconds > nonActiveInstance
+                              ? "bg-[#f7545485] text-white"
+                              : "odd:bg-[#24303f] even:bg-[#2d3d52] text-white"
                           : "",
-
-                        // ✅ selected overrides everything
                         isSelected ? "bg-[#e0cfb0] text-black" : "",
-
-                        // ✅ cursor but not selected
                         isCursor && !isSelected
                           ? "!bg-[#e0cfb0] !text-black outline outline-1 outline-[#e0cfb0]"
                           : "",
                       ].join(" ")}
                       onClick={(e) => {
-                        const isRemoving = e.ctrlKey && highlightedRows.includes(row.index);
-                        handleRowClick(e, row.index); setSelected(row.original as RunningInstance)
+                        const isRemoving =
+                          e.ctrlKey && highlightedRows.includes(row.index);
+
+                        handleRowClick(e, row.index);
+                        setSelected(row.original as RunningInstance);
+
                         if (isRemoving) {
-                          const next = highlightedRows.filter((x) => x !== row.index).at(-1);
+                          const next = highlightedRows
+                            .filter((x) => x !== row.index)
+                            .at(-1);
+
                           setActiveCursor(next ?? -1);
                         } else {
                           setActiveCursor(row.index);
                         }
                       }}
                     >
-                      {row.getVisibleCells().map(cell => {
-                        return (
-                          <td key={cell.id} style={{ width: cell.column.getSize() }} className='px-1'>
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </td>
-                        )
-                      })}
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          style={{ width: cell.column.getSize() }}
+                          className="px-1"
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      ))}
                     </tr>
-                  )
+                  );
                 })}
 
                 {tableData?.length === 0 && !isFetched && (
                   <tr>
-                    <td colSpan={ColumnInstance.length} className="px-4 py-10 text-center text-slate-500">
+                    <td
+                      colSpan={ColumnInstance.length}
+                      className="px-4 py-10 text-center text-slate-500"
+                    >
                       No data
                     </td>
                   </tr>
@@ -366,14 +582,19 @@ export default function RunningInstancesDashboard() {
             </table>
           </div>
         </div>
-        {/* Right Panel */}
-        <div className={`rounded-2xl border-4 bg-[#24303f] overflow-auto ${borderColor}`}>
-          <div className={`flex items-center justify-between border-b px-4 py-3 sticky top-0 bg-[#24303f] ${borderColor}`}>
-            <div className={`font-semibold ${statusColor}`}>{selected?.instanceName ?? "Select an instance"}</div>
+
+        <div
+          className={`overflow-auto rounded-2xl border-4 bg-[#24303f] ${borderColor}`}
+        >
+          <div
+            className={`sticky top-0 flex items-center justify-between border-b bg-[#24303f] px-4 py-3 ${borderColor}`}
+          >
+            <div className={`font-semibold ${statusColor}`}>
+              {selected?.instanceName ?? "Select an instance"}
+            </div>
+
             {selected && (
-              <button
-                onClick={() => setSelected(null)}
-              >
+              <button onClick={() => setSelected(null)}>
                 <IoMdCloseCircleOutline color="#ffffff" size={25} />
               </button>
             )}
@@ -385,37 +606,112 @@ export default function RunningInstancesDashboard() {
             </div>
           ) : (
             <div className="space-y-4 p-4">
+              <Section title="Storage Info" color={statusColor}>
+                <InfoRow k="Path" v={safe(selected.ip)} />
+
+                <InfoRow
+                  k="Total Space"
+                  v={selectedStorage.totalSpace}
+                />
+
+                {/* <InfoRow
+                  k="Used Space"
+                  v={selectedStorage.usedSpace}
+                /> */}
+
+                <InfoRow
+                  k="Free Space"
+                  v={selectedStorage.freeSpace}
+                />
+
+                <InfoRow
+                  k="Status"
+                  v={selectedStorage.statusText}
+                  status={selectedStorage.status}
+                />
+
+                <InfoRow
+                  k="Storage Usage"
+                  v={`${selectedStorage.usedPercent}% Used`}
+                  status={selectedStorage.status}
+                  progress={selectedStorage.usedPercent}
+                  progressLabel="Used Space"
+                />
+              </Section>
+
               <Section title="Instance Info" color={statusColor}>
                 <InfoRow k="IP" v={safe(selected.ip)} />
                 <InfoRow k="Drive" v={safe(selected.driveNB)} />
                 <InfoRow k="TID" v={safe(selected.tlID)} />
-                <InfoRow k="Last Updated" v={new Date(selected.lastupdatedDate).toLocaleString()} />
+                <InfoRow
+                  k="Last Updated"
+                  v={
+                    selected.lastupdatedDate
+                      ? new Date(selected.lastupdatedDate).toLocaleString()
+                      : "-"
+                  }
+                />
                 <InfoRow k="Total Files" v={safe(selected.totalFiles)} />
               </Section>
 
               <Section title="File Info" color={statusColor}>
-                <InfoRow k="File Name" v={safe(selected.startedDumpingObjectName)} />
-                <InfoRow k="File Size" v={selected.startedDumpingObjectSize ? bytesToGB(selected.startedDumpingObjectSize) + " GB" : "-"} />
-                <InfoRow k="Prev Obj Throughput" v={safe(selected.previousObjectThroughput)} />
+                <InfoRow
+                  k="File Name"
+                  v={safe(selected.startedDumpingObjectName)}
+                />
+                <InfoRow
+                  k="File Size"
+                  v={
+                    selected.startedDumpingObjectSize
+                      ? `${bytesToGB(selected.startedDumpingObjectSize)} GB`
+                      : "-"
+                  }
+                />
+                <InfoRow
+                  k="Prev Obj Throughput"
+                  v={safe(selected.previousObjectThroughput)}
+                />
               </Section>
 
               <Section title="Current Tape" color={statusColor}>
                 <InfoRow k="Tape" v={safe(selected.currentTape)} />
-                <InfoRow k="Started" v={safe(selected.startTimeCurrentTape)} />
-                <InfoRow k="Transferred" v={bytesToGB(selected.sizeTransferCurrentTape) + " GB"} />
-                <InfoRow k="Duration" v={msToHuman(selected.durationCurrentTapeMS)} />
-                <InfoRow k="Throughput" v={`${safe(selected.currentTapeThroughput)} MB/s`} />
+                <InfoRow
+                  k="Started"
+                  v={safe(selected.startTimeCurrentTape)}
+                />
+                <InfoRow
+                  k="Transferred"
+                  v={`${bytesToGB(selected.sizeTransferCurrentTape)} GB`}
+                />
+                <InfoRow
+                  k="Duration"
+                  v={msToHuman(selected.durationCurrentTapeMS)}
+                />
+                <InfoRow
+                  k="Throughput"
+                  v={`${safe(selected.currentTapeThroughput)} MB/s`}
+                />
               </Section>
 
               <Section title="Previous Tape" color={statusColor}>
                 <InfoRow k="Tape" v={safe(selected.previousTape)} />
-                <InfoRow k="Started" v={safe(selected.startTimePreviousTape)} />
-                <InfoRow k="Transferred" v={bytesToGB(selected.sizeTransferPreviousTape) + " GB"} />
-                <InfoRow k="Duration" v={msToHuman(selected.durationPreviousTapeMS)} />
-                <InfoRow k="Throughput" v={`${safe(selected.previousTapeThroughput)} MB/s`} />
+                <InfoRow
+                  k="Started"
+                  v={safe(selected.startTimePreviousTape)}
+                />
+                <InfoRow
+                  k="Transferred"
+                  v={`${bytesToGB(selected.sizeTransferPreviousTape)} GB`}
+                />
+                <InfoRow
+                  k="Duration"
+                  v={msToHuman(selected.durationPreviousTapeMS)}
+                />
+                <InfoRow
+                  k="Throughput"
+                  v={`${safe(selected.previousTapeThroughput)} MB/s`}
+                />
               </Section>
-
-
             </div>
           )}
         </div>
@@ -424,31 +720,24 @@ export default function RunningInstancesDashboard() {
   );
 }
 
-// ---------- small UI components ----------
-function KpiCard({ title, value, subtitle }: { title: string; value: string; subtitle?: string }) {
+function Section({
+  title,
+  children,
+  color,
+}: {
+  title: string;
+  children: React.ReactNode;
+  color: string;
+}) {
   return (
-    <div className="rounded-2xl border bg-[#24303f] p-4">
-      <div className="text-xs font-semibold uppercase tracking-wide text-white">{title}</div>
-      <div className="mt-1 text-2xl font-bold text-white">{value}</div>
-      {subtitle ? <div className="mt-1 text-xs text-white">{subtitle}</div> : null}
-    </div>
-  );
-}
+    <div className="rounded-xl border bg-[#18212d] p-3 shadow-lg">
+      <div
+        className={`mb-2 text-sm font-semibold uppercase tracking-wide underline ${color}`}
+      >
+        {title}
+      </div>
 
-function Section({ title, children, color }: { title: string; children: React.ReactNode, color: string; }) {
-  return (
-    <div className="rounded-xl border p-3 bg-[#18212d] shadow-lg">
-      <div className={`mb-2 text-sm underline font-semibold uppercase tracking-wide ${color}`}>{title}</div>
       <div className="space-y-1 text-xs">{children}</div>
-    </div>
-  );
-}
-
-function InfoRow({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="flex items-start justify-between gap-3 text-sm">
-      <div className="text-white">{k}</div>
-      <div className="max-w-[220px] break-words text-right font-medium text-white">{v}</div>
     </div>
   );
 }

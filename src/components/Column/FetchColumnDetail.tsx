@@ -6,12 +6,49 @@ import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
 import { FaCircle, FaEdit } from "react-icons/fa";
 import CopyCell from '../ui/CopyCell';
-
+import { CheckCircle2, AlertTriangle, XCircle, HelpCircle } from "lucide-react";
+// type InfoRowStatus = "Healthy" | "warning" | "critical" | "Unknown";
 export function safe(s: any) {
     return s === null || s === undefined || s === "" ? "-" : String(s);
 }
 
 // ---------- helpers ----------
+
+const KB_IN_TB = 1024 * 1024 * 1024;
+
+const formatKbToTb = (value: unknown) => {
+    if (value === null || value === undefined || value === "") {
+        return null;
+    }
+
+
+    const kb = Number(value);
+
+    if (Number.isNaN(kb)) {
+        return null;
+    }
+
+    return kb / KB_IN_TB;
+};
+
+
+const toNumber = (value: unknown) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+};
+
+const getFreeSpaceStatus = (remainingKb: unknown) => {
+
+    console.log("formatKbToTb called with value:", remainingKb);
+    const remaining = toNumber(remainingKb);
+    if (remaining === 0) return "Unknown";
+
+    if (remaining > 70) return "critical";
+    if (remaining > 50) return "warning";
+    return "Healthy";
+};
+
+
 export function bytesToGB(bytes?: number | null) {
     if (!bytes || bytes <= 0) return "0 ";
     return (bytes / 1024 / 1024 / 1024).toFixed(0);
@@ -72,6 +109,12 @@ const FetchColumnDetail = () => {
             const meta: any = props.table.options.meta;
             const isEditing = meta?.editingUuid === uuid;
 
+            const handleFocus = (event) => {
+                // Highlights all text inside the input field
+                console.log("focus", event);
+                event.target.select();
+            };
+
             // loading rows safety
             if (!uuid) return <span className={`tableHeaderSize ${alignText}`}>-</span>;
 
@@ -101,7 +144,9 @@ const FetchColumnDetail = () => {
                         >
                             <FaEdit color="#9298fb" size={15} />
                         </button>
-                        <span className="tableHeaderSize">{value}</span>
+                        <span className="tableHeaderSize">
+                            {value}
+                        </span>
                     </div>
                 );
             }
@@ -109,8 +154,9 @@ const FetchColumnDetail = () => {
             return (
                 <div className={`flex items-center gap-2 ${alignText}`}>
                     <input
+                        onFocus={handleFocus}
                         type="number"
-                        className="w-22 h-8 px-2 py-1 border rounded bg-transparent"
+                        className="w-22 h-8 px-2 py-1 border rounded bg-transparent select-text"
                         value={meta.priorityDraft}
                         autoFocus
                         min={0}
@@ -242,6 +288,61 @@ const FetchColumnDetail = () => {
             const d = new Date(String(props.getValue()));
             return (
                 <span >{props.getValue() == 0 ? "N" : "Y"}</span>
+            );
+        }
+        else if (header === "driveRemainingSize") {
+            const remainingKb = Number(props.getValue() ?? 0);
+            const totalKb = Number(props.row.original.driveTotalSize ?? 0);
+
+            const usedKb = Math.max(totalKb - remainingKb, 0);
+
+            const usedPercent =
+                totalKb > 0 ? Number(((usedKb / totalKb) * 100).toFixed(2)) : 0;
+
+            const status =
+                totalKb <= 0
+                    ? "Unknown"
+                    : usedPercent > 70
+                        ? "critical"
+                        : usedPercent > 50
+                            ? "warning"
+                            : "Healthy";
+
+            const statusUI = {
+                Healthy: {
+                    icon: <CheckCircle2 size={16} className="text-emerald-800" />,
+                    text: "Healthy",
+                    className: "border-emerald-500/30 bg-emerald-500/60",
+                },
+                warning: {
+                    icon: <AlertTriangle size={16} className="text-yellow-700" />,
+                    text: "Warning",
+                    className: "border-yellow-700/30 bg-yellow-700/60",
+                },
+                critical: {
+                    icon: <XCircle size={16} className="text-red-900" />,
+                    text: "Critical",
+                    className: "border-red-900/40 bg-red-200/60",
+                },
+                Unknown: {
+                    icon: <HelpCircle size={16} className="text-slate-200" />,
+                    text: "Unknown",
+                    className: "border-slate-500/30 bg-slate-900/60",
+                },
+            } as const;
+
+            const ui = statusUI[status];
+
+            return (
+                <div className="flex items-center justify-start gap-2">
+                    <span
+                        title={`Used: ${usedPercent}%`}
+                        className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-bold ${ui.className}`}
+                    >
+                        {ui.icon}
+                        {ui.text}
+                    </span>
+                </div>
             );
         }
         else {

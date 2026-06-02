@@ -199,6 +199,24 @@
             "enableColumnFilter": true
         },
         {
+            "accessorKey": "insertDate",
+            "header": " Insert Date",
+            "size": "130",
+            "minSize": "90",
+            "enableResizing": "true",
+            "textAlign": "text-left",
+            "enableColumnFilter": true
+        },
+        {
+            "accessorKey": "ejectDate",
+            "header": "Eject Date",
+            "size": "130",
+            "minSize": "90",
+            "enableResizing": "true",
+            "textAlign": "text-left",
+            "enableColumnFilter": true
+        },
+        {
             "accessorKey": "migrationState",
             "header": "Migration State",
             "size": 160,
@@ -825,7 +843,7 @@
             "accessorKey": "ip",
             "header": "Ip",
             "enableResizing": false,
-            "size": 140,
+            "size": 110,
             "minSize": 30,
             "textAlign": "text-left"
         },
@@ -877,6 +895,15 @@
             "enableResizing": true,
             "size": 100,
             "minSize": 130,
+            "textAlign": "text-left",
+            "enableColumnFilter": false
+        },
+        {
+            "accessorKey": "driveRemainingSize",
+            "header": "Storage",
+            "enableResizing": true,
+            "size": 85,
+            "minSize": 20,
             "textAlign": "text-left",
             "enableColumnFilter": false
         }
