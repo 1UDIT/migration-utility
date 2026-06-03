@@ -26,9 +26,8 @@ import FetchColumnDetail, {
 } from "@/components/Column/FetchColumnDetail.tsx";
 import { KpiCard } from "@/components/ui/KpiCard.tsx";
 import { InfoRow } from "@/components/InfoRow.tsx";
-
-type InfoRowStatus = "normal" | "Unknown" | "warning" | "critical" | "success";
-type KpiStatus = "healthy" | "warning" | "critical" | "info";
+import { StorageWarningBanner } from "@/components/ui/StorageWarningBanner.tsx";
+import { GlobalStorageAlert } from "@/components/GlobalStorageAlert";
 
 const KB_IN_TB = 1024 * 1024 * 1024;
 
@@ -50,36 +49,7 @@ const formatKbToTb = (value: unknown): string => {
   return `${kbToTb(kb).toFixed(2)} TB`;
 };
 
-const getPercent = (value: number, total: number): number => {
-  if (total <= 0) return 0;
 
-  return Number(((value / total) * 100).toFixed(2));
-};
-
-
-const getStorageStatusByUsedPercent = (
-  usedPercent: number
-): InfoRowStatus => {
-  if (usedPercent <= 0) return "normal";
-  if (usedPercent > 70) return "critical";
-  if (usedPercent > 50) return "warning";
-
-  return "success";
-};
-
-const getKpiStatusByUsedPercent = (usedPercent: number): KpiStatus => {
-  if (usedPercent >= 70) return "critical";
-  if (usedPercent >= 50) return "warning";
-  return "healthy";
-};
-
-const getStorageStatusTextByUsedPercent = (usedPercent: number): string => {
-  if (usedPercent <= 0) return "Unknown";
-  if (usedPercent > 70) return "Critical";
-  if (usedPercent > 50) return "Warning";
-
-  return "Healthy";
-};
 
 
 
@@ -99,7 +69,7 @@ export default function RunningInstancesDashboard() {
     pageIndex: 0,
     pageSize: 50,
   });
-
+  const [hideStorageAlert, setHideStorageAlert] = useState(false);
   const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
   const [Filter, setFilter] = useState<any>();
   const [previousSelection, setPreviousSelection] = useState<number | null>(
@@ -138,7 +108,7 @@ export default function RunningInstancesDashboard() {
     };
   }, [Filter, sorting, status, q, nonActiveInstance]);
 
-  const { data, isLoading, refetch, isFetched } = useQuery({
+  const { data, isLoading, refetch, isFetched, dataUpdatedAt } = useQuery({
     queryKey: [
       "running_instances",
       pagination,
@@ -163,71 +133,23 @@ export default function RunningInstancesDashboard() {
     return Array.isArray(data?.data) ? data.data : [];
   }, [isLoading, data]);
 
-  const storage = useMemo(() => {
-    const rows = Array.isArray(data?.data) ? data.data : [];
-
-    const totalKb = rows.reduce((sum: number, row: any) => {
-      return sum + toNumber(row.driveTotalSize);
-    }, 0);
-
-    const freeKb = rows.reduce((sum: number, row: any) => {
-      return sum + toNumber(row.driveRemainingSize);
-    }, 0);
-
-    const usedKb = Math.max(totalKb - freeKb, 0);
-
-    const freePercent = getPercent(freeKb, totalKb);
-    const usedPercent = getPercent(usedKb, totalKb);
-
-    const status = getKpiStatusByUsedPercent(usedPercent);
-
-    return {
-      totalKb,
-      freeKb,
-      usedKb,
-      totalSpace: formatKbToTb(totalKb),
-      freeSpace: formatKbToTb(freeKb),
-      usedSpace: formatKbToTb(usedKb),
-      freePercent,
-      usedPercent,
-      status,
-      statusText: getStorageStatusTextByUsedPercent(usedPercent),
-    };
-  }, [data]);
-
-  const selectedStorage = useMemo(() => {
-    const totalKb = toNumber(selected?.driveTotalSize);
-    // Your DB value is acting like USED SPACE
-    const usedKbFromDb = toNumber(selected?.driveRemainingSize);
-
-    const usedKb = Math.min(Math.max(usedKbFromDb, 0), totalKb);
-    const freeKb = Math.max(totalKb - usedKb, 0);
-
-    const freePercent = getPercent(freeKb, totalKb);
-    const usedPercent = getPercent(usedKb, totalKb);
-
-    const status = getStorageStatusByUsedPercent(usedPercent);
-
-    return {
-      totalKb,
-      freeKb,
-      usedKb,
-      totalSpace: formatKbToTb(totalKb),
-      freeSpace: formatKbToTb(freeKb),
-      usedSpace: formatKbToTb(usedKb),
-      freePercent,
-      usedPercent,
-      status,
-      statusText: getStorageStatusTextByUsedPercent(usedPercent),
-    };
-  }, [selected]);
 
   const kpi = useMemo(() => {
     return {
       active: data?.activeInstance || 0,
       NotActive: data?.notActiveInstance || 0,
+      totalStorage: data?.totalStorage || 0,
+      usedStoragePercentage: data?.driveUsedPercent || 0,
+      storageStatus: data?.storageStatus,
+      freeStorage: data?.freeStorage || 0,
+      driveFreePercent: data?.driveFreePercent || 0
     };
   }, [data]);
+
+  useEffect(() => {
+    setHideStorageAlert(false);
+  }, [selected?.instanceName, selected?.storageStatus]);
+
 
   const tableColumns = useMemo(() => {
     if (!isLoading) return ColumnInstance;
@@ -271,6 +193,28 @@ export default function RunningInstancesDashboard() {
     if (diffSeconds <= nonActiveInstance) return "text-white";
     return "text-red-400 border-red-500";
   }, [selected, nonActiveInstance]);
+
+  const storageStatusColor = useMemo(() => {
+    const storageStatus = String(selected?.storageStatus ?? "").toLowerCase();
+
+    if (storageStatus === "critical") {
+      return "text-red-400";
+    }
+
+    if (storageStatus === "warning") {
+      return "text-yellow-400";
+    }
+
+    if (storageStatus === "healthy") {
+      return "text-green-400";
+    }
+
+    if (storageStatus === "unknown") {
+      return "text-slate-300";
+    }
+
+    return "";
+  }, [selected?.storageStatus]);
 
   const [keyNavigation, setActiveCursor] = useKeyNavigationx(
     tableData,
@@ -320,7 +264,7 @@ export default function RunningInstancesDashboard() {
   });
 
   return (
-    <div className="min-h-screen p-2">
+    <div className="h-[calc(100vh-95px)] p-2 overflow-auto">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <div>
@@ -381,7 +325,7 @@ export default function RunningInstancesDashboard() {
           title="Active Instances"
           value={`${kpi.active}`}
           subtitle="Currently running"
-          status="info"
+          status="Info"
           icon={<CheckCircle2 size={20} />}
         />
 
@@ -389,38 +333,32 @@ export default function RunningInstancesDashboard() {
           title={`Not Active (<${nonActiveInstance / 3600}h) Instances`}
           value={`${kpi.NotActive}`}
           subtitle="Recently inactive"
-          status={kpi.NotActive > 0 ? "warning" : "healthy"}
+          status={kpi.NotActive > 0 ? "Warning" : "Healthy"}
           icon={<AlertTriangle size={20} />}
         />
 
         <KpiCard
           title="Total Storage"
-          value={storage.totalSpace}
-          subtitle={`${storage.usedPercent}% used`}
-          status={storage.status}
+          value={kpi.totalStorage ? `${(kpi.totalStorage)} TB` : "N/A"}
+          subtitle={`${kpi.usedStoragePercentage}% used`}
+          status={kpi.storageStatus}
           icon={<Server size={20} />}
-          progress={storage.usedPercent}
-          progressLabel="Used Space"
+          progress={kpi.usedStoragePercentage}
+          progressLabel="Remaining Space"
         />
-
-        <KpiCard
-          title="Free Space"
-          value={storage.freeSpace}
-          subtitle={`${storage.freePercent}% free remaining`}
-          status={storage.status}
-          icon={
-            storage.status === "critical" || storage.status === "warning" ? (
-              <AlertTriangle size={20} />
-            ) : (
-              <CheckCircle2 size={20} />
-            )
-          }
-          progress={storage.freePercent}
-          progressLabel="Free Space"
-        />
+        {!hideStorageAlert && (
+          <StorageWarningBanner
+            status={selected?.storageStatus}
+            instanceName={selected?.instanceName}
+            usedPercent={selected?.driveUsedPercent}
+            freePercent={selected?.driveFreePercent}
+            onClose={() => setHideStorageAlert(true)}
+          />
+        )}
       </div>
+      <GlobalStorageAlert rows={tableData} refreshKey={dataUpdatedAt} />
 
-      <div className="grid h-[65%] grid-cols-1 gap-4 lg:grid-cols-[1fr_360px] lg:w-full 2xl:w-[100%]">
+      <div className="grid h-[55%] grid-cols-1 gap-4 lg:grid-cols-[1fr_360px] lg:w-full 2xl:w-[100%]">
         <div className="overflow-auto rounded-2xl border bg-[#24303f]">
           <div className="flex items-center justify-between border-b px-4 py-3">
             <div className="font-semibold text-white">Instances</div>
@@ -606,35 +544,33 @@ export default function RunningInstancesDashboard() {
             </div>
           ) : (
             <div className="space-y-4 p-4">
-              <Section title="Storage Info" color={statusColor}>
-                <InfoRow k="Path" v={safe(selected.ip)} />
+              <Section title="Storage Info" color={storageStatusColor}>
 
                 <InfoRow
-                  k="Total Space"
-                  v={selectedStorage.totalSpace}
+                  k="Drive(Letter)"
+                  v={selected.driveLetter === null ? "N/A" : selected.driveLetter.toUpperCase()}
                 />
-
-                {/* <InfoRow
-                  k="Used Space"
-                  v={selectedStorage.usedSpace}
-                /> */}
+                <InfoRow
+                  k="Total Space"
+                  v={selected.driveTotalSize !== null ? `${(selected.driveTotalSize)}TB` : "N/A"}
+                />
 
                 <InfoRow
                   k="Free Space"
-                  v={selectedStorage.freeSpace}
+                  v={selected.driveRemainingSize !== null ? `${(selected.driveRemainingSize)}TB` : "N/A"}
                 />
 
                 <InfoRow
                   k="Status"
-                  v={selectedStorage.statusText}
-                  status={selectedStorage.status}
+                  v={selected.storageStatus}
+                  status={selected.storageStatus}
                 />
 
                 <InfoRow
                   k="Storage Usage"
-                  v={`${selectedStorage.usedPercent}% Used`}
-                  status={selectedStorage.status}
-                  progress={selectedStorage.usedPercent}
+                  v={selected.driveUsedPercent !== null ? `${selected.driveUsedPercent}% Free` : "N/A"}
+                  status={selected.storageStatus}
+                  progress={selected.driveFreePercent }
                   progressLabel="Used Space"
                 />
               </Section>
@@ -717,6 +653,8 @@ export default function RunningInstancesDashboard() {
         </div>
       </div>
     </div>
+
+
   );
 }
 

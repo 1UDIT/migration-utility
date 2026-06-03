@@ -1,6 +1,6 @@
 
 
-type KpiStatus = "healthy" | "warning" | "critical" | "info";
+type KpiStatus = "Healthy" | "Warning" | "Critical" | "Info" |"Unknown";
 
 type KpiCardProps = {
   title: string;
@@ -16,39 +16,46 @@ export const KpiCard = ({
   title,
   value,
   subtitle,
-  status = "info",
+  status = "Info",
   icon,
   progress,
   progressLabel,
 }: KpiCardProps) => {
   const statusStyle = {
-    healthy: {
+    Healthy: {
       border: "border-slate-500/40",
       bg: "bg-emerald-500/10",
       text: "text-emerald-400",
       bar: "bg-emerald-500",
       glow: "shadow-emerald-500/10",
     },
-    warning: {
+    Warning: {
       border: "border-slate-500/50",
       bg: "bg-yellow-500/10",
       text: "text-yellow-400",
       bar: "bg-yellow-500",
       glow: "shadow-yellow-500/10",
     },
-    critical: {
+    Critical: {
       border: "border-slate-500/60",
       bg: "bg-red-500/10",
       text: "text-red-400",
       bar: "bg-red-500",
       glow: "shadow-red-500/10",
     },
-    info: {
+    Info: {
       border: "border-slate-600/70",
       bg: "bg-slate-800/40",
       text: "text-blue-400",
       bar: "bg-blue-500",
       glow: "shadow-black/20",
+    },
+    Unknown: {
+      border: "border-slate-500/50",
+      bg: "bg-gray-500/10",
+      text: "text-gray-400",
+      bar: "bg-gray-500",
+      glow: "shadow-gray-500/10",
     },
   };
 

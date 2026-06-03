@@ -103,49 +103,99 @@ const FetchColumnDetail = () => {
             )
         }
         else if (header === "priority") {
-            const uuid = props.row.original?.UUID; // your data uses UUID in table.tsx interface
+            const uuid = props.row.original?.UUID;
             const value = Number(props.getValue() ?? 0);
 
             const meta: any = props.table.options.meta;
-            const isEditing = meta?.editingUuid === uuid;
+            const isEditing = meta?.editingPriorityUuid === uuid;
 
-            const handleFocus = (event) => {
-                // Highlights all text inside the input field
-                console.log("focus", event);
-                event.target.select();
-            };
-
-            // loading rows safety
-            if (!uuid) return <span className={`tableHeaderSize ${alignText}`}>-</span>;
+            if (!uuid) {
+                return <span className={`tableHeaderSize ${alignText}`}>-</span>;
+            }
 
             if (!isEditing) {
                 return (
                     <div className={`flex items-center gap-2 ${alignText}`}>
                         <button
                             type="button"
-                            onClick={async () => {
-                                // if another row is currently being edited -> save it first
-                                const prevUuid = meta?.editingUuid;
-                                if (prevUuid && prevUuid !== uuid) {
-                                    try {
-                                        await meta.updatePriority(prevUuid, meta.priorityDraft);
-                                    } catch (e) {
-                                        // if save fails, don't switch row (optional)
-                                        return;
-                                    }
-                                }
+                            onClick={(e) => {
+                                e.stopPropagation();
 
-                                // now start editing this row
-                                meta.setEditingUuid(uuid);
+                                meta.setEditingPriorityUuid(uuid);
                                 meta.setPriorityDraft(value);
                             }}
-                            className="text-xs px-2 py-1 border rounded odd:border-[#171f29] even:border-[#2d3d52]"
+                            className="rounded border px-2 py-1 text-xs odd:border-[#171f29] even:border-[#2d3d52]"
                             title="Edit Priority"
                         >
                             <FaEdit color="#9298fb" size={15} />
                         </button>
+
+                        <span className="tableHeaderSize">{value}</span>
+                    </div>
+                );
+            }
+
+            return (
+                <div className={`flex items-center gap-2 ${alignText}`}>
+                    <input
+                        type="number"
+                        className="h-8 w-20 rounded border border-slate-500 bg-[#18212d] px-2 py-1 text-xs text-white outline-none"
+                        value={meta.priorityDraft ?? 0}
+                        autoFocus
+                        min={0}
+                        max={100}
+                        onClick={(e) => e.stopPropagation()}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => meta.setPriorityDraft(Number(e.target.value))}
+                        onBlur={() => {
+                            if (meta?.editingPriorityUuid === uuid) {
+                                meta.updatePriority(uuid, meta.priorityDraft);
+                            }
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                meta.updatePriority(uuid, meta.priorityDraft);
+                            }
+
+                            if (e.key === "Escape") {
+                                meta.setEditingPriorityUuid(null);
+                            }
+                        }}
+                        disabled={meta.savingPriority}
+                    />
+                </div>
+            );
+        }
+        else if (header === "additionalRemarks") {
+            const uuid = props.row.original?.UUID;
+            const value = props.getValue() ?? "";
+
+            const meta: any = props.table.options.meta;
+            const isEditing = meta?.editingRemarksUuid === uuid;
+
+            if (!uuid) {
+                return <span className={`tableHeaderSize ${alignText}`}>-</span>;
+            }
+
+            if (!isEditing) {
+                return (
+                    <div className={`flex items-center gap-2 ${alignText}`}>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+
+                                meta.setEditingRemarksUuid(uuid);
+                                meta.setAdditionalRemarksDraft(String(value ?? ""));
+                            }}
+                            className="rounded border px-2 py-1 text-xs odd:border-[#171f29] even:border-[#2d3d52]"
+                            title="Edit Additional Remarks"
+                        >
+                            <FaEdit color="#9298fb" size={15} />
+                        </button>
+
                         <span className="tableHeaderSize">
-                            {value}
+                            {value ? String(value) : "-"}
                         </span>
                     </div>
                 );
@@ -154,24 +204,29 @@ const FetchColumnDetail = () => {
             return (
                 <div className={`flex items-center gap-2 ${alignText}`}>
                     <input
-                        onFocus={handleFocus}
-                        type="number"
-                        className="w-22 h-8 px-2 py-1 border rounded bg-transparent select-text"
-                        value={meta.priorityDraft}
+                        type="text"
+                        className="h-8 w-44 rounded border border-slate-500 bg-[#18212d] px-2 py-1 text-xs text-white outline-none"
+                        value={meta.additionalRemarksDraft ?? ""}
                         autoFocus
-                        min={0}
-                        max={100}
-                        onChange={(e) => meta.setPriorityDraft(Number(e.target.value))}
+                        onClick={(e) => e.stopPropagation()}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => meta.setAdditionalRemarksDraft(e.target.value)}
                         onBlur={() => {
-                            if (meta?.editingUuid === uuid) meta.updatePriority(uuid, meta.priorityDraft);
+                            if (meta?.editingRemarksUuid === uuid) {
+                                meta.updateAdditionalRemarks(uuid, meta.additionalRemarksDraft);
+                            }
                         }}
                         onKeyDown={(e) => {
-                            if (e.key === "Enter") meta.updatePriority(uuid, meta.priorityDraft);
-                            if (e.key === "Escape") meta.setEditingUuid(null);
-                        }}
-                        disabled={meta.savingPriority}
-                    />
+                            if (e.key === "Enter") {
+                                meta.updateAdditionalRemarks(uuid, meta.additionalRemarksDraft);
+                            }
 
+                            if (e.key === "Escape") {
+                                meta.setEditingRemarksUuid(null);
+                            }
+                        }}
+                        disabled={meta.savingAdditionalRemarks}
+                    />
                 </div>
             );
         }
@@ -290,53 +345,46 @@ const FetchColumnDetail = () => {
                 <span >{props.getValue() == 0 ? "N" : "Y"}</span>
             );
         }
-        else if (header === "driveRemainingSize") {
-            const remainingKb = Number(props.getValue() ?? 0);
-            const totalKb = Number(props.row.original.driveTotalSize ?? 0);
+        else if (header === "storageStatus") {
+            const status = String(props.getValue() ?? "Unknown");
 
-            const usedKb = Math.max(totalKb - remainingKb, 0);
+            const normalizedStatus =
+                status === "Healthy" || status === "Warning" || status === "Critical"
+                    ? status
+                    : "Unknown";
 
-            const usedPercent =
-                totalKb > 0 ? Number(((usedKb / totalKb) * 100).toFixed(2)) : 0;
-
-            const status =
-                totalKb <= 0
-                    ? "Unknown"
-                    : usedPercent > 70
-                        ? "critical"
-                        : usedPercent > 50
-                            ? "warning"
-                            : "Healthy";
+            const usedPercent = props.row.original.driveUsedPercent ?? 0;
+            const freePercent = props.row.original.driveFreePercent ?? 0;
 
             const statusUI = {
                 Healthy: {
                     icon: <CheckCircle2 size={16} className="text-emerald-800" />,
                     text: "Healthy",
-                    className: "border-emerald-500/30 bg-emerald-500/60",
+                    className: "border-emerald-500/30 bg-emerald-500/60 text-emerald-950",
                 },
-                warning: {
-                    icon: <AlertTriangle size={16} className="text-yellow-700" />,
+                Warning: {
+                    icon: <AlertTriangle size={16} className="text-yellow-800" />,
                     text: "Warning",
-                    className: "border-yellow-700/30 bg-yellow-700/60",
+                    className: "border-yellow-700/30 bg-yellow-500/70 text-yellow-950",
                 },
-                critical: {
+                Critical: {
                     icon: <XCircle size={16} className="text-red-900" />,
                     text: "Critical",
-                    className: "border-red-900/40 bg-red-200/60",
+                    className: "border-red-900/40 bg-red-300/70 text-red-950",
                 },
                 Unknown: {
                     icon: <HelpCircle size={16} className="text-slate-200" />,
                     text: "Unknown",
-                    className: "border-slate-500/30 bg-slate-900/60",
+                    className: "border-slate-500/30 bg-slate-900/60 text-slate-200",
                 },
             } as const;
 
-            const ui = statusUI[status];
+            const ui = statusUI[normalizedStatus];
 
             return (
                 <div className="flex items-center justify-start gap-2">
                     <span
-                        title={`Used: ${usedPercent}%`}
+                        title={`Used: ${usedPercent}% | Free: ${freePercent}%`}
                         className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-bold ${ui.className}`}
                     >
                         {ui.icon}

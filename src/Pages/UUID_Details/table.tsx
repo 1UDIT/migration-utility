@@ -142,9 +142,15 @@ const Tabledata = () => {
     const prevPendingRef = useRef(false);
     const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
     const reshedularSelection = useSelector((state: RootState) => state.tableDownClick.reshedularSelection)
-    const [editingUuid, setEditingUuid] = useState<string | null>(null);
+
+    const [editingPriorityUuid, setEditingPriorityUuid] = useState<string | null>(null);
     const [priorityDraft, setPriorityDraft] = useState<number>(0);
+
+    const [editingRemarksUuid, setEditingRemarksUuid] = useState<string | null>(null);
+    const [additionalRemarksDraft, setAdditionalRemarksDraft] = useState<string>("");
+
     const [savingPriority, setSavingPriority] = useState(false);
+    const [savingAdditionalRemarks, setSavingAdditionalRemarks] = useState(false);
     const [openDialog, setOpenDialog] = useState(false);
     const [sorting, setSorting] = useState<SortingState>([]);
     const [selectedRow, setSelectedRow] = useState<User | null>(null);
@@ -171,11 +177,35 @@ const Tabledata = () => {
             // await queryClient.invalidateQueries({ queryKey: ["uuidData"] });
 
             toast.success("Priority updated");
-            setEditingUuid(null);
+            setEditingPriorityUuid(null);
         } catch (e: any) {
             toast.error(e?.response?.data?.message || "Failed to update priority");
         } finally {
             setSavingPriority(false);
+        }
+    };
+
+    const updateAdditionalRemarks = async (uuid: string, additionalRemarks: string) => {
+        try {
+            setSavingAdditionalRemarks(true);
+
+            await axios.put(`http://${ipAddress}:4000/uuids/additionalRemarks`, {
+                UUID: uuid,
+                additionalRemarks: additionalRemarks,
+            });
+
+            // simplest: refresh list
+            await refetch();
+
+            // OR better (optional): invalidate instead of refetch
+            // await queryClient.invalidateQueries({ queryKey: ["uuidData"] });
+
+            toast.success("Additional remarks updated");
+            setEditingRemarksUuid(null);
+        } catch (e: any) {
+            toast.error(e?.response?.data?.message || "Failed to update additional remarks");
+        } finally {
+            setSavingAdditionalRemarks(false);
         }
     };
 
@@ -185,12 +215,12 @@ const Tabledata = () => {
         setPagination((p) => ({ ...p, pageIndex: 0 }));
     }, [debouncedDraftFilter]);
 
-    useEffect(() => { 
+    useEffect(() => {
         console.log("Dialog open state changed:", openDialog);
-        return () => { 
+        return () => {
             document.body.style.pointerEvents = '';
-         }; 
-        }, [openDialog]);
+        };
+    }, [openDialog]);
 
     const { show } = useContextMenu({
         id: MENU_ID
@@ -402,13 +432,20 @@ const Tabledata = () => {
         pageCount: Math.ceil(totalQuery?.data?.total / pagination.pageSize),
 
         meta: {
-            editingUuid,
-            setEditingUuid,
+            editingPriorityUuid,
+            setEditingPriorityUuid,
             priorityDraft,
             setPriorityDraft,
             savingPriority,
             updatePriority,
-        },
+
+            editingRemarksUuid,
+            setEditingRemarksUuid,
+            additionalRemarksDraft,
+            setAdditionalRemarksDraft,
+            savingAdditionalRemarks,
+            updateAdditionalRemarks,
+        }
     });
 
     function clearFilter(idHeader: string) {
@@ -647,8 +684,8 @@ const Tabledata = () => {
                                     onDoubleClick={() => {
                                         const data = row.original as User;
                                         // if (data.isOnline === 1) {
-                                            setSelectedRow(data);
-                                            setOpenDialog(true);
+                                        setSelectedRow(data);
+                                        setOpenDialog(true);
                                         // }
                                     }}
                                     onContextMenu={(e) => {

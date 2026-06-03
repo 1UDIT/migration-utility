@@ -1,4 +1,4 @@
-export type InfoRowStatus = "normal" | "success" | "warning" | "critical" |"Unknown";
+export type InfoRowStatus = "normal" | "success" | "Warning" | "Critical" | "Unknown" | "Healthy";
 
 export function InfoRow({
   k,
@@ -14,26 +14,28 @@ export function InfoRow({
   progressLabel?: string;
 }) {
   const statusClass: Record<InfoRowStatus, string> = {
-    normal: "text-white", 
+    normal: "text-white",
     success: "text-green-400",
-    warning: "text-yellow-400",
-    critical: "text-red-400",
+    Warning: "text-yellow-400",
+    Critical: "text-red-400",
     Unknown: "text-slate-400",
+    Healthy: "text-green-400",
   };
 
   const barClass: Record<InfoRowStatus, string> = {
-    normal: "bg-blue-500", 
+    normal: "bg-blue-500",
     success: "bg-green-500",
-    warning: "bg-yellow-500",
-    critical: "bg-red-500",
+    Warning: "bg-yellow-500",
+    Critical: "bg-red-500",
     Unknown: "bg-slate-500",
+    Healthy: "bg-green-500",
   };
 
   const safeProgress =
     typeof progress === "number"
       ? Math.min(Math.max(progress, 0), 100)
       : undefined;
- 
+
 
   return (
     <div className="border-b border-slate-700/50 py-1 last:border-b-0">
@@ -46,7 +48,7 @@ export function InfoRow({
           className={`max-w-[220px] break-words text-right text-xs font-bold ${statusClass[status]}`}
           title={String(v)}
         >
-          {v  }
+          {v}
         </div>
       </div>
 

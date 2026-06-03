@@ -199,6 +199,15 @@
             "enableColumnFilter": true
         },
         {
+            "accessorKey": "additionalRemarks",
+            "header": "Additional Remarks",
+            "size": "130",
+            "minSize": "90",
+            "enableResizing": "true",
+            "textAlign": "text-left",
+            "enableColumnFilter": true
+        },
+        {
             "accessorKey": "insertDate",
             "header": " Insert Date",
             "size": "130",
@@ -899,7 +908,7 @@
             "enableColumnFilter": false
         },
         {
-            "accessorKey": "driveRemainingSize",
+            "accessorKey": "storageStatus",
             "header": "Storage",
             "enableResizing": true,
             "size": 85,
