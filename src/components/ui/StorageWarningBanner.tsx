@@ -30,8 +30,8 @@ export function StorageWarningBanner({
     : "Storage Warning";
 
   const message = isCritical
-    ? `${instanceName ?? "Selected instance"} storage is critical. Used space is ${usedPercent ?? 0}%.`
-    : `${instanceName ?? "Selected instance"} storage usage is high. Used space is ${usedPercent ?? 0}%.`;
+    ? `${instanceName ?? "Selected instance"} storage is critical. Used  space is ${freePercent ?? 0}%.`
+    : `${instanceName ?? "Selected instance"} storage usage is high. Used  space is ${freePercent ?? 0}%.`;
 
   const wrapperClass = isCritical
     ? "border-red-500 bg-red-500/15 text-red-300"

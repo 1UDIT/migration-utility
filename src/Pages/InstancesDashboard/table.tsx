@@ -343,7 +343,7 @@ export default function RunningInstancesDashboard() {
           subtitle={`${kpi.usedStoragePercentage}% used`}
           status={kpi.storageStatus}
           icon={<Server size={20} />}
-          progress={kpi.usedStoragePercentage}
+          progress={kpi.driveFreePercent}
           progressLabel="Remaining Space"
         />
         {!hideStorageAlert && (
