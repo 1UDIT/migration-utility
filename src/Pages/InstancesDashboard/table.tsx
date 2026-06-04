@@ -264,7 +264,7 @@ export default function RunningInstancesDashboard() {
   });
 
   return (
-    <div className="h-[calc(100vh-95px)] p-2 overflow-auto">
+    <div className="flex h-full min-h-0 flex-col overflow-auto p-2">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <div>
@@ -356,10 +356,10 @@ export default function RunningInstancesDashboard() {
           />
         )}
       </div>
-      <GlobalStorageAlert rows={tableData} refreshKey={dataUpdatedAt} />
 
-      <div className="grid h-[55%] grid-cols-1 gap-4 lg:grid-cols-[1fr_360px] lg:w-full 2xl:w-[100%]">
-        <div className="overflow-auto rounded-2xl border bg-[#24303f]">
+      <GlobalStorageAlert rows={tableData} refreshKey={dataUpdatedAt} />
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[1fr_360px] lg:w-full 2xl:w-[100%]">
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border bg-[#24303f]">
           <div className="flex items-center justify-between border-b px-4 py-3">
             <div className="font-semibold text-white">Instances</div>
 
@@ -521,9 +521,7 @@ export default function RunningInstancesDashboard() {
           </div>
         </div>
 
-        <div
-          className={`overflow-auto rounded-2xl border-4 bg-[#24303f] ${borderColor}`}
-        >
+        <div className={`min-h-0 overflow-auto rounded-2xl border-4 bg-[#24303f] ${borderColor}`}>
           <div
             className={`sticky top-0 flex items-center justify-between border-b bg-[#24303f] px-4 py-3 ${borderColor}`}
           >
@@ -568,9 +566,9 @@ export default function RunningInstancesDashboard() {
 
                 <InfoRow
                   k="Storage Usage"
-                  v={selected.driveUsedPercent !== null ? `${selected.driveUsedPercent}% Free` : "N/A"}
+                  v={selected.driveFreePercent !== null ? `${selected.driveFreePercent}% Free` : "N/A"}
                   status={selected.storageStatus}
-                  progress={selected.driveFreePercent }
+                  progress={selected.driveUsedPercent}
                   progressLabel="Used Space"
                 />
               </Section>
@@ -653,8 +651,6 @@ export default function RunningInstancesDashboard() {
         </div>
       </div>
     </div>
-
-
   );
 }
 
