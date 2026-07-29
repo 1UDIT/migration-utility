@@ -1,15 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-interface PaginationState {
-    "filters": {
-        "UUID": string,
-        "migratedObjectSize": string,
-        "sourceName": string,
-        "destinationName": string,
-        "objectName": string,
-        "status": string
-    }
-}
+const username = sessionStorage.getItem("user_Name");
+
+let UserName = username !== null ? username : "";
 
 interface CounterState {
     paginationStore: any;
@@ -17,6 +10,7 @@ interface CounterState {
     reshedularSelection?:number
     reportType?:any
     nonActiveInstance:number
+    user_Name:string
 }
 
 const initialState: CounterState = {
@@ -27,7 +21,8 @@ const initialState: CounterState = {
     ipAddressStore: "",
     reshedularSelection:0,
     reportType:{}, 
-    nonActiveInstance:2
+    nonActiveInstance:2,
+    user_Name:UserName
 };
 
 const tableDropDownSlice = createSlice({
@@ -49,8 +44,11 @@ const tableDropDownSlice = createSlice({
         nonActiveInstances: (state, action) => {
             state.nonActiveInstance = action.payload; 
         },
+        user_Name: (state, action) => {
+            state.user_Name = action.payload; 
+        },
     },
 });
 
-export const { setPaginationStore,ipAddressStore, reshedularSelection, reportType, nonActiveInstances } = tableDropDownSlice.actions;
+export const { setPaginationStore,ipAddressStore, reshedularSelection, reportType, nonActiveInstances, user_Name } = tableDropDownSlice.actions;
 export default tableDropDownSlice.reducer;

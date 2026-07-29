@@ -28,7 +28,7 @@ import {
 import { toast } from 'sonner';
 import { useSelector } from "react-redux";
 import type { RootState } from "@/Redux/Store";
-import { NavLink, useLocation } from "react-router";
+import { NavLink, useLocation, useNavigate } from "react-router";
 import { Button } from "../ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { saveAs } from "file-saver";
@@ -46,12 +46,15 @@ import { Label } from "@/components/ui/label";
 
 import { fetchData } from "@/Pages/Object_Details/HandleApiCall/Apicall";
 import FetchColumnDetail from "../Column/FetchColumnDetail";
+import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { ChevronUp, User2 } from "lucide-react";
+import { DropdownMenuContent, DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 const basePath = import.meta.env.BASE_URL;
 
 const items = [
     {
         title: "Instance View",
-        url: "/",
+        url: "/Dashboard",
     },
     {
         title: "Object Detail",
@@ -71,6 +74,13 @@ const items = [
     },
 ]
 
+const operatorDisabledItems = new Set([
+    "Object Detail",
+    "Uuid Detail",
+    "Masstech-Object Detail",
+    "Report",
+]);
+
 interface AppSidebarProps {
     children: ReactNode;
 }
@@ -86,6 +96,9 @@ export function DefaultLayout({ children }: AppSidebarProps) {
     const reportType = useSelector((state: RootState) => state.tableDownClick.reportType);
     const [open, setOpen] = useState<boolean>(false);
     const [downloadChoice, setDownloadChoice] = useState<"OBJECT_LIST" | "CHECKSUM" | "Report">("OBJECT_LIST");
+    const navigate = useNavigate();
+    const userName = useSelector((state: RootState) => state.tableDownClick.user_Name);
+
 
     useEffect(() => {
         locationName();
@@ -283,6 +296,10 @@ export function DefaultLayout({ children }: AppSidebarProps) {
         setOpen(false);
     }, [downloadChoice, DownloadReport]);
 
+    const signOut = useCallback(() => {
+        sessionStorage.clear();
+        navigate("/");
+    }, [])
 
 
     return (
@@ -314,29 +331,58 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                         <SidebarGroup>
                             <SidebarGroupContent>
                                 <SidebarMenu>
-                                    {items.map((item) => (
-                                        <SidebarMenuItem key={item.title}>
-                                            <SidebarMenuButton
-                                                asChild
-                                                size="lg"
-                                                className="text-xl"
-                                                variant={location.pathname === item.url ? "outline" : "default"}
-                                            >
-                                                <NavLink
-                                                    to={item.url} className={"text-white"}>
-                                                    <span>{item.title}</span>
-                                                </NavLink>
+                                    {items.map((item) => {
+                                        const active = location.pathname === item.url;
+                                        const isDisabled =
+                                            userName === "operator" && operatorDisabledItems.has(item.title);
 
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    ))}
+                                        return (
+                                            <SidebarMenuItem key={item.title}>
+                                                <SidebarMenuButton
+                                                    asChild
+                                                    size="lg"
+                                                    className="text-xl"
+                                                    disabled={isDisabled}
+                                                    variant={active ? "outline" : "default"}
+                                                >
+                                                    <NavLink
+                                                        to={item.url}
+                                                        aria-disabled={isDisabled}
+                                                        tabIndex={isDisabled ? -1 : undefined}
+                                                        onClick={(event) => {
+                                                            if (isDisabled) event.preventDefault();
+                                                        }}
+                                                        className="text-white">
+                                                        <span>{item.title}</span>
+                                                    </NavLink>
+
+                                                </SidebarMenuButton>
+                                            </SidebarMenuItem>
+                                        )
+                                    })}
 
                                 </SidebarMenu>
                             </SidebarGroupContent>
                         </SidebarGroup>
                     </SidebarContent>
                     <SidebarHeader />
-
+                    <SidebarFooter>
+                        <SidebarMenu className="text-white">
+                            <SidebarMenuItem>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <SidebarMenuButton className="text-xl">
+                                            <User2 /> {userName}
+                                            <ChevronUp className="ml-auto" />
+                                        </SidebarMenuButton>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width] bg-[#182331] px-3 py-3 rounded-md">
+                                        <DropdownMenuItem onClick={signOut}>Sign out</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarFooter>
                 </Sidebar>
                 <SidebarInset className="h-screen flex flex-col overflow-hidden">
                     <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4 bg-[#24303f] w-full">

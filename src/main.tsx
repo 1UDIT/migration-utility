@@ -10,21 +10,34 @@ import {
 } from '@tanstack/react-query'
 import { Provider } from 'react-redux';
 import { Toaster } from 'sonner';
+import SignIn from './Pages/Auth/signin.tsx';
+import { UUIDpage } from './Pages/UUID_Details/UUIDpage.tsx';
+import { MasstechPage } from './Pages/MassTech/MasstechPage.tsx';
+import { ObjectPage } from './Pages/Object_Details/ObjectPage.tsx';
+import { ReportPage } from './Pages/ReportViewer/ReportPage.tsx';
+import ProtectedRoute from './ProtectedRoutes/Index.tsx';
 
 // console.log('Base path:', basePath);
 const queryClient = new QueryClient()
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
-      {/* <Route index path='/' element={<SignIn />} /> */}
-      <Route >
+      <Route index path='/' element={<SignIn />} />
+      {/* <Route >
         <Route path="/uuid" lazy={() => import("@/Pages/UUID_Details/page.tsx")}  hydrateFallbackElement />
         <Route path="/masstech" lazy={() => import("@/Pages/MassTech/page.tsx")}  hydrateFallbackElement />
         <Route path="/Object" lazy={() => import("@/Pages/Object_Details/page.tsx")} hydrateFallbackElement/>
         <Route path="/reportViewer" lazy={() => import("@/Pages/ReportViewer/page.tsx")} hydrateFallbackElement/>
         <Route path="/" lazy={() => import("@/Pages/InstancesDashboard/page.tsx")} hydrateFallbackElement/>
+      </Route> */}
+      <Route  >
+        <Route path="/uuid" element={<ProtectedRoute><UUIDpage /></ProtectedRoute>} />
+        <Route path="/masstech" element={<ProtectedRoute><MasstechPage /></ProtectedRoute>} />
+        <Route path="/Object" element={<ProtectedRoute><ObjectPage /></ProtectedRoute>} />
+        <Route path="/reportViewer" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+        <Route path="/Dashboard" lazy={() => import("@/Pages/InstancesDashboard/page.tsx")} hydrateFallbackElement />
       </Route>
-      {/* <Route path="*" element={<SignIn />} /> */}
+      <Route path="*" element={<SignIn />} />
     </>
   ), { basename: basePath }
 )
@@ -33,7 +46,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={queryClient}>
     <Provider store={store}>
       <RouterProvider router={router} />
-       <Toaster position='bottom-left'/>
+      <Toaster position='bottom-left' />
     </Provider>
   </QueryClientProvider>
   ,

@@ -3,6 +3,7 @@ import { FaRegEye, FaRegEyeSlash, FaRegUserCircle } from 'react-icons/fa';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router';
+import { user_Name } from '@/Redux/tableDropFilter';
 
 const SignIn: React.FC = () => {
   const [eyeOpen, setEyeOpen] = useState(false);
@@ -13,6 +14,7 @@ const SignIn: React.FC = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const Dispatch = useDispatch();
 
   // TODO: re-enable when config is ready
   // useEffect(() => {
@@ -35,13 +37,22 @@ const SignIn: React.FC = () => {
       const dataBody = { user: userName, password };
 
       if (userName === 'admin' && password === 'admin') {
-        const from = (location as any).state?.from?.pathname || '/Request';
+        const from = (location as any).state?.from?.pathname || '/Dashboard';
         navigate(from, { replace: true });
-      } else {
+        sessionStorage.setItem("user_Name","admin")
+        Dispatch(user_Name("admin"))
+      }
+      else if (userName === 'operator' && password === 'operator') {
+        const from = (location as any).state?.from?.pathname || '/Dashboard';
+        navigate(from, { replace: true });
+        sessionStorage.setItem("user_Name","operator")
+        Dispatch(user_Name("operator"))
+      }
+       else {
         setError('Invalid credentials. Please try again.');
         setLoading(false);
         return;
-      } 
+      }
     },
     [userName, password, location, navigate]
   );

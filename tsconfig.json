@@ -8,8 +8,7 @@
       "path": "./tsconfig.node.json"
     }
   ],
-  "compilerOptions": {
-    "baseUrl": "./",
+  "compilerOptions": { 
     "paths": {
       "@/*": ["./src/*"]
     }
