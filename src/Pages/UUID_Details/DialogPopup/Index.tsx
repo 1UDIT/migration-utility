@@ -30,6 +30,7 @@ const MTContextRight = lazy(() => import('@/Pages/MassTech/ContextRight/Index'))
 import { MdClose } from "react-icons/md";
 import { byteToKb } from "@/components/Column/FetchColumnDetail";
 import { FaSortDown, FaSortUp } from 'react-icons/fa';
+import CopyCell from "@/components/ui/CopyCell";
 
 type User = {
   UUID: string;
@@ -119,18 +120,19 @@ const MENU_ID = "tape-details-menu";
 
 export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPopupProps) {
   const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
+  const apiPort = useSelector((state: any) => state.tableDownClick.apiPort);
   const [selectedStatus, setSelectedStatus] = useState("MIGRATION_FAILED");
   const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
   const reshedularSelection = useSelector((state: RootState) => state.tableDownClick.reshedularSelection)
-  const [sorting, setSorting] = useState<SortingState>([{id: "remarks", desc: true}]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "remarks", desc: true }]);
   const columns = useMemo<ColumnDef<ObjectItem>[]>(() => [
     {
       accessorKey: "objectName",
       header: "Object Name",
       cell: ({ row }) => (
-        <span title={row.original.objectName || "-"}>
-          {row.original.objectName || "-"}
-        </span>
+        <CopyCell
+          value={row.original.objectName}
+        />
       ),
       size: 250,
     },
@@ -138,9 +140,9 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
       accessorKey: "category",
       header: "Category",
       cell: ({ row }) => (
-        <span title={row.original.category || "-"}>
-          {row.original.category || "-"}
-        </span>
+        <CopyCell
+          value={row.original.category}
+        />
       ),
     },
     {
@@ -160,18 +162,18 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
       accessorKey: "fileName",
       header: "File Name",
       cell: ({ row }) => (
-        <span title={row.original.fileName}>
-          {row.original.fileName || "-"}
-        </span>
+        <CopyCell
+          value={row.original.fileName}
+        />
       ),
     },
     {
       accessorKey: "remarks",
       header: "remarks",
       cell: ({ row }) => (
-        <span title={row.original.remarks}>
-          {row.original.remarks || "-"}
-        </span>
+        <CopyCell
+          value={row.original.remarks}
+        /> 
       ),
       size: 250,
     },
@@ -201,7 +203,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
   const { data: listDetails, isLoading, isFetching, refetch } = useQuery<TapeDetailsResponse>({
     queryKey: ["tapeDetails", body],
     queryFn: async ({ signal }) => {
-      const endpoint = `http://${ipAddress}:4000/uuids/tapeDetails`;
+      const endpoint = `http://${ipAddress}:${apiPort}/uuids/tapeDetails`;
       return fetchData(endpoint, "POST", body, signal);
     },
     enabled: !!data?.UUID && !!data?.mediaType,
@@ -393,7 +395,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
                                         desc: <FaSortDown className="h-4 w-4 font-bold text-red-500" />,
                                       }[header.column.getIsSorted() as string] ?? null}
                                     </span>
-                                  </span>                                   
+                                  </span>
                                 </div>
 
                                 {header.column.getCanResize() && (

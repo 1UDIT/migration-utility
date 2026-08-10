@@ -23,6 +23,7 @@ interface props {
 
 export default function ContextRight({ MENU_ID, Rescheduled, refetch, SetMultipleRowsSelection }: props) {
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
+    const apiPort = useSelector((state: RootState) => state.tableDownClick.apiPort);
 
     const runRuleProcesApi = useCallback(async (e: any) => {
         const body = {
@@ -31,7 +32,7 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, SetMultipl
         // console.log(Rescheduled, "Schedualar")
         await axios({
             method: 'post',
-            url: `http://${ipAddress}:4000/objects/reshedulerulejobs`,
+            url: `http://${ipAddress}:${apiPort}/objects/reshedulerulejobs`,
             data: body,
         }).then(response => {
             toast(

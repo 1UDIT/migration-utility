@@ -7,6 +7,7 @@ let UserName = username !== null ? username : "";
 interface CounterState {
     paginationStore: any;
     ipAddressStore?: any;
+    apiPort?: number;
     reshedularSelection?:number
     reportType?:any
     nonActiveInstance:number
@@ -19,6 +20,7 @@ const initialState: CounterState = {
         }
     },
     ipAddressStore: "",
+    apiPort: 4000,
     reshedularSelection:0,
     reportType:{}, 
     nonActiveInstance:2,
@@ -35,6 +37,9 @@ const tableDropDownSlice = createSlice({
         ipAddressStore: (state, action) => {
             state.ipAddressStore = action.payload; 
         },
+        apiPort: (state, action) => {
+            state.apiPort = action.payload;
+        },
         reshedularSelection: (state, action) => {
             state.reshedularSelection = action.payload; 
         },
@@ -50,5 +55,5 @@ const tableDropDownSlice = createSlice({
     },
 });
 
-export const { setPaginationStore,ipAddressStore, reshedularSelection, reportType, nonActiveInstances, user_Name } = tableDropDownSlice.actions;
+export const { setPaginationStore, ipAddressStore, apiPort, reshedularSelection, reportType, nonActiveInstances, user_Name } = tableDropDownSlice.actions;
 export default tableDropDownSlice.reducer;

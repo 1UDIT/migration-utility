@@ -25,6 +25,7 @@ interface props {
 export default function ContextRight({ MENU_ID, Rescheduled, refetch, setRescheduled, setActiveCursor, SetMultipleRowsSelection, displayMenu }: props) {
     const queryClient = useQueryClient();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
+    const apiPort = useSelector((state: RootState) => state.tableDownClick.apiPort);
     const hasOnline = Rescheduled.some(item => item?.isOnline === 1);
     const hasOffline = Rescheduled.some(item => item?.isOnline === 0);
     const hasMT = Rescheduled.filter(item => item?.mediaType?.startsWith("MT"));
@@ -39,7 +40,7 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
         // console.log(Rescheduled, "Schedualar")
         await axios({
             method: 'post',
-            url: `http://${ipAddress}:4000/uuids/reshedulerulejobs`,
+            url: `http://${ipAddress}:${apiPort}/uuids/reshedulerulejobs`,
             data: body,
         }).then(response => {
             toast(
@@ -72,7 +73,7 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, setResched
 
         await axios({
             method: 'post',
-            url: `http://${ipAddress}:4000/uuids/updateOnline`,
+            url: `http://${ipAddress}:${apiPort}/uuids/updateOnline`,
             data: body,
         })
             .then(() => {

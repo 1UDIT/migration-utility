@@ -49,6 +49,7 @@ const Tabledata = () => {
     const { ColumnReport } = FetchColumnDetail();
     const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
+    const apiPort = useSelector((state: RootState) => state.tableDownClick.apiPort);
     const [draftFilter, setDraftFilter] = useState<any>({
         MigrationDate: {
             from: format(initialDateRange.from, "yyyy-MM-dd"),
@@ -162,7 +163,7 @@ const Tabledata = () => {
                     filters: Filter,
                 })
             );
-            const endpoint = `http://${ipAddress}:4000/Report?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+            const endpoint = `http://${ipAddress}:${apiPort}/Report?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
@@ -194,7 +195,7 @@ const Tabledata = () => {
     const totalQuery = useQuery({
         queryKey: ["reportTotal", body, ipAddress],
         queryFn: ({ signal }) =>
-            fetchData(`http://${ipAddress}:4000/Report/total`, "POST", body, signal),
+            fetchData(`http://${ipAddress}:${apiPort}/Report/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
         refetchOnWindowFocus: false, // optional, avoid spam

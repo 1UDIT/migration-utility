@@ -79,6 +79,9 @@ export default function RunningInstancesDashboard() {
   const ipAddress = useSelector(
     (state: RootState) => state.tableDownClick.ipAddressStore
   );
+  const apiPort = useSelector(
+    (state: RootState) => state.tableDownClick.apiPort
+  );
 
   const nonActiveInstance = useSelector(
     (state: RootState) => state.tableDownClick.nonActiveInstance
@@ -117,7 +120,7 @@ export default function RunningInstancesDashboard() {
       nonActiveInstance,
     ],
     queryFn: async ({ signal }) => {
-      const endpoint = `http://${ipAddress}:4000/Instance?page=${pagination.pageIndex + 1
+      const endpoint = `http://${ipAddress}:${apiPort}/Instance?page=${pagination.pageIndex + 1
         }&limit=${pagination.pageSize}`;
 
       return fetchData(endpoint, "POST", body, signal);

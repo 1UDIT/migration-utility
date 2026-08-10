@@ -1,6 +1,6 @@
 
 import { Progress } from '@/components/ui/progress';
-import { ipAddressStore, nonActiveInstances, reportType, reshedularSelection } from '@/Redux/tableDropFilter';
+import { apiPort, ipAddressStore, nonActiveInstances, reportType, reshedularSelection } from '@/Redux/tableDropFilter';
 import axios from 'axios';
 import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
@@ -516,6 +516,7 @@ const FetchColumnDetail = () => {
             setReportsbtn(response.data.ReportColumns);
             setReportsPannel(response.data.reportPanel);
             Dispatch(ipAddressStore(response.data.apiUrl));
+            Dispatch(apiPort(response.data.apiPort ?? 4000));
             Dispatch(reshedularSelection(response.data.reshedularSelection));
             Dispatch(nonActiveInstances(response.data.nonActiveInstance));
             Dispatch(reportType(response.data.reportType));

@@ -64,6 +64,7 @@ const Tabledata = () => {
     const { ColumnMasstech_column } = FetchColumnDetail();
     const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
     const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
+    const apiPort = useSelector((state: any) => state.tableDownClick.apiPort);
     const [draftFilter, setDraftFilter] = useState<any>({
         lastUpdatedDate: {
             from: format(initialDateRange.from, "yyyy-MM-dd"),
@@ -223,7 +224,7 @@ const Tabledata = () => {
         queryKey: ["uuidData", pagination.pageIndex, pagination.pageSize, body, currentCursor],
         queryFn: async ({ signal }) => {
             const endpoint =
-                `http://${ipAddress}:4000/Masstech?limit=${pagination.pageSize}` +
+                `http://${ipAddress}:${apiPort}/Masstech?limit=${pagination.pageSize}` +
                 (currentCursor ? `&cursor=${currentCursor}` : "");
 
             const resp = await fetchData(endpoint, "POST", body, signal);
@@ -286,7 +287,7 @@ const Tabledata = () => {
     const totalQuery = useQuery({
         queryKey: ["uuidTotal", body],
         queryFn: ({ signal }) =>
-            fetchData(`http://${ipAddress}:4000/Masstech/total`, "POST", body, signal),
+            fetchData(`http://${ipAddress}:${apiPort}/Masstech/total`, "POST", body, signal),
         networkMode: 'always',
         refetchInterval: 12000,
         retry: false, 

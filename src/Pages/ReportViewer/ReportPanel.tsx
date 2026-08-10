@@ -48,6 +48,7 @@ export default function ReportPanel() {
     const [XLSX, setXLSX] = useState<typeof import("xlsx") | null>(null);
     const queryClient = useQueryClient();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
+    const apiPort = useSelector((state: RootState) => state.tableDownClick.apiPort);
     const { DownloadPannel } = FetchColumnDetail();
     const [selectedTypes, setSelectedTypes] = useState<ReportType[]>(["TODAY_REPORT"]);
 
@@ -100,7 +101,7 @@ export default function ReportPanel() {
 
             // ✅ SPECIAL CASE: backend returns XLSX with chart
 
-            const endpoint = `http://${ipAddress}:4000/Report/DownloadReport`;
+            const endpoint = `http://${ipAddress}:${apiPort}/Report/DownloadReport`;
 
             const res = await fetch(endpoint, {
                 method: "POST",

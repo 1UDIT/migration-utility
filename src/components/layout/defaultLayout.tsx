@@ -93,6 +93,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
     const [XLSX, setXLSX] = useState<typeof import("xlsx") | null>(null);
     const { Downloadbtn } = FetchColumnDetail();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
+    const apiPort = useSelector((state: RootState) => state.tableDownClick.apiPort);
     const reportType = useSelector((state: RootState) => state.tableDownClick.reportType);
     const [open, setOpen] = useState<boolean>(false);
     const [downloadChoice, setDownloadChoice] = useState<"OBJECT_LIST" | "CHECKSUM" | "Report">("OBJECT_LIST");
@@ -157,7 +158,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 const response = await queryClient.fetchQuery({
                     queryKey: ["uuidData", "all", Body],
                     queryFn: async ({ signal }) => {
-                        const endpoint = `http://${ipAddress}:4000/${nameUrl === 'Object List' ? "objects" : "uuids"}?page=0&limit=0`;
+                        const endpoint = `http://${ipAddress}:${apiPort}/${nameUrl === 'Object List' ? "objects" : "uuids"}?page=0&limit=0`;
                         return fetchData(endpoint, "POST", Body, signal);
                     },
                     staleTime: 0,
@@ -228,7 +229,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 return "Migration Data Report";
             }
             else if (downloadChoice === "CHECKSUM") {
-                const endpoint = `http://${ipAddress}:4000/objects/checkSumDownloader`;
+                const endpoint = `http://${ipAddress}:${apiPort}/objects/checkSumDownloader`;
                 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
                 const res = await fetch(endpoint, {
                     method: "POST",
@@ -253,7 +254,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 const body: any = {
                     reportType: reportType
                 };
-                const endpoint = `http://${ipAddress}:4000/Report/DownloadReport`;
+                const endpoint = `http://${ipAddress}:${apiPort}/Report/DownloadReport`;
                 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
                 const res = await fetch(endpoint, {
                     method: "POST",

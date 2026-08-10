@@ -128,6 +128,7 @@ const Tabledata = () => {
     const { ColumnUUID } = FetchColumnDetail();
     const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
     const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
+    const apiPort = useSelector((state: any) => state.tableDownClick.apiPort);
     const [draftFilter, setDraftFilter] = useState<any>({
         startDate: {
             from: format(initialDateRange.from, "yyyy-MM-dd"),
@@ -165,7 +166,7 @@ const Tabledata = () => {
         try {
             setSavingPriority(true);
 
-            await axios.put(`http://${ipAddress}:4000/uuids/setPriority`, {
+            await axios.put(`http://${ipAddress}:${apiPort}/uuids/setPriority`, {
                 UUID: uuid,
                 priority: priority,
             });
@@ -189,7 +190,7 @@ const Tabledata = () => {
         try {
             setSavingAdditionalRemarks(true);
 
-            await axios.put(`http://${ipAddress}:4000/uuids/additionalRemarks`, {
+            await axios.put(`http://${ipAddress}:${apiPort}/uuids/additionalRemarks`, {
                 UUID: uuid,
                 additionalRemarks: additionalRemarks,
             });
@@ -355,7 +356,7 @@ const Tabledata = () => {
                     filters: Filter,
                 })
             );
-            const endpoint = `http://${ipAddress}:4000/uuids?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+            const endpoint = `http://${ipAddress}:${apiPort}/uuids?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
@@ -387,7 +388,7 @@ const Tabledata = () => {
     const totalQuery = useQuery({
         queryKey: ["uuidTotal", body],
         queryFn: ({ signal }) =>
-            fetchData(`http://${ipAddress}:4000/uuids/total`, "POST", body, signal),
+            fetchData(`http://${ipAddress}:${apiPort}/uuids/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
         refetchInterval: 12000,

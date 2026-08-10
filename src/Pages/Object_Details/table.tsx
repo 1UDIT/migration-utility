@@ -66,6 +66,7 @@ const Tabledata = () => {
     const [storeFilterId, setStoreFilterId] = useState<string[]>([]); // State to track selected filter IDs
     const dispatch = useDispatch();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
+    const apiPort = useSelector((state: RootState) => state.tableDownClick.apiPort);
     // const [Rescheduled, setRescheduled] = useState<any>([]);
     const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
     const parentRef = useRef<HTMLDivElement>(null);
@@ -225,7 +226,7 @@ const Tabledata = () => {
                     filters: Filter,
                 })
             );
-            const endpoint = `http://${ipAddress}:4000/objects?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
+            const endpoint = `http://${ipAddress}:${apiPort}/objects?page=${pagination.pageIndex + 1}&limit=${pagination.pageSize}`;
             return fetchData(endpoint, "POST", body, signal);
         },
         networkMode: 'always',
@@ -236,7 +237,7 @@ const Tabledata = () => {
     const totalQuery = useQuery({
         queryKey: ["uuidTotal", Filter],
         queryFn: ({ signal }) =>
-            fetchData(`http://${ipAddress}:4000/objects/total`, "POST", body, signal),
+            fetchData(`http://${ipAddress}:${apiPort}/objects/total`, "POST", body, signal),
         networkMode: "always",
         retry: false,
         refetchOnWindowFocus: false, // optional, avoid spam
