@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig(({ command }) => {
-  let base = command === "serve" ? "/" : "/Migration/";
+  let base = command === "serve" ? "/" : "./";
 
   return {
     server: {

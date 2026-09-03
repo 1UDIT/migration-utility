@@ -27,6 +27,7 @@ import { useSelectionRow } from "@/hooks/useSelectionRow.tsx";
 import type { RootState } from "@/Redux/Store";
 import ContextRight from "@/Pages/Object_Details/ContextRight/Index";
 const MTContextRight = lazy(() => import('@/Pages/MassTech/ContextRight/Index'));
+const AltoContextRight = lazy(() => import('@/Pages/Object_Details/ContextRight/Index'));
 import { MdClose } from "react-icons/md";
 import { byteToKb } from "@/components/Column/FetchColumnDetail";
 import { FaSortDown, FaSortUp } from 'react-icons/fa';
@@ -307,6 +308,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
     });
   }, [highlightedRows, table]);
 
+  console.log(data.mediaType,"data.mediaType")
 
   return (
     <>
@@ -497,6 +499,15 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
       {data.mediaType.startsWith("MT") && highlightedRows.length <= reshedularSelection ? (
         <Suspense>
           <MTContextRight
+            MENU_ID={MENU_ID}
+            Rescheduled={Rescheduled}
+            refetch={refetch}
+            SetMultipleRowsSelection={SetMultipleRowsSelection}
+          /></Suspense>) : null
+      }
+      {data.mediaType.startsWith("ALTO") && highlightedRows.length <= reshedularSelection ? (
+        <Suspense>
+          <AltoContextRight
             MENU_ID={MENU_ID}
             Rescheduled={Rescheduled}
             refetch={refetch}

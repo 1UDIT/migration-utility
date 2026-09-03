@@ -3,7 +3,6 @@ import './index.css'
 import { createBrowserRouter, createRoutesFromElements, Route } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import { store } from './Redux/Store.tsx'
-const basePath = import.meta.env.BASE_URL;
 import {
   QueryClient,
   QueryClientProvider,
@@ -19,17 +18,23 @@ import ProtectedRoute from './ProtectedRoutes/Index.tsx';
 
 // console.log('Base path:', basePath);
 const queryClient = new QueryClient()
+
+const getBasePath = () => {
+  // In production the first URL segment is the Tomcat webapp context.
+  // For example, /migrationGEC/Dashboard -> /migrationGEC.
+  if (import.meta.env.PROD) {
+    const contextPath = window.location.pathname.split('/').filter(Boolean)[0];
+    return contextPath ? `/${contextPath}` : '';
+  }
+
+  return '';
+};
+
+
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       <Route index path='/' element={<SignIn />} />
-      {/* <Route >
-        <Route path="/uuid" lazy={() => import("@/Pages/UUID_Details/page.tsx")}  hydrateFallbackElement />
-        <Route path="/masstech" lazy={() => import("@/Pages/MassTech/page.tsx")}  hydrateFallbackElement />
-        <Route path="/Object" lazy={() => import("@/Pages/Object_Details/page.tsx")} hydrateFallbackElement/>
-        <Route path="/reportViewer" lazy={() => import("@/Pages/ReportViewer/page.tsx")} hydrateFallbackElement/>
-        <Route path="/" lazy={() => import("@/Pages/InstancesDashboard/page.tsx")} hydrateFallbackElement/>
-      </Route> */}
       <Route  >
         <Route path="/uuid" element={<ProtectedRoute><UUIDpage /></ProtectedRoute>} />
         <Route path="/masstech" element={<ProtectedRoute><MasstechPage /></ProtectedRoute>} />
@@ -39,7 +44,7 @@ const router = createBrowserRouter(
       </Route>
       <Route path="*" element={<SignIn />} />
     </>
-  ), { basename: basePath }
+  ), { basename: getBasePath(), }
 )
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
