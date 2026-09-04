@@ -10,10 +10,6 @@ import {
 import { Provider } from 'react-redux';
 import { Toaster } from 'sonner';
 import SignIn from './Pages/Auth/signin.tsx';
-import { UUIDpage } from './Pages/UUID_Details/UUIDpage.tsx';
-import { MasstechPage } from './Pages/MassTech/MasstechPage.tsx';
-import { ObjectPage } from './Pages/Object_Details/ObjectPage.tsx';
-import { ReportPage } from './Pages/ReportViewer/ReportPage.tsx';
 import ProtectedRoute from './ProtectedRoutes/Index.tsx';
 
 // console.log('Base path:', basePath);
@@ -36,10 +32,22 @@ const router = createBrowserRouter(
     <>
       <Route index path='/' element={<SignIn />} />
       <Route  >
-        <Route path="/uuid" element={<ProtectedRoute><UUIDpage /></ProtectedRoute>} />
-        <Route path="/masstech" element={<ProtectedRoute><MasstechPage /></ProtectedRoute>} />
-        <Route path="/Object" element={<ProtectedRoute><ObjectPage /></ProtectedRoute>} />
-        <Route path="/reportViewer" element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+        <Route path="/uuid" lazy={async () => {
+          const { UUIDpage } = await import('./Pages/UUID_Details/UUIDpage.tsx');
+          return { Component: () => <ProtectedRoute><UUIDpage /></ProtectedRoute> };
+        }} />
+        <Route path="/masstech" lazy={async () => {
+          const { MasstechPage } = await import('./Pages/MassTech/MasstechPage.tsx');
+          return { Component: () => <ProtectedRoute><MasstechPage /></ProtectedRoute> };
+        }} />
+        <Route path="/Object" lazy={async () => {
+          const { ObjectPage } = await import('./Pages/Object_Details/ObjectPage.tsx');
+          return { Component: () => <ProtectedRoute><ObjectPage /></ProtectedRoute> };
+        }} />
+        <Route path="/reportViewer" lazy={async () => {
+          const { ReportPage } = await import('./Pages/ReportViewer/ReportPage.tsx');
+          return { Component: () => <ProtectedRoute><ReportPage /></ProtectedRoute> };
+        }} />
         <Route path="/Dashboard" lazy={() => import("@/Pages/InstancesDashboard/page.tsx")} hydrateFallbackElement />
       </Route>
       <Route path="*" element={<SignIn />} />
