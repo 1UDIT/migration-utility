@@ -45,7 +45,7 @@ export function InfoRow({
         </div>
 
         <div
-          className={`max-w-[220px] break-words text-right text-xs font-bold ${statusClass[status]}`}
+          className={`max-w-[220px] break-words text-right text-xs font-bold ${statusClass[status]} line-clamp-2 break-words`} 
           title={String(v)}
         >
           {v}

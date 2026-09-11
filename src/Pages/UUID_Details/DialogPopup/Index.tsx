@@ -34,9 +34,11 @@ import { FaSortDown, FaSortUp } from 'react-icons/fa';
 import CopyCell from "@/components/ui/CopyCell";
 
 type User = {
-  UUID: string;
-  mediaType: string;
+  UUID?: string;
+  currentTape?: string;
+  mediaType?: string;
   totalObjectCount?: number;
+  totalFiles?: number;
 };
 
 type StatusSummaryItem = {
@@ -88,7 +90,7 @@ type ObjectItem = {
 
 const normalizeData = (rows: any[], mediaType: string) => {
 
-  if (mediaType.startsWith("MT-LTO")) {
+  if (mediaType?.startsWith("MT-LTO")) {
     return rows.map((r) => ({
       objectName: r.displayName || r.AO_OBJECT_NAME,
       category: r.collectionName || r.AO_CATEGORY,
@@ -103,7 +105,7 @@ const normalizeData = (rows: any[], mediaType: string) => {
     }));
   }
 
-  return rows.map((r) => ({
+  return rows?.map((r) => ({
     objectName: r.objectName,
     category: r.category,
     mediaName: r.mediaName || r.barcode,
@@ -119,7 +121,7 @@ const normalizeData = (rows: any[], mediaType: string) => {
 
 const MENU_ID = "tape-details-menu";
 
-export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPopupProps) {
+export default function IndexPopup({ data, setOpenDialog }: IndexPopupProps) {
   const ipAddress = useSelector((state: any) => state.tableDownClick.ipAddressStore);
   const apiPort = useSelector((state: any) => state.tableDownClick.apiPort);
   const [selectedStatus, setSelectedStatus] = useState("MIGRATION_FAILED");
@@ -151,7 +153,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
       header: "size (KB)",
       cell: ({ row }) => {
         const rowsizeKB = row.original.sizeKB;
-        if (data?.mediaType.startsWith("LTO")) {
+        if (data?.mediaType?.startsWith("LTO")) {
           return (<span className="font-medium">{rowsizeKB || "-"}</span>);
         } else {
           return (<span className="font-medium">{byteToKb(rowsizeKB) || "-"}</span>);
@@ -188,13 +190,13 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
   const body = useMemo(
     () => ({
       filters: {
-        uuid: data?.UUID,
+        uuid: data?.UUID || data?.currentTape,
         mediaType: data?.mediaType,
         status: selectedStatus,
       },
       sorting,
     }),
-    [data?.UUID, data?.mediaType, selectedStatus, sorting]
+    [data?.UUID, data?.mediaType, selectedStatus, sorting, data?.currentTape]
   );
 
   const { show } = useContextMenu({ id: MENU_ID });
@@ -207,7 +209,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
       const endpoint = `http://${ipAddress}:${apiPort}/uuids/tapeDetails`;
       return fetchData(endpoint, "POST", body, signal);
     },
-    enabled: !!data?.UUID && !!data?.mediaType,
+    enabled: (!!data?.UUID || !!data?.currentTape) && !!data?.mediaType,
     retry: false,
     refetchOnWindowFocus: false,
     placeholderData: (prev) => prev,
@@ -239,7 +241,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
     }
     if (item.value === "PENDING") {
       return hasCount
-        ? "border-blue-500 bg-blue-500/10"
+        ? "border-blue-400 bg-blue-500/10"
         : "border-blue-500/40 bg-[#111827]";
     }
 
@@ -250,7 +252,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
     }
 
     return isActive
-      ? "border-blue-500 bg-blue-500/10"
+      ? "border-blue-800 bg-blue-800/10"
       : "border-gray-700 bg-[#111827]";
   };
 
@@ -307,8 +309,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
       };
     });
   }, [highlightedRows, table]);
-
-  console.log(data.mediaType,"data.mediaType")
+ 
 
   return (
     <>
@@ -331,8 +332,8 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
             <div className="space-y-5 z-30">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
-                  <div className="text-sm text-gray-400">UUID</div>
-                  <div className="mt-1 break-all font-medium text-white">{data.UUID}</div>
+                  <div className="text-sm text-gray-400">{data.UUID ? "UUID" : "Current tape"}</div>
+                  <div className="mt-1 break-all font-medium text-white">{data.UUID ? data.UUID : data.currentTape}</div>
                 </div>
 
                 <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
@@ -341,8 +342,8 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
                 </div>
 
                 <div className="rounded-lg border border-gray-700 bg-[#111827] p-4">
-                  <div className="text-sm text-gray-400">Total Object Count</div>
-                  <div className="mt-1 text-2xl font-bold text-white">{data?.totalObjectCount}</div>
+                  <div className="text-sm text-gray-400">{data?.totalObjectCount !== undefined ? "Total Object Count" : "Total Files"}</div>
+                  <div className="mt-1 text-2xl font-bold text-white">{data?.totalObjectCount !== undefined ? data.totalObjectCount : data.totalFiles}</div>
                 </div>
               </div>
 
@@ -487,7 +488,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
           </DialogDescription>
         </DialogHeader>
       </DialogContent>
-      {data.mediaType.startsWith("LTO") && highlightedRows.length <= reshedularSelection ? (
+      {data?.mediaType?.startsWith("LTO") && highlightedRows.length <= reshedularSelection ? (
         <ContextRight
           MENU_ID={MENU_ID}
           Rescheduled={Rescheduled}
@@ -496,7 +497,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
         />
       ) : null
       }
-      {data.mediaType.startsWith("MT") && highlightedRows.length <= reshedularSelection ? (
+      {data?.mediaType?.startsWith("MT") && highlightedRows.length <= reshedularSelection ? (
         <Suspense>
           <MTContextRight
             MENU_ID={MENU_ID}
@@ -505,7 +506,7 @@ export default function IndexPopup({ data, setOpenDialog, openDialog }: IndexPop
             SetMultipleRowsSelection={SetMultipleRowsSelection}
           /></Suspense>) : null
       }
-      {data.mediaType.startsWith("ALTO") && highlightedRows.length <= reshedularSelection ? (
+      {data?.mediaType?.startsWith("ALTO") && highlightedRows.length <= reshedularSelection ? (
         <Suspense>
           <AltoContextRight
             MENU_ID={MENU_ID}

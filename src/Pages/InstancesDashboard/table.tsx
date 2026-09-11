@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, Suspense, lazy } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -11,6 +11,7 @@ import { useSelector } from "react-redux";
 import { AlertTriangle, CheckCircle2, Server } from "lucide-react";
 import { IoMdCloseCircleOutline } from "react-icons/io";
 import { FaSortDown, FaSortUp } from "react-icons/fa";
+import { toast } from "sonner";
 
 import type { RootState } from "@/Redux/Store.tsx";
 import type { RunningInstance } from "./types.ts";
@@ -28,6 +29,10 @@ import { KpiCard } from "@/components/ui/KpiCard.tsx";
 import { InfoRow } from "@/components/InfoRow.tsx";
 import { StorageWarningBanner } from "@/components/ui/StorageWarningBanner.tsx";
 import { GlobalStorageAlert } from "@/components/GlobalStorageAlert";
+import {
+  Dialog,
+} from "@/components/ui/dialog"
+const IndexPopup = lazy(() => import("@/Pages/UUID_Details/DialogPopup/Index"));
 
 const KB_IN_TB = 1024 * 1024 * 1024;
 
@@ -75,6 +80,8 @@ export default function RunningInstancesDashboard() {
   const [previousSelection, setPreviousSelection] = useState<number | null>(
     null
   );
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<RunningInstance | null>(null);
 
   const ipAddress = useSelector(
     (state: RootState) => state.tableDownClick.ipAddressStore
@@ -153,6 +160,11 @@ export default function RunningInstancesDashboard() {
     setHideStorageAlert(false);
   }, [selected?.instanceName, selected?.storageStatus]);
 
+  useEffect(() => {
+    return () => {
+      document.body.style.pointerEvents = '';
+    };
+  }, [openDialog]);
 
   const tableColumns = useMemo(() => {
     if (!isLoading) return ColumnInstance;
@@ -248,6 +260,36 @@ export default function RunningInstancesDashboard() {
       setPreviousSelection,
       isLoading
     );
+  };
+
+  const openTapeDetails = async (instance: RunningInstance) => {
+    if (!instance.currentTape) {
+      toast.error("Current tape is not available");
+      return;
+    }
+
+    try {
+      const endpoint = `http://${ipAddress}:${apiPort}/uuids?page=1&limit=50`;
+      const uuidResult = await fetchData(endpoint, "POST", {
+        filters: { UUID: instance.currentTape },
+        sorting: [],
+      });
+      const matchingTape = uuidResult?.data?.find(
+        (item: { UUID?: string }) => item.UUID === instance.currentTape
+      );
+      const mediaType = matchingTape?.mediaType;
+
+      if (!mediaType) {
+        toast.error(`Media type was not found for ${instance.currentTape}`);
+        return;
+      }
+
+      setSelectedRow({ ...instance, mediaType });
+      setOpenDialog(true);
+    } catch (error) {
+      console.error("Failed to load the tape media type", error);
+      toast.error("Failed to load the tape media type");
+    }
   };
 
   const table = useReactTable({
@@ -492,6 +534,9 @@ export default function RunningInstancesDashboard() {
                           setActiveCursor(row.index);
                         }
                       }}
+                      onDoubleClick={() => {
+                        void openTapeDetails(row.original as RunningInstance);
+                      }}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <td
@@ -653,6 +698,24 @@ export default function RunningInstancesDashboard() {
           )}
         </div>
       </div>
+
+      {
+        openDialog && selectedRow && (
+          <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+            <Suspense fallback={""}>
+              <IndexPopup
+                data={{
+                  currentTape: selectedRow.currentTape ?? undefined,
+                  mediaType: selectedRow.mediaType ?? undefined,
+                  totalObjectCount: selectedRow.totalFiles ?? undefined,
+                }}
+                setOpenDialog={setOpenDialog}
+                openDialog={openDialog}
+              />
+            </Suspense>
+          </Dialog>
+        )
+      }
     </div>
   );
 }

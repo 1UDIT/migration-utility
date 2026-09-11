@@ -12,6 +12,7 @@ export type RunningInstance = {
   previousObjectThroughput: string | null;
 
   currentTape: string | null;
+  mediaType: string | null;
   startTimeCurrentTape: string | null;
   startTimeCurrentTapeMS: number | null;
   sizeTransferCurrentTape: number | null;
