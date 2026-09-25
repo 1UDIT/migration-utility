@@ -43,8 +43,8 @@ export default function ContextRight({ MENU_ID, Rescheduled, refetch, SetMultipl
             SetMultipleRowsSelection([]);
             contextMenu.hideAll();
         }).catch(error => {
-            console.log("Error In Post Data", error);
-            toast.error("Error In Data", {
+            console.log("Error In Post Data", error?.response?.data);
+            toast.error(error?.response?.data?.detail?.errors[0]?.reason, {
                 style: {
                     background: "#ef4444", // Tailwind red-500
                     color: "#fff",
