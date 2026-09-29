@@ -91,7 +91,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
     const Body = useSelector((state: RootState) => state.tableDownClick.paginationStore);
     const location = useLocation();
     const [XLSX, setXLSX] = useState<typeof import("xlsx") | null>(null);
-    const { Downloadbtn } = FetchColumnDetail();
+    const { Downloadbtn, siteName } = FetchColumnDetail();
     const ipAddress = useSelector((state: RootState) => state.tableDownClick.ipAddressStore);
     const apiPort = useSelector((state: RootState) => state.tableDownClick.apiPort);
     const reportType = useSelector((state: RootState) => state.tableDownClick.reportType);
@@ -270,7 +270,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
                 const blob = await res.blob();
                 const filename = getFileNameFromDisposition(
                     res.headers.get("content-disposition"),
-                    `Yesterday Transfer.zip`
+                    `Yesterday Transfer-${siteName}.zip`
                 );
 
                 saveAs(blob, filename);
@@ -281,7 +281,7 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             console.error("❌ DownloadReport failed:", err);
             throw err; // ❌ IMPORTANT
         }
-    }, [Body, Downloadbtn, downloadChoice]);
+    }, [Body, Downloadbtn, downloadChoice, siteName]);
 
     const handleDialogDownload = useCallback(() => {
         const choiceName = downloadChoice === "OBJECT_LIST" ? "Object List" : "CHECKSUM";
@@ -308,6 +308,8 @@ export function DefaultLayout({ children }: AppSidebarProps) {
             <SidebarProvider>
                 <Sidebar className="bg-[#24303f] text-base font-medium">
                     {/* Logo */}
+                    <div className="pr-2 text-center text-blue-400 font-bold">Migration Utility Tool</div>
+                    <div className="pr-2 text-center text-blue-300 font-bold">{siteName}</div>
                     <div className="block m-auto p-auto pt-2">
                         <img
                             src={`${basePath}img/Logo.png`}

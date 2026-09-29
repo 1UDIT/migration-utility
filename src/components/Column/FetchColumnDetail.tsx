@@ -78,6 +78,7 @@ const FetchColumnDetail = () => {
     const [nonActiveInstance, SetnonActiveInstance] = useState<number>(1);
     const [Downloadbtn, setReportsbtn] = useState<typeof import("xlsx") | any>(null);
     const [DownloadPannel, setReportsPannel] = useState<typeof import("xlsx") | any>(null);
+    const [siteName, setSiteName] = useState<string>("");
     const Dispatch = useDispatch()
 
     const getCelldetail = (props: any, header: any, alignText: string) => {
@@ -515,6 +516,7 @@ const FetchColumnDetail = () => {
             SetColumnInstance(ColumnInstance);
             setReportsbtn(response.data.ReportColumns);
             setReportsPannel(response.data.reportPanel);
+            setSiteName(response.data.siteName ?? "");
             Dispatch(ipAddressStore(response.data.apiUrl));
             Dispatch(apiPort(response.data.apiPort ?? 4000));
             Dispatch(reshedularSelection(response.data.reshedularSelection));
@@ -527,7 +529,7 @@ const FetchColumnDetail = () => {
 
     }, [nonActiveInstance]);
 
-    return { ColumnUUID, ColumnObject, ColumnMasstech_column, Downloadbtn, ColumnReport, DownloadPannel, ColumnInstance };
+    return { ColumnUUID, ColumnObject, ColumnMasstech_column, Downloadbtn, ColumnReport, DownloadPannel, ColumnInstance, siteName };
 }
 
 export default FetchColumnDetail
