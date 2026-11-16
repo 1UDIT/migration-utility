@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, Suspense, lazy } from "react";
+import { useEffect, useMemo, useState, Suspense, lazy } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -6,10 +6,9 @@ import {
   type PaginationState,
   type SortingState,
 } from "@tanstack/react-table";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
-import { AlertTriangle, CheckCircle2, Server } from "lucide-react";
-import { IoMdCloseCircleOutline } from "react-icons/io";
+import { format, subDays } from "date-fns";
 import { FaSortDown, FaSortUp } from "react-icons/fa";
 import { toast } from "sonner";
 
@@ -19,50 +18,62 @@ import type { RunningInstance } from "./types.ts";
 import { fetchData } from "../Object_Details/HandleApiCall/Apicall.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import useKeyNavigationx from "@/hooks/useKeyNavigation.tsx";
-import { useSelectionRow } from "@/hooks/useSelectionRow.tsx.tsx";
-import FetchColumnDetail, {
-  bytesToGB,
-  msToHuman,
-  safe,
-} from "@/components/Column/FetchColumnDetail.tsx";
-import { KpiCard } from "@/components/ui/KpiCard.tsx";
-import { InfoRow } from "@/components/InfoRow.tsx";
-import { StorageWarningBanner } from "@/components/ui/StorageWarningBanner.tsx";
+import { useSelectionRow as updateRowSelection } from "@/hooks/useSelectionRow.tsx.tsx";
+import FetchColumnDetail from "@/components/Column/FetchColumnDetail.tsx";
 import { GlobalStorageAlert } from "@/components/GlobalStorageAlert";
+import { Dialog } from "@/components/ui/dialog";
 import {
-  Dialog,
-} from "@/components/ui/dialog"
+  DashboardKpis,
+  DashboardToolbar,
+  InstanceDetailsPanel,
+  MigrationActivitySummary,
+  type ActivitySummary,
+  type DataRange,
+  type StatusFilter,
+} from "./dashboard-sections.tsx";
 const IndexPopup = lazy(() => import("@/Pages/UUID_Details/DialogPopup/Index"));
 
-const KB_IN_TB = 1024 * 1024 * 1024;
-
-const toNumber = (value: unknown): number => {
-  if (value === null || value === undefined || value === "") return 0;
-
-  const num = Number(value);
-  return Number.isFinite(num) ? num : 0;
+const getAgeSeconds = (dateValue: unknown): number => {
+  if (!dateValue) return Number.MAX_SAFE_INTEGER;
+  const time = new Date(String(dateValue)).getTime();
+  return Number.isNaN(time) ? Number.MAX_SAFE_INTEGER : (Date.now() - time) / 1000;
 };
 
-const kbToTb = (kb: number): number => {
-  return kb / KB_IN_TB;
+type ArchivedObject = {
+  archiveDate?: string | null;
 };
 
-const formatKbToTb = (value: unknown): string => {
-  const kb = toNumber(value);
-  if (kb <= 0) return "0.00 TB";
-
-  return `${kbToTb(kb).toFixed(2)} TB`;
+const parseArchiveDate = (value: string | null | undefined): number => {
+  if (!value) return Number.NaN;
+  return new Date(value.replace(" ", "T")).getTime();
 };
 
+const ACTIVITY_STATUSES = [
+  { key: "migrationCompleted", status: "MIGRATION_COMPLETED" },
+  { key: "migrationFailed", status: "MIGRATION_FAILED" },
+  { key: "decodedCompleted", status: "DECODE_COMPLETED" },
+  { key: "decodedFailed", status: "DECODE_FAILED" },
+] as const;
 
+const countActivityObjects = (data: unknown, dataRange: DataRange): number => {
+  const response = data as { data?: ArchivedObject[] } | undefined;
+  const objects = Array.isArray(response?.data) ? response.data : [];
+  if (dataRange !== "24-hours") return objects.length;
 
+  const now = Date.now();
+  const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+
+  return objects.filter(({ archiveDate }) => {
+    const archiveTime = parseArchiveDate(archiveDate);
+    const ageMs = now - archiveTime;
+    return Number.isFinite(archiveTime) && ageMs >= 0 && ageMs <= twentyFourHoursMs;
+  }).length;
+};
 
 
 export default function RunningInstancesDashboard() {
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState<
-    "ALL" | "Running" | "NotActive" | "Stale"
-  >("ALL");
+  const [status, setStatus] = useState<StatusFilter>("ALL");
 
   const [selected, setSelected] = useState<RunningInstance | null>(null);
 
@@ -74,14 +85,14 @@ export default function RunningInstancesDashboard() {
     pageIndex: 0,
     pageSize: 50,
   });
-  const [hideStorageAlert, setHideStorageAlert] = useState(false);
-  const [highlightedRows, SetMultipleRowsSelection] = useState<any[]>([]);
-  const [Filter, setFilter] = useState<any>();
+  const [dataRange, setDataRange] = useState<DataRange>("1-day");
+  const [highlightedRows, SetMultipleRowsSelection] = useState<number[]>([]);
   const [previousSelection, setPreviousSelection] = useState<number | null>(
     null
   );
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedRow, setSelectedRow] = useState<RunningInstance | null>(null);
+  const [hideSummary, setHideSummary] = useState(true);
 
   const ipAddress = useSelector(
     (state: RootState) => state.tableDownClick.ipAddressStore
@@ -97,11 +108,7 @@ export default function RunningInstancesDashboard() {
   const { ColumnInstance } = FetchColumnDetail();
 
   const body = useMemo(() => {
-    const { startDate, ...rest } = Filter ?? {};
-
-    const filters: any = {
-      ...rest,
-    };
+    const filters: Record<string, string> = {};
 
     if (q.trim() !== "") {
       filters.q = q.trim();
@@ -116,7 +123,7 @@ export default function RunningInstancesDashboard() {
       sorting,
       nonActiveInstance,
     };
-  }, [Filter, sorting, status, q, nonActiveInstance]);
+  }, [sorting, status, q, nonActiveInstance]);
 
   const { data, isLoading, refetch, isFetched, dataUpdatedAt } = useQuery({
     queryKey: [
@@ -137,6 +144,54 @@ export default function RunningInstancesDashboard() {
     retry: false,
   });
 
+  const activityDateRange = useMemo(() => {
+    if (dataRange === "overall") return undefined;
+
+    const today = new Date();
+    return {
+      from: format(dataRange === "24-hours" ? subDays(today, 1) : today, "yyyy-MM-dd"),
+      to: format(today, "yyyy-MM-dd"),
+    };
+  }, [dataRange]);
+
+  const activityQueries = useQueries({
+    queries: ACTIVITY_STATUSES.map(({ status: activityStatus }) => ({
+      queryKey: ["activity-summary", activityStatus, dataRange, activityDateRange, ipAddress, apiPort],
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        fetchData(
+          `http://${ipAddress}:${apiPort}/objects?page=1&limit=50`,
+          "POST",
+          {
+            filters: {
+              status: [activityStatus],
+              ...(activityDateRange ? { lastUpdateDate: activityDateRange } : {}),
+            },
+            sorting: [],
+          },
+          signal
+        ),
+      enabled: !hideSummary,
+      retry: false,
+    })),
+  });
+
+  const activitySummary = ACTIVITY_STATUSES.reduce<ActivitySummary>(
+    (summary, { key }, index) => {
+      const query = activityQueries[index];
+      summary[key] = {
+        count: countActivityObjects(query.data, dataRange),
+        isLoading: query.isLoading,
+      };
+      return summary;
+    },
+    {
+      migrationCompleted: { count: 0, isLoading: false },
+      migrationFailed: { count: 0, isLoading: false },
+      decodedCompleted: { count: 0, isLoading: false },
+      decodedFailed: { count: 0, isLoading: false },
+    }
+  );
+
   const tableData = useMemo(() => {
     if (isLoading) return Array(10).fill({});
 
@@ -147,24 +202,20 @@ export default function RunningInstancesDashboard() {
   const kpi = useMemo(() => {
     return {
       active: data?.activeInstance || 0,
-      NotActive: data?.notActiveInstance || 0,
+      notActive: data?.notActiveInstance || 0,
       totalStorage: data?.totalStorage || 0,
       usedStoragePercentage: data?.driveUsedPercent || 0,
-      storageStatus: data?.storageStatus,
-      freeStorage: data?.freeStorage || 0,
+      storageStatus: data?.storageStatus || "Unknown",
       driveFreePercent: data?.driveFreePercent || 0
     };
   }, [data]);
 
-  useEffect(() => {
-    setHideStorageAlert(false);
-  }, [selected?.instanceName, selected?.storageStatus]);
 
   useEffect(() => {
     return () => {
       document.body.style.pointerEvents = '';
     };
-  }, [openDialog]);
+  }, []);
 
   const tableColumns = useMemo(() => {
     if (!isLoading) return ColumnInstance;
@@ -178,16 +229,6 @@ export default function RunningInstancesDashboard() {
       ),
     }));
   }, [isLoading, ColumnInstance]);
-
-  const getAgeSeconds = (dateValue: unknown): number => {
-    if (!dateValue) return Number.MAX_SAFE_INTEGER;
-
-    const time = new Date(String(dateValue)).getTime();
-
-    if (Number.isNaN(time)) return Number.MAX_SAFE_INTEGER;
-
-    return (Date.now() - time) / 1000;
-  };
 
   const borderColor = useMemo(() => {
     if (!selected?.lastupdatedDate) return "border-slate-500";
@@ -252,7 +293,7 @@ export default function RunningInstancesDashboard() {
   }, [isLoading, tableData, keyNavigation]);
 
   const handleRowClick = (event: React.MouseEvent, id: number) => {
-    useSelectionRow(
+    updateRowSelection(
       event,
       id,
       SetMultipleRowsSelection,
@@ -310,97 +351,22 @@ export default function RunningInstancesDashboard() {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-auto p-2">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div>
-            <div className="text-2xl font-bold text-white">
-              Running Instances
-            </div>
-            <div className="text-sm text-white">
-              Live view of current tape transfers
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-64">
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search instance / IP / drive"
-              className="w-full rounded-xl border bg-white px-3 py-2 pr-8 outline-none focus:ring"
-            />
-
-            {q && (
-              <button
-                onClick={() => setQ("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
-                title="Clear"
-              >
-                <IoMdCloseCircleOutline size={18} />
-              </button>
-            )}
-          </div>
-
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
-            onFocus={(e) => e.target.blur()}
-            className="rounded-xl border bg-white px-3 py-2 font-semibold"
-          >
-            <option value="ALL">Status: All</option>
-            <option value="Running">
-              Running (&lt; {nonActiveInstance / 3600}h)
-            </option>
-            <option value="NotActive">Not Active</option>
-            <option value="Stale">Stale (&gt; 24h)</option>
-          </select>
-
-          <button
-            onClick={() => refetch()}
-            className="rounded-xl border bg-white px-3 py-2 hover:bg-slate-100"
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          title="Active Instances"
-          value={`${kpi.active}`}
-          subtitle="Currently running"
-          status="Info"
-          icon={<CheckCircle2 size={20} />}
-        />
-
-        <KpiCard
-          title={`Not Active (<${nonActiveInstance / 3600}h) Instances`}
-          value={`${kpi.NotActive}`}
-          subtitle="Recently inactive"
-          status={kpi.NotActive > 0 ? "Warning" : "Healthy"}
-          icon={<AlertTriangle size={20} />}
-        />
-
-        <KpiCard
-          title="Total Storage"
-          value={kpi.totalStorage ? `${(kpi.totalStorage)} TB` : "N/A"}
-          subtitle={`${kpi.usedStoragePercentage}% used`}
-          status={kpi.storageStatus}
-          icon={<Server size={20} />}
-          progress={kpi.driveFreePercent}
-          progressLabel="Remaining Space"
-        />
-        {!hideStorageAlert && (
-          <StorageWarningBanner
-            status={selected?.storageStatus}
-            instanceName={selected?.instanceName}
-            usedPercent={selected?.driveUsedPercent}
-            freePercent={selected?.driveFreePercent}
-            onClose={() => setHideStorageAlert(true)}
-          />
-        )}
-      </div>
+      <DashboardToolbar
+        query={q}
+        status={status}
+        nonActiveInstance={nonActiveInstance}
+        onQueryChange={setQ}
+        onStatusChange={setStatus}
+        onRefresh={() => void refetch()}
+      />
+      <DashboardKpis kpi={kpi} nonActiveInstance={nonActiveInstance} />
+      <MigrationActivitySummary
+        activitySummary={activitySummary}
+        dataRange={dataRange}
+        collapsed={hideSummary}
+        onRangeChange={setDataRange}
+        onToggle={() => setHideSummary((hidden) => !hidden)}
+      />
 
       <GlobalStorageAlert rows={tableData} refreshKey={dataUpdatedAt} />
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[1fr_360px] lg:w-full 2xl:w-[100%]">
@@ -569,134 +535,13 @@ export default function RunningInstancesDashboard() {
           </div>
         </div>
 
-        <div className={`min-h-0 overflow-auto rounded-2xl border-4 bg-[#24303f] ${borderColor}`}>
-          <div
-            className={`sticky top-0 flex items-center justify-between border-b bg-[#24303f] px-4 py-3 ${borderColor}`}
-          >
-            <div className={`font-semibold ${statusColor}`}>
-              {selected?.instanceName ?? "Select an instance"}
-            </div>
-
-            {selected && (
-              <button onClick={() => setSelected(null)}>
-                <IoMdCloseCircleOutline color="#ffffff" size={25} />
-              </button>
-            )}
-          </div>
-
-          {!selected ? (
-            <div className="p-4 text-sm text-white">
-              Click any row to view current/previous tape details.
-            </div>
-          ) : (
-            <div className="space-y-4 p-4">
-              <Section title="Storage Info" color={storageStatusColor}>
-
-                <InfoRow
-                  k="Drive(Letter)"
-                  v={selected.driveLetter === null ? "N/A" : selected.driveLetter.toUpperCase()}
-                />
-                <InfoRow
-                  k="Total Space"
-                  v={selected.driveTotalSize !== null ? `${(selected.driveTotalSize)}TB` : "N/A"}
-                />
-
-                <InfoRow
-                  k="Free Space"
-                  v={selected.driveRemainingSize !== null ? `${(selected.driveRemainingSize)}TB` : "N/A"}
-                />
-
-                <InfoRow
-                  k="Status"
-                  v={selected.storageStatus}
-                  status={selected.storageStatus}
-                />
-
-                <InfoRow
-                  k="Storage Usage"
-                  v={selected.driveFreePercent !== null ? `${selected.driveFreePercent}% Free` : "N/A"}
-                  status={selected.storageStatus}
-                  progress={selected.driveUsedPercent}
-                  progressLabel="Used Space"
-                />
-              </Section>
-
-              <Section title="Instance Info" color={statusColor}>
-                <InfoRow k="IP" v={safe(selected.ip)} />
-                <InfoRow k="Drive" v={safe(selected.driveNB)} />
-                <InfoRow k="TID" v={safe(selected.tlID)} />
-                <InfoRow
-                  k="Last Updated"
-                  v={
-                    selected.lastupdatedDate
-                      ? new Date(selected.lastupdatedDate).toLocaleString()
-                      : "-"
-                  }
-                />
-                <InfoRow k="Total Files" v={safe(selected.totalFiles)} />
-              </Section>
-
-              <Section title="File Info" color={statusColor}>
-                <InfoRow
-                  k="File Name"
-                  v={safe(selected.startedDumpingObjectName)}
-                />
-                <InfoRow
-                  k="File Size"
-                  v={
-                    selected.startedDumpingObjectSize
-                      ? `${bytesToGB(selected.startedDumpingObjectSize)} GB`
-                      : "-"
-                  }
-                />
-                <InfoRow
-                  k="Prev Obj Throughput"
-                  v={safe(selected.previousObjectThroughput)}
-                />
-              </Section>
-
-              <Section title="Current Tape" color={statusColor}>
-                <InfoRow k="Tape" v={safe(selected.currentTape)} />
-                <InfoRow
-                  k="Started"
-                  v={safe(selected.startTimeCurrentTape)}
-                />
-                <InfoRow
-                  k="Transferred"
-                  v={`${bytesToGB(selected.sizeTransferCurrentTape)} GB`}
-                />
-                <InfoRow
-                  k="Duration"
-                  v={msToHuman(selected.durationCurrentTapeMS)}
-                />
-                <InfoRow
-                  k="Throughput"
-                  v={`${safe(selected.currentTapeThroughput)} MB/s`}
-                />
-              </Section>
-
-              <Section title="Previous Tape" color={statusColor}>
-                <InfoRow k="Tape" v={safe(selected.previousTape)} />
-                <InfoRow
-                  k="Started"
-                  v={safe(selected.startTimePreviousTape)}
-                />
-                <InfoRow
-                  k="Transferred"
-                  v={`${bytesToGB(selected.sizeTransferPreviousTape)} GB`}
-                />
-                <InfoRow
-                  k="Duration"
-                  v={msToHuman(selected.durationPreviousTapeMS)}
-                />
-                <InfoRow
-                  k="Throughput"
-                  v={`${safe(selected.previousTapeThroughput)} MB/s`}
-                />
-              </Section>
-            </div>
-          )}
-        </div>
+        <InstanceDetailsPanel
+          instance={selected}
+          borderColor={borderColor}
+          statusColor={statusColor}
+          storageStatusColor={storageStatusColor}
+          onClose={() => setSelected(null)}
+        />
       </div>
 
       {
@@ -716,28 +561,6 @@ export default function RunningInstancesDashboard() {
           </Dialog>
         )
       }
-    </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-  color,
-}: {
-  title: string;
-  children: React.ReactNode;
-  color: string;
-}) {
-  return (
-    <div className="rounded-xl border bg-[#18212d] p-3 shadow-lg">
-      <div
-        className={`mb-2 text-sm font-semibold uppercase tracking-wide underline ${color}`}
-      >
-        {title}
-      </div>
-
-      <div className="space-y-1 text-xs">{children}</div>
     </div>
   );
 }

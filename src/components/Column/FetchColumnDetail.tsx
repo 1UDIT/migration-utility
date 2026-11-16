@@ -2,7 +2,7 @@
 import { Progress } from '@/components/ui/progress';
 import { apiPort, ipAddressStore, nonActiveInstances, reportType, reshedularSelection } from '@/Redux/tableDropFilter';
 import axios from 'axios';
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDispatch } from 'react-redux';
 import { FaCircle, FaEdit } from "react-icons/fa";
 import CopyCell from '../ui/CopyCell';
@@ -69,13 +69,35 @@ export function msToHuman(ms?: number | null) {
     return `${s}s`;
 }
 
+let configRequest: Promise<any> | null = null;
+
+const loadConfig = () => {
+    if (!configRequest) {
+        configRequest = axios({
+            method: "GET",
+            url: "./config.json",
+            headers: {
+                "Cache-Control": "no-cache",
+            },
+        })
+            .then(({ data }) => data)
+            .catch((error) => {
+                // Allow a later mount to retry after a failed request.
+                configRequest = null;
+                throw error;
+            });
+    }
+
+    return configRequest;
+};
+
 const FetchColumnDetail = () => {
     const [ColumnUUID, SetColumnUUID] = useState([]);
     const [ColumnObject, SetColumnObject] = useState([]);
     const [ColumnMasstech_column, SetColumnMasstech_column] = useState([]);
     const [ColumnInstance, SetColumnInstance] = useState([]);
     const [ColumnReport, SetColumnReport] = useState([]);
-    const [nonActiveInstance, SetnonActiveInstance] = useState<number>(1);
+    const nonActiveInstanceRef = useRef(1);
     const [Downloadbtn, setReportsbtn] = useState<typeof import("xlsx") | any>(null);
     const [DownloadPannel, setReportsPannel] = useState<typeof import("xlsx") | any>(null);
     const [siteName, setSiteName] = useState<string>("");
@@ -284,7 +306,7 @@ const FetchColumnDetail = () => {
             let color = "";
             let label = "";
 
-            if (diffHours <= nonActiveInstance) {
+            if (diffHours <= nonActiveInstanceRef.current) {
                 color = "text-green-400 animate-[greenPulse_2s_ease-in-out_infinite]";
                 label = "Healthy";
             } else if (diffHours <= 86400) {
@@ -406,14 +428,14 @@ const FetchColumnDetail = () => {
     }
 
     useEffect(() => {
-        axios({
-            method: "Get",
-            url: './config.json',
-            headers: {
-                "Cache-Control": "no-cache"
-            }
-        }).then(response => {
-            const ColumnUUID = response?.data?.Uuid_column.map((value: any) => {
+        let isMounted = true;
+
+        loadConfig().then(config => {
+            if (!isMounted) return;
+
+            nonActiveInstanceRef.current = config.nonActiveInstance ?? 1;
+
+            const ColumnUUID = config?.Uuid_column.map((value: any) => {
                 const alignClass = value.textAlign === 'text-left'
                     ? 'text-left'
                     : value.textAlign === 'text-center'
@@ -433,7 +455,7 @@ const FetchColumnDetail = () => {
 
                 }
             })
-            const ColumnObject = response?.data?.Object_column.map((value: any) => {
+            const ColumnObject = config?.Object_column.map((value: any) => {
                 const alignClass = value.textAlign === 'text-left'
                     ? 'text-left'
                     : value.textAlign === 'text-center'
@@ -452,7 +474,7 @@ const FetchColumnDetail = () => {
                     enableSorting: value.enableSorting,
                 }
             })
-            const ColumnMasstech_column = response?.data?.Masstech_column.map((value: any) => {
+            const ColumnMasstech_column = config?.Masstech_column.map((value: any) => {
                 const alignClass = value.textAlign === 'text-left'
                     ? 'text-left'
                     : value.textAlign === 'text-center'
@@ -471,7 +493,7 @@ const FetchColumnDetail = () => {
                     enableSorting: value.enableSorting,
                 }
             })
-            const ColumnReport = response?.data?.ReportGenerate.map((value: any) => {
+            const ColumnReport = config?.ReportGenerate.map((value: any) => {
                 const alignClass = value.textAlign === 'text-left'
                     ? 'text-left'
                     : value.textAlign === 'text-center'
@@ -490,7 +512,7 @@ const FetchColumnDetail = () => {
                     enableSorting: value.enableSorting,
                 }
             })
-            const ColumnInstance = response?.data?.InstanceDashBoard.map((value: any) => {
+            const ColumnInstance = config?.InstanceDashBoard.map((value: any) => {
                 const alignClass = value.textAlign === 'text-left'
                     ? 'text-left'
                     : value.textAlign === 'text-center'
@@ -514,20 +536,22 @@ const FetchColumnDetail = () => {
             SetColumnMasstech_column(ColumnMasstech_column);
             SetColumnReport(ColumnReport);
             SetColumnInstance(ColumnInstance);
-            setReportsbtn(response.data.ReportColumns);
-            setReportsPannel(response.data.reportPanel);
-            setSiteName(response.data.siteName ?? "");
-            Dispatch(ipAddressStore(response.data.apiUrl));
-            Dispatch(apiPort(response.data.apiPort ?? 4000));
-            Dispatch(reshedularSelection(response.data.reshedularSelection));
-            Dispatch(nonActiveInstances(response.data.nonActiveInstance));
-            Dispatch(reportType(response.data.reportType));
-            SetnonActiveInstance(response.data.nonActiveInstance); //convert the seconds to hours for display in the UI
+            setReportsbtn(config.ReportColumns);
+            setReportsPannel(config.reportPanel);
+            setSiteName(config.siteName ?? "");
+            Dispatch(ipAddressStore(config.apiUrl));
+            Dispatch(apiPort(config.apiPort ?? 4000));
+            Dispatch(reshedularSelection(config.reshedularSelection));
+            Dispatch(nonActiveInstances(config.nonActiveInstance));
+            Dispatch(reportType(config.reportType));
         }).catch(error => {
             console.log(error, "error in Config File")
         });
 
-    }, [nonActiveInstance]);
+        return () => {
+            isMounted = false;
+        };
+    }, [Dispatch]);
 
     return { ColumnUUID, ColumnObject, ColumnMasstech_column, Downloadbtn, ColumnReport, DownloadPannel, ColumnInstance, siteName };
 }
