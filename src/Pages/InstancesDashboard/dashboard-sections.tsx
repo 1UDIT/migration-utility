@@ -8,9 +8,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { bytesToGB, msToHuman, safe } from "@/components/Column/FetchColumnDetail.tsx";
 import type { RunningInstance } from "./types.ts";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
-import { MigrationActivityChart } from "./MigrationActivityChart.tsx";
-import { mergeActivityData } from "./mergeActivityData.tsx";
-import { fetchChartData } from "./Multi-Series-LineChart-API.tsx";
+import { MigrationActivityChart, type ActivityChartPoint } from "./MigrationActivityChart.tsx";
 
 
 const mediaType = [
@@ -165,7 +163,9 @@ export function MigrationActivitySummary({
   collapsed,
   onRangeChange,
   onToggle,
-  setMediaType
+  setMediaType,
+  chartData,
+  chartLoading,
 }: {
   activitySummary: ActivitySummary;
   dataRange: DataRange;
@@ -173,6 +173,8 @@ export function MigrationActivitySummary({
   onRangeChange: (range: DataRange) => void;
   onToggle: () => void;
   setMediaType: (value: string | null) => void;
+  chartData: ActivityChartPoint[];
+  chartLoading: boolean;
 }) {
   return (
     <section className="mb-4 rounded-xl border border-slate-500 bg-[#18212d] p-4">
@@ -267,11 +269,8 @@ export function MigrationActivitySummary({
           </div>
           <div className="mt-4">
             <MigrationActivityChart
-              data={fetchChartData}
-              isLoading={
-                activitySummary.migrationCompleted.isLoading ||
-                activitySummary.decodedCompleted.isLoading
-              }
+              data={chartData}
+              isLoading={chartLoading}
             />
           </div>
         </>

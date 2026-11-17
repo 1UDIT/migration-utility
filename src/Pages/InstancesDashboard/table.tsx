@@ -14,6 +14,7 @@ import { toast } from "sonner";
 
 import type { RootState } from "@/Redux/Store.tsx";
 import type { RunningInstance } from "./types.ts";
+import { mergeActivityData, type MigrationSummaryResponse } from "./mergeActivityData.tsx";
 
 import { fetchData } from "../Object_Details/HandleApiCall/Apicall.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -46,13 +47,6 @@ const ACTIVITY_STATUSES = [
   { key: "decodedFailed", status: "DECODE_FAILED" },
 ] as const;
 
-type MigrationSummaryResponse = {
-  totals?: {
-    objectCount?: number;
-  };
-};
-
-
 export default function RunningInstancesDashboard() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<StatusFilter>("ALL");
@@ -75,7 +69,7 @@ export default function RunningInstancesDashboard() {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedRow, setSelectedRow] = useState<RunningInstance | null>(null);
   const [hideSummary, setHideSummary] = useState(true);
-  const [mediaType, setMediaType] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<string | null>("alto-disk");
 
   const ipAddress = useSelector(
     (state: RootState) => state.tableDownClick.ipAddressStore
@@ -177,6 +171,17 @@ export default function RunningInstancesDashboard() {
       decodedFailed: { count: 0, isLoading: false },
     }
   );
+
+  const chartData = useMemo(() => {
+    const migration = activityQueries[0].data as MigrationSummaryResponse | undefined;
+    const decoded = activityQueries[2].data as MigrationSummaryResponse | undefined;
+
+    if (!migration?.rows || !decoded?.rows) return [];
+    return mergeActivityData(migration, decoded);
+  }, [activityQueries[0].data, activityQueries[2].data]);
+
+  const chartLoading =
+    activityQueries[0].isLoading || activityQueries[2].isLoading;
 
   const tableData = useMemo(() => {
     if (isLoading) return Array(10).fill({});
@@ -353,6 +358,8 @@ export default function RunningInstancesDashboard() {
         onRangeChange={setDataRange}
         onToggle={() => setHideSummary((hidden) => !hidden)}
         setMediaType={setMediaType}
+        chartData={chartData}
+        chartLoading={chartLoading}
       />
 
       <GlobalStorageAlert rows={tableData} refreshKey={dataUpdatedAt} />
