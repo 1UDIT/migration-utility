@@ -7,6 +7,18 @@ import { KpiStatus } from "@/components/ui/KpiStatus.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { bytesToGB, msToHuman, safe } from "@/components/Column/FetchColumnDetail.tsx";
 import type { RunningInstance } from "./types.ts";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
+import { MigrationActivityChart } from "./MigrationActivityChart.tsx";
+import { mergeActivityData } from "./mergeActivityData.tsx";
+import { fetchChartData } from "./Multi-Series-LineChart-API.tsx";
+
+
+const mediaType = [
+  { label: "ALTO-DISK", value: "alto-disk" },
+  { label: "LTO", value: "LTO" },
+  { label: "MT", value: "MT" }
+]
+
 
 type StatusFilter = "ALL" | "Running" | "NotActive" | "Stale";
 type KpiState = {
@@ -28,7 +40,7 @@ export type ActivitySummary = {
 const DATA_RANGES = [
   { value: "overall", label: "Overall (All Time)" },
   { value: "24-hours", label: "24 Hours" },
-  { value: "1-day", label: "1 Day" },
+  { value: "1-hour", label: "1 Hour" },
 ] as const;
 
 export type DataRange = (typeof DATA_RANGES)[number]["value"];
@@ -131,23 +143,55 @@ export function DashboardKpis({ kpi, nonActiveInstance }: { kpi: KpiState; nonAc
   );
 }
 
+
+const LoadingDots = () => (
+  <span className="inline-flex items-center">
+    {[0, 1, 2].map((i) => (
+      <span
+        key={i}
+        className="inline-block animate-bounce"
+        style={{ animationDelay: `${i * 150}ms` }}
+      >
+        .
+      </span>
+    ))}
+  </span>
+);
+
+
 export function MigrationActivitySummary({
   activitySummary,
   dataRange,
   collapsed,
   onRangeChange,
   onToggle,
+  setMediaType
 }: {
   activitySummary: ActivitySummary;
   dataRange: DataRange;
   collapsed: boolean;
   onRangeChange: (range: DataRange) => void;
   onToggle: () => void;
+  setMediaType: (value: string | null) => void;
 }) {
   return (
     <section className="mb-4 rounded-xl border border-slate-500 bg-[#18212d] p-4">
       <div className="mb-2 flex items-center justify-between gap-2 border-b border-dashed border-slate-500 pb-2 text-sm font-semibold text-white">
         <span>Migration Activity Summary</span>
+        <Select defaultValue={mediaType[0].value} onValueChange={(value) => setMediaType(value)}>
+          <SelectTrigger className="w-48 border-slate-600 bg-[#111c2b] text-white">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {mediaType.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
         <div className="flex items-center gap-2">
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-700 bg-[#111c2b] p-1">
             {DATA_RANGES.map(({ value, label }) => {
@@ -160,8 +204,8 @@ export function MigrationActivitySummary({
                   aria-pressed={isActive}
                   onClick={() => onRangeChange(value)}
                   className={`h-8 min-w-[90px] rounded-md px-3 text-[12px] font-semibold transition ${isActive
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "text-slate-400 hover:bg-[#1b2a3d] hover:text-slate-200"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-400 hover:bg-[#1b2a3d] hover:text-slate-200"
                     }`}
                 >
                   {label}
@@ -184,42 +228,53 @@ export function MigrationActivitySummary({
       </div>
 
       {!collapsed && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <KpiStatus
-            title="Migration completed"
-            value={activitySummary.migrationCompleted.isLoading ? "..." : activitySummary.migrationCompleted.count}
-            subtitle={
-              dataRange === "overall"
-                ? "All time"
-                : dataRange === "24-hours"
-                  ? "Rolling last 24 hours"
-                  : "Today"
-            }
-            status="Info"
-            icon={<UploadCloud size={20} />}
-          />
-          <KpiStatus
-            title="Migration Failed"
-            value={activitySummary.migrationFailed.isLoading ? "..." : activitySummary.migrationFailed.count}
-            subtitle={getRangeLabel(dataRange)}
-            status={activitySummary.migrationFailed.count > 0 ? "Warning" : "Healthy"}
-            icon={<UploadCloud size={20} />}
-          />
-          <KpiStatus
-            title="Decoded completed"
-            value={activitySummary.decodedCompleted.isLoading ? "..." : activitySummary.decodedCompleted.count}
-            subtitle={getRangeLabel(dataRange)}
-            status="Info"
-            icon={<SquareDashedBottomCode size={20} />}
-          />
-          <KpiStatus
-            title="Decoded Failed"
-            value={activitySummary.decodedFailed.isLoading ? "..." : activitySummary.decodedFailed.count}
-            subtitle={getRangeLabel(dataRange)}
-            status={activitySummary.decodedFailed.count > 0 ? "Warning" : "Healthy"}
-            icon={<SquareDashedBottomCode size={20} />}
-          />
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <KpiStatus
+              title="Migration completed"
+              value={activitySummary.migrationCompleted.isLoading ? <LoadingDots /> : activitySummary.migrationCompleted.count}
+              subtitle={
+                dataRange === "overall"
+                  ? "All time"
+                  : dataRange === "24-hours"
+                    ? "Rolling last 24 hours"
+                    : "Rolling last 1 hour"
+              }
+              status="Info"
+              icon={<UploadCloud size={20} />}
+            />
+            <KpiStatus
+              title="Migration Failed"
+              value={activitySummary.migrationFailed.isLoading ? <LoadingDots /> : activitySummary.migrationFailed.count}
+              subtitle={getRangeLabel(dataRange)}
+              status={activitySummary.migrationFailed.count > 0 ? "Warning" : "Healthy"}
+              icon={<UploadCloud size={20} />}
+            />
+            <KpiStatus
+              title="Decoded completed"
+              value={activitySummary.decodedCompleted.isLoading ? <LoadingDots /> : activitySummary.decodedCompleted.count}
+              subtitle={getRangeLabel(dataRange)}
+              status="Info"
+              icon={<SquareDashedBottomCode size={20} />}
+            />
+            <KpiStatus
+              title="Decoded Failed"
+              value={activitySummary.decodedFailed.isLoading ? <LoadingDots /> : activitySummary.decodedFailed.count}
+              subtitle={getRangeLabel(dataRange)}
+              status={activitySummary.decodedFailed.count > 0 ? "Warning" : "Healthy"}
+              icon={<SquareDashedBottomCode size={20} />}
+            />
+          </div>
+          <div className="mt-4">
+            <MigrationActivityChart
+              data={fetchChartData}
+              isLoading={
+                activitySummary.migrationCompleted.isLoading ||
+                activitySummary.decodedCompleted.isLoading
+              }
+            />
+          </div>
+        </>
       )}
     </section>
   );
@@ -228,7 +283,7 @@ export function MigrationActivitySummary({
 function getRangeLabel(dataRange: DataRange) {
   if (dataRange === "overall") return "All time";
   if (dataRange === "24-hours") return "Rolling last 24 hours";
-  return "Today";
+  return "Rolling last 1 hour";
 }
 
 export function InstanceDetailsPanel({

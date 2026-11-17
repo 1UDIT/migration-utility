@@ -4,7 +4,7 @@ type KpiStatus = "Healthy" | "Warning" | "Critical" | "Info" |"Unknown";
 
 type KpiCardProps = {
   title: string;
-  value: string | number;
+  value: string | number | React.ReactNode;
   subtitle?: string;
   status?: KpiStatus;
   icon?: React.ReactNode;

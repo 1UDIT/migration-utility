@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-table";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
-import { format, subDays } from "date-fns";
+import { endOfDay, format, subHours } from "date-fns";
 import { FaSortDown, FaSortUp } from "react-icons/fa";
 import { toast } from "sonner";
 
@@ -39,15 +39,6 @@ const getAgeSeconds = (dateValue: unknown): number => {
   return Number.isNaN(time) ? Number.MAX_SAFE_INTEGER : (Date.now() - time) / 1000;
 };
 
-type ArchivedObject = {
-  archiveDate?: string | null;
-};
-
-const parseArchiveDate = (value: string | null | undefined): number => {
-  if (!value) return Number.NaN;
-  return new Date(value.replace(" ", "T")).getTime();
-};
-
 const ACTIVITY_STATUSES = [
   { key: "migrationCompleted", status: "MIGRATION_COMPLETED" },
   { key: "migrationFailed", status: "MIGRATION_FAILED" },
@@ -55,19 +46,10 @@ const ACTIVITY_STATUSES = [
   { key: "decodedFailed", status: "DECODE_FAILED" },
 ] as const;
 
-const countActivityObjects = (data: unknown, dataRange: DataRange): number => {
-  const response = data as { data?: ArchivedObject[] } | undefined;
-  const objects = Array.isArray(response?.data) ? response.data : [];
-  if (dataRange !== "24-hours") return objects.length;
-
-  const now = Date.now();
-  const twentyFourHoursMs = 24 * 60 * 60 * 1000;
-
-  return objects.filter(({ archiveDate }) => {
-    const archiveTime = parseArchiveDate(archiveDate);
-    const ageMs = now - archiveTime;
-    return Number.isFinite(archiveTime) && ageMs >= 0 && ageMs <= twentyFourHoursMs;
-  }).length;
+type MigrationSummaryResponse = {
+  totals?: {
+    objectCount?: number;
+  };
 };
 
 
@@ -85,7 +67,7 @@ export default function RunningInstancesDashboard() {
     pageIndex: 0,
     pageSize: 50,
   });
-  const [dataRange, setDataRange] = useState<DataRange>("1-day");
+  const [dataRange, setDataRange] = useState<DataRange>("1-hour");
   const [highlightedRows, SetMultipleRowsSelection] = useState<number[]>([]);
   const [previousSelection, setPreviousSelection] = useState<number | null>(
     null
@@ -93,6 +75,7 @@ export default function RunningInstancesDashboard() {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedRow, setSelectedRow] = useState<RunningInstance | null>(null);
   const [hideSummary, setHideSummary] = useState(true);
+  const [mediaType, setMediaType] = useState<string | null>(null);
 
   const ipAddress = useSelector(
     (state: RootState) => state.tableDownClick.ipAddressStore
@@ -145,28 +128,30 @@ export default function RunningInstancesDashboard() {
   });
 
   const activityDateRange = useMemo(() => {
-    if (dataRange === "overall") return undefined;
+    const now = new Date();
+    const hours = dataRange === "24-hours" ? 24 : 1;
 
-    const today = new Date();
     return {
-      from: format(dataRange === "24-hours" ? subDays(today, 1) : today, "yyyy-MM-dd"),
-      to: format(today, "yyyy-MM-dd"),
+      from:
+        dataRange === "overall"
+          ? "1970-01-01 00:00:00"
+          : format(subHours(now, hours), "yyyy-MM-dd HH:mm:ss"),
+      to: format(endOfDay(now), "yyyy-MM-dd HH:mm:ss"),
     };
   }, [dataRange]);
 
   const activityQueries = useQueries({
     queries: ACTIVITY_STATUSES.map(({ status: activityStatus }) => ({
-      queryKey: ["activity-summary", activityStatus, dataRange, activityDateRange, ipAddress, apiPort],
+      queryKey: ["activity-summary", activityStatus, dataRange, activityDateRange, ipAddress, apiPort, mediaType],
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         fetchData(
-          `http://${ipAddress}:${apiPort}/objects?page=1&limit=50`,
+          `http://${ipAddress}:${apiPort}/objects/migrationSummary`,
           "POST",
           {
-            filters: {
-              status: [activityStatus],
-              ...(activityDateRange ? { lastUpdateDate: activityDateRange } : {}),
-            },
-            sorting: [],
+            status: activityStatus,
+            mediaType: mediaType,
+            from: activityDateRange.from,
+            to: activityDateRange.to,
           },
           signal
         ),
@@ -178,8 +163,9 @@ export default function RunningInstancesDashboard() {
   const activitySummary = ACTIVITY_STATUSES.reduce<ActivitySummary>(
     (summary, { key }, index) => {
       const query = activityQueries[index];
+      const response = query.data as MigrationSummaryResponse | undefined;
       summary[key] = {
-        count: countActivityObjects(query.data, dataRange),
+        count: Number(response?.totals?.objectCount ?? 0),
         isLoading: query.isLoading,
       };
       return summary;
@@ -366,6 +352,7 @@ export default function RunningInstancesDashboard() {
         collapsed={hideSummary}
         onRangeChange={setDataRange}
         onToggle={() => setHideSummary((hidden) => !hidden)}
+        setMediaType={setMediaType}
       />
 
       <GlobalStorageAlert rows={tableData} refreshKey={dataUpdatedAt} />
