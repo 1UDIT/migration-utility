@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-table";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
-import { endOfDay, format, subHours } from "date-fns";
+import { format, subHours } from "date-fns";
 import { FaSortDown, FaSortUp } from "react-icons/fa";
 import { toast } from "sonner";
 
@@ -126,13 +126,12 @@ export default function RunningInstancesDashboard() {
     const hours = dataRange === "24-hours" ? 24 : 1;
 
     return {
-      from:
-        dataRange === "overall"
-          ? "1970-01-01 00:00:00"
-          : format(subHours(now, hours), "yyyy-MM-dd HH:mm:ss"),
-      to: format(endOfDay(now), "yyyy-MM-dd HH:mm:ss"),
+      from: format(subHours(now, hours), "yyyy-MM-dd HH:mm:ss"),
+      to: format(now, "yyyy-MM-dd HH:mm:ss"),
     };
   }, [dataRange]);
+
+  console.log(activityDateRange," activityDateRange");
 
   const activityQueries = useQueries({
     queries: ACTIVITY_STATUSES.map(({ status: activityStatus }) => ({
@@ -160,15 +159,16 @@ export default function RunningInstancesDashboard() {
       const response = query.data as MigrationSummaryResponse | undefined;
       summary[key] = {
         count: Number(response?.totals?.objectCount ?? 0),
+        TotalSizeTB: Number(response?.totals?.totalSizeTB ?? 0),
         isLoading: query.isLoading,
       };
       return summary;
     },
     {
-      migrationCompleted: { count: 0, isLoading: false },
-      migrationFailed: { count: 0, isLoading: false },
-      decodedCompleted: { count: 0, isLoading: false },
-      decodedFailed: { count: 0, isLoading: false },
+      migrationCompleted: { count: 0, TotalSizeTB: 0, isLoading: false },
+      migrationFailed: { count: 0, TotalSizeTB: 0, isLoading: false },
+      decodedCompleted: { count: 0, TotalSizeTB: 0, isLoading: false },
+      decodedFailed: { count: 0, TotalSizeTB: 0, isLoading: false },
     }
   );
 

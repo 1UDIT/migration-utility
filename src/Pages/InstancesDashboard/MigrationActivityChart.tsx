@@ -13,14 +13,21 @@ import {
 
 export type ActivityChartPoint = {
   time: string;
-  migrationCompleted: number;
-  decodedCompleted: number;
+  migrationSizeTB: number;
+  migrationCount: number;
+  decodedSizeTB: number;
+  decodedCount: number;
 };
 
 interface MigrationActivityChartProps {
   data: ActivityChartPoint[];
   isLoading?: boolean;
 }
+
+const formatHourLabel = (value: unknown) => {
+  const label = String(value);
+  return label.includes("-") ? label.slice(5, 16) : label;
+};
 
 export function MigrationActivityChart({
   data,
@@ -34,11 +41,11 @@ export function MigrationActivityChart({
     <div className="w-full rounded-xl border border-slate-700 bg-[#122033] p-3 text-white">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-sm font-semibold">
-          Migration & Decoded Completed
+          Migration & Decoded Completed Size (TB)
         </h3>
       </div>
 
-      <div className="relative h-[200px] w-full">
+      <div className="relative h-[240px] w-full">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#122033]/70">
             <span className="animate-pulse text-sm text-slate-300">
@@ -58,8 +65,8 @@ export function MigrationActivityChart({
               margin={{
                 top: 12,
                 right: 15,
-                left: -10,
-                bottom: 0,
+                left: 0,
+                bottom: 20,
               }}
             >
               <defs>
@@ -113,15 +120,19 @@ export function MigrationActivityChart({
                 tick={{ fill: "#cbd5e1", fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
+                height={42}
+                tickMargin={10}
+                interval="preserveStartEnd"
+                minTickGap={24}
+                tickFormatter={formatHourLabel}
               />
 
               <YAxis
-                allowDecimals={false}
                 tick={{ fill: "#cbd5e1", fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) =>
-                  Number(value).toLocaleString()
+                  `${Number(value).toLocaleString()} TB`
                 }
               />
 
@@ -132,10 +143,18 @@ export function MigrationActivityChart({
                   borderRadius: 8,
                   color: "#fff",
                 }}
-                formatter={(value, name) => [
-                  Number(value).toLocaleString(),
-                  String(name),
-                ]}
+                labelFormatter={(label) => `Hour: ${formatHourLabel(label)}`}
+                formatter={(value, name, item) => {
+                  const point = item.payload as ActivityChartPoint;
+                  const count = item.dataKey === "migrationSizeTB"
+                    ? point.migrationCount
+                    : point.decodedCount;
+
+                  return [
+                    `${Number(value).toLocaleString()} TB | ${count.toLocaleString()} objects`,
+                    String(name),
+                  ];
+                }}
               />
 
               <Legend
@@ -147,7 +166,7 @@ export function MigrationActivityChart({
 
               <Area
                 type="monotone"
-                dataKey="migrationCompleted"
+                dataKey="migrationSizeTB"
                 name="Migration Completed"
                 stroke="#00a6ff"
                 strokeWidth={2.5}
@@ -164,7 +183,7 @@ export function MigrationActivityChart({
 
               <Area
                 type="monotone"
-                dataKey="decodedCompleted"
+                dataKey="decodedSizeTB"
                 name="Decoded Completed"
                 stroke="#00e58b"
                 strokeWidth={2.5}

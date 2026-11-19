@@ -29,14 +29,14 @@ type KpiState = {
 };
 
 export type ActivitySummary = {
-  migrationCompleted: { count: number; isLoading: boolean };
-  migrationFailed: { count: number; isLoading: boolean };
-  decodedCompleted: { count: number; isLoading: boolean };
-  decodedFailed: { count: number; isLoading: boolean };
+  migrationCompleted: { count: number; TotalSizeTB: number; isLoading: boolean };
+  migrationFailed: { count: number; TotalSizeTB: number; isLoading: boolean };
+  decodedCompleted: { count: number; TotalSizeTB: number; isLoading: boolean };
+  decodedFailed: { count: number; TotalSizeTB: number; isLoading: boolean };
 };
 
 const DATA_RANGES = [
-  { value: "overall", label: "Overall (All Time)" },
+  // { value: "overall", label: "Overall (All Time)" },
   { value: "24-hours", label: "24 Hours" },
   { value: "1-hour", label: "1 Hour" },
 ] as const;
@@ -235,12 +235,11 @@ export function MigrationActivitySummary({
             <KpiStatus
               title="Migration completed"
               value={activitySummary.migrationCompleted.isLoading ? <LoadingDots /> : activitySummary.migrationCompleted.count}
+              TotalSizeTB={activitySummary.migrationCompleted.isLoading ? <LoadingDots /> : activitySummary.migrationCompleted.TotalSizeTB}
               subtitle={
-                dataRange === "overall"
-                  ? "All time"
-                  : dataRange === "24-hours"
-                    ? "Rolling last 24 hours"
-                    : "Rolling last 1 hour"
+                dataRange === "24-hours"
+                  ? "Rolling last 24 hours"
+                  : "Rolling last 1 hour"
               }
               status="Info"
               icon={<UploadCloud size={20} />}
@@ -248,6 +247,7 @@ export function MigrationActivitySummary({
             <KpiStatus
               title="Migration Failed"
               value={activitySummary.migrationFailed.isLoading ? <LoadingDots /> : activitySummary.migrationFailed.count}
+              TotalSizeTB={activitySummary.migrationFailed.isLoading ? <LoadingDots /> : activitySummary.migrationFailed.TotalSizeTB}
               subtitle={getRangeLabel(dataRange)}
               status={activitySummary.migrationFailed.count > 0 ? "Warning" : "Healthy"}
               icon={<UploadCloud size={20} />}
@@ -255,6 +255,7 @@ export function MigrationActivitySummary({
             <KpiStatus
               title="Decoded completed"
               value={activitySummary.decodedCompleted.isLoading ? <LoadingDots /> : activitySummary.decodedCompleted.count}
+              TotalSizeTB={activitySummary.decodedCompleted.isLoading ? <LoadingDots /> : activitySummary.decodedCompleted.TotalSizeTB}
               subtitle={getRangeLabel(dataRange)}
               status="Info"
               icon={<SquareDashedBottomCode size={20} />}
@@ -262,6 +263,7 @@ export function MigrationActivitySummary({
             <KpiStatus
               title="Decoded Failed"
               value={activitySummary.decodedFailed.isLoading ? <LoadingDots /> : activitySummary.decodedFailed.count}
+              TotalSizeTB={activitySummary.decodedFailed.isLoading ? <LoadingDots /> : activitySummary.decodedFailed.TotalSizeTB}
               subtitle={getRangeLabel(dataRange)}
               status={activitySummary.decodedFailed.count > 0 ? "Warning" : "Healthy"}
               icon={<SquareDashedBottomCode size={20} />}
@@ -280,7 +282,6 @@ export function MigrationActivitySummary({
 }
 
 function getRangeLabel(dataRange: DataRange) {
-  if (dataRange === "overall") return "All time";
   if (dataRange === "24-hours") return "Rolling last 24 hours";
   return "Rolling last 1 hour";
 }

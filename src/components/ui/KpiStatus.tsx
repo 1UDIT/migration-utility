@@ -5,6 +5,7 @@ type KpiStatus = "Healthy" | "Warning" | "Critical" | "Info" |"Unknown";
 type KpiCardProps = {
   title: string;
   value: string | number | React.ReactNode;
+  TotalSizeTB?: string | number | React.ReactNode;
   subtitle?: string;
   status?: KpiStatus;
   icon?: React.ReactNode;
@@ -15,6 +16,7 @@ type KpiCardProps = {
 export const KpiStatus = ({
   title,
   value,
+  TotalSizeTB,
   subtitle,
   status = "Info",
   icon,
@@ -76,6 +78,12 @@ export const KpiStatus = ({
               {value}
             </span>
           </div>
+
+          {TotalSizeTB !== undefined ? (
+            <div className="mt-2 text-sm font-semibold text-slate-300">
+              Total Size: <span className="text-white">{TotalSizeTB}</span> TB
+            </div>
+          ) : null}
 
           {subtitle ? (
             <div className={`mt-2 text-xs font-semibold ${style.text}`}>

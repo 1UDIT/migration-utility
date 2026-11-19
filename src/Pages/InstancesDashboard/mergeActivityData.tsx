@@ -1,5 +1,5 @@
 export interface MigrationSummaryRow {
-  Hour: number;
+  Hour: string | number;
   ObjectCount: number;
   TotalSizeGB: number;
   TotalSizeTB: number;
@@ -20,8 +20,10 @@ export interface MigrationSummaryResponse {
 
 export interface ActivityChartPoint {
   time: string;
-  migrationCompleted: number;
-  decodedCompleted: number;
+  migrationSizeTB: number;
+  migrationCount: number;
+  decodedSizeTB: number;
+  decodedCount: number;
 }
 
 
@@ -30,7 +32,7 @@ export function mergeActivityData(
   migration: MigrationSummaryResponse,
   decoded: MigrationSummaryResponse
 ): ActivityChartPoint[] {
-  const hourlyData = new Map<number, ActivityChartPoint>();
+  const hourlyData = new Map<string, ActivityChartPoint>();
 
   console.log("Merging activity data:", {
     migration,
@@ -39,27 +41,35 @@ export function mergeActivityData(
 
   const addRows = (
     rows: MigrationSummaryRow[],
-    key: "migrationCompleted" | "decodedCompleted"
+    sizeKey: "migrationSizeTB" | "decodedSizeTB",
+    countKey: "migrationCount" | "decodedCount"
   ) => {
     rows.forEach((row) => {
-      const hour = Number(row.Hour);
+      const rawHour = String(row.Hour);
+      const isNumericHour = /^\d{1,2}$/.test(rawHour);
+      const hour = isNumericHour
+        ? rawHour.padStart(2, "0")
+        : rawHour;
 
       const existing = hourlyData.get(hour) ?? {
-        time: `${String(hour).padStart(2, "0")}:00`,
-        migrationCompleted: 0,
-        decodedCompleted: 0,
+        time: isNumericHour ? `${hour}:00` : hour,
+        migrationSizeTB: 0,
+        migrationCount: 0,
+        decodedSizeTB: 0,
+        decodedCount: 0,
       };
 
-      existing[key] += Number(row.ObjectCount) || 0;
+      existing[sizeKey] += Number(row.TotalSizeTB) || 0;
+      existing[countKey] += Number(row.ObjectCount) || 0;
       hourlyData.set(hour, existing);
     });
-    console.log(`Added rows for ${key}:`, rows);
+    console.log(`Added rows for ${sizeKey}:`, rows);
   };
 
-  addRows(migration.rows, "migrationCompleted");
-  addRows(decoded.rows, "decodedCompleted");
+  addRows(migration.rows, "migrationSizeTB", "migrationCount");
+  addRows(decoded.rows, "decodedSizeTB", "decodedCount");
 
   return Array.from(hourlyData.entries())
-    .sort(([a], [b]) => a - b)
+    .sort(([a], [b]) => a.localeCompare(b))
     .map(([, value]) => value);
 }
